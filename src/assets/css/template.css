@@ -1,0 +1,109 @@
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu>.dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -6px;
+    margin-left: -1px;
+    -webkit-border-radius: 0 6px 6px 6px;
+    -moz-border-radius: 0 6px 6px;
+    border-radius: 0 6px 6px 6px;
+}
+
+.dropdown-submenu:hover>.dropdown-menu {
+    display: block;
+}
+
+.dropdown-submenu>a:after {
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #ccc;
+    margin-top: 10px;
+    margin-right: -10px;
+}
+
+.dropdown-submenu:hover>a:after {
+    border-left-color: #fff;
+}
+
+.dropdown-submenu.pull-left {
+    float: none;
+}
+
+.dropdown-submenu.pull-left>.dropdown-menu {
+    left: -100%;
+    margin-left: 10px;
+    -webkit-border-radius: 6px 0 6px 6px;
+    -moz-border-radius: 6px 0 6px 6px;
+    border-radius: 6px 0 6px 6px;
+}
+
+.custom-list { margin: 0; padding: 0; list-style-type: none; }
+.custom-list > li { margin: 0; padding: 0; list-style-type: none; }
+.custom-list > li:before { display: none; }
+
+#footer { padding: 20px 0 10px 0; background-color: #189CC8; }
+#footer p { -webkit-transform: translateZ(0); }
+#footer p:first-child { margin-top: 0; }
+
+/* FOOTER SOCIAL */
+.footer-social { text-align: right; font-size: 18px; -webkit-transform: translateZ(0); }
+.footer-social > li { display: inline-block; margin-left: 10px; }
+.footer-social > li > a > span { display: none; }
+.footer-social > li > a { border: 0; color: #ffffff;}
+.footer-social > li > a:hover { opacity: .8; color: #ffffff;}
+.footer-social > li > a:active { opacity: .5; }
+	
+	
+#bottom-panel { background-color: #EFF1F1; }
+#bottom-panel .widget-title { color: #FFF; }
+
+/* DEFAULT FORM */
+
+#bottom-panel .default-form input { color: #999999; background-color: #241c1f; }
+#bottom-panel .default-form .input-group { background-color: #241c1f; }
+#bottom-panel .default-form .input-group input { background-color: transparent; }
+#bottom-panel .default-form .input-group button { color: #2baddf; }
+
+
+#bottom-panel { padding: 45px 0 24px 0; }
+#bottom-panel .widget p { margin-top: 12px; }
+#bottom-panel .widget-title { margin: 0; font-size: 1.5em; font-family: Calibri; color: #000000; font-weight: normal; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; content: "\f054";}
+#bottom-panel .widget-content > *:first-child { margin-top: 0; }
+#bottom-panel .widget-content { padding-top: 12px; }
+#bottom-panel .input-group { max-width: 300px; }
+
+/* ABOUT WIDGET */
+#bottom-panel .about-widget { margin-top: -12px; }
+#bottom-panel .about-widget .widget-content { padding-top: 0; }
+#bottom-panel .about-widget img { display: block; }
+
+/* LINKS WIDGET */
+#bottom-panel .links-widget li { margin-bottom: 6px;
+	-webkit-transform: translateZ(0); }
+
+/* TWITTER WIDGET */
+#bottom-panel .twitter-widget.loading .twitter-feed { text-align: center; }
+#bottom-panel .twitter-widget .widget-title > span { margin-right: 13px; }
+#bottom-panel .twitter-widget .tweet-nav { display: none; font-size: 14px; white-space: nowrap; }
+#bottom-panel .twitter-widget .tweet-nav-prev,
+#bottom-panel .twitter-widget .tweet-nav-next { position: relative; left: 0; margin: 0 2px; cursor: pointer;
+	-webkit-transition: all 150ms ease-in-out; -moz-transition: all 150ms ease-in-out; -ms-transition: all 150ms ease-in-out; -o-transition: all 150ms ease-in-out; transition: all 150ms ease-in-out; }
+#bottom-panel .twitter-widget .tweet-nav-prev:active { left: -2px; }
+#bottom-panel .twitter-widget .tweet-nav-next:active { left: 2px; }
+#bottom-panel .twitter-widget .tweet-list { display: none; }
+#bottom-panel .twitter-widget .tweet-time { display: block; }
+
+/* NEWSLETTER WIDGET */
+#bottom-panel .newsletter-widget form { margin-top: 12px; -webkit-transform: translateZ(0); }
+#bottom-panel .newsletter-widget input { width: 100%; border: 0; }
+#bottom-panel .newsletter-widget .alert-message { margin-bottom: 12px; }
+#bottom-panel .newsletter-widget .alert-message { display: none; }
