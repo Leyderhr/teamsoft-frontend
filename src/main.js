@@ -6,7 +6,7 @@ import PrimeVue from 'primevue/config'
 import {ToastService, Tooltip, ConfirmationService, Ripple} from "primevue";
 
 // Tema de PrimeVue
-import Aura from '@primeuix/themes/aura';
+import Material from '@primeuix/themes/material';
 import 'primeicons/primeicons.css'
 // import 'primeflex/primeflex.css'
 
@@ -28,7 +28,7 @@ const app = createApp(App)
 
 app.directive('tooltip', Tooltip)
 app.use(PrimeVue, {
-    theme: {preset: Aura}
+    theme: {preset: Material}
 })
 app.use(ToastService)
 app.mount('#app')

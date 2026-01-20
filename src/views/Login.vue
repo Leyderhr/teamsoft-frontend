@@ -189,8 +189,7 @@ const handleLogin = () => {
 }
 
 :deep(.p-floatlabel input:focus) {
-  border-bottom: 1px solid #1094b9 !important;
-  box-shadow: 0 1px 0 0 #1094b9 !important;
+  outline: none;
 }
 
 :deep(.p-floatlabel label) {
@@ -198,6 +197,10 @@ const handleLogin = () => {
   left: 10px !important;
   font-size: 16px;
   transition: all 0.2s ease;
+}
+
+:deep(.p-floatlabel input.p-filled){
+  padding-left: 10px;
 }
 
 :deep(.p-floatlabel input:focus ~ label),
@@ -227,10 +230,7 @@ const handleLogin = () => {
   font-size: 16px;
 }
 
-:deep(.p-password input:focus) {
-  border-bottom: 1px solid #1094b9 !important;
-  box-shadow: 0 1px 0 0 #1094b9 !important;
-}
+
 
 /* Toggle mask icon positioning */
 :deep(.p-password .p-password-toggle-mask-icon) {
