@@ -1,0 +1,205 @@
+<script setup>
+import {ref, computed} from 'vue'
+import {useRouter} from 'vue-router'
+import {useSecurityStore} from '@/store/security'
+import {useUserStore} from '@/store/user'
+import PanelMenu from 'primevue/panelmenu'
+import Avatar from 'primevue/avatar'
+import Button from 'primevue/button'
+
+const router = useRouter()
+const securityStore = useSecurityStore()
+const userStore = useUserStore()
+
+const collapsed = ref(false)
+
+const toggleCollapse = () => {
+  collapsed.value = !collapsed.value
+}
+
+// Modelo del menú usando PrimeVue PanelMenu
+const menuItems = computed(() => {
+  const items = []
+
+  // Inicio
+  items.push({
+    label: 'Inicio',
+    icon: 'pi pi-home',
+    command: () => router.push('/')
+  })
+
+  // Nomencladores (GESTOR)
+  if (securityStore.isGestor) {
+    items.push({
+      label: 'Nomencladores',
+      icon: 'pi pi-list',
+      items: [
+        {
+          label: 'Competencias',
+          items: [
+            {label: 'Importancia', command: () => router.push('/nomenclatives/competence-importance')},
+            {label: 'Niveles', command: () => router.push('/nomenclatives/levels')}
+          ]
+        },
+        {
+          label: 'Rol',
+          items: [
+            {label: 'Costo teletrabajo', command: () => router.push('/nomenclatives/cost-distance')},
+            {label: 'Carga de rol', command: () => router.push('/nomenclatives/role-load')}
+          ]
+        },
+        {
+          label: 'Trabajador',
+          items: [
+            {label: 'Grupos', command: () => router.push('/nomenclatives/person-group')},
+            {label: 'Evaluación de rol', command: () => router.push('/nomenclatives/role-eval')},
+            {label: 'Índice de conflicto', command: () => router.push('/nomenclatives/conflict-index')},
+            {label: 'Nacionalidad', command: () => router.push('/nomenclatives/nacionality')},
+            {label: 'Provincia', command: () => router.push('/nomenclatives/county')},
+            {label: 'Municipio', command: () => router.push('/nomenclatives/municipality')},
+            {label: 'Raza', command: () => router.push('/nomenclatives/race')},
+            {label: 'Religión', command: () => router.push('/nomenclatives/religion')},
+            {label: 'Rango de edad', command: () => router.push('/nomenclatives/age-group')}
+          ]
+        },
+        {
+          label: 'Proyecto',
+          items: [
+            {label: 'Entidad cliente', command: () => router.push('/nomenclatives/client-entity')},
+            {label: 'Estructuras definidas', command: () => router.push('/nomenclatives/project-structure')}
+          ]
+        }
+      ]
+    })
+  }
+
+  // Recursos Humanos (GESTOR)
+  if (securityStore.isGestor) {
+    items.push({
+      label: 'Recursos Humanos',
+      icon: 'pi pi-users',
+      items: [
+        {label: 'Competencias', command: () => router.push('/manage-competences/competence')},
+        {label: 'Roles', command: () => router.push('/manage-roles/role')},
+        {label: 'Personas', command: () => router.push('/person')},
+        {
+          label: 'Importar personas',
+          items: [
+            {label: 'Importar solo personas', command: () => router.push('/import')},
+            {label: 'Importar configuración', command: () => router.push('/import/config')}
+          ]
+        }
+      ]
+    })
+  }
+
+  // Proyectos
+  if (securityStore.isDirectivoTecnico || securityStore.isExperimentador || securityStore.isJefeEquipo) {
+    const projectItems = []
+
+    if (securityStore.isDirectivoTecnico || securityStore.isExperimentador) {
+      projectItems.push(
+          {label: 'Proyectos', command: () => router.push('/manage-projects/project')},
+          {label: 'Formar equipo', command: () => router.push('/team-formation')}
+      )
+    }
+
+    if (securityStore.isJefeEquipo) {
+      projectItems.push(
+          {label: 'Finalizar el proyecto', command: () => router.push('/close-project/finalize')}
+      )
+    }
+
+    if (securityStore.isDirectivoTecnico) {
+      projectItems.push(
+          {label: 'Cerrar proyecto', command: () => router.push('/close-project/close')}
+      )
+    }
+
+    items.push({
+      label: 'Proyectos',
+      icon: 'pi pi-briefcase',
+      items: projectItems
+    })
+  }
+
+  // Experimentos (EXPERIMENTADOR)
+  if (securityStore.isExperimentador) {
+    items.push({
+      label: 'Experimentos',
+      icon: 'pi pi-cog',
+      items: [
+        {label: 'Configurar', command: () => router.push('/experiments')}
+      ]
+    })
+  }
+
+  // Usuarios (ADMIN)
+  if (securityStore.isAdmin) {
+    items.push({
+      label: 'Usuarios',
+      icon: 'pi pi-user-plus',
+      items: [
+        {label: 'Usuarios', command: () => router.push('/manage-user-role/users')}
+      ]
+    })
+  }
+
+  // Reportes (ADMIN)
+  if (securityStore.isAdmin) {
+    items.push({
+      label: 'Reportes',
+      icon: 'pi pi-chart-bar',
+      items: [
+        {label: 'Personas', command: () => router.push('/reports/person-report')},
+        {label: 'Equipos finalizados', command: () => router.push('/reports/finished-teams')},
+        {label: 'Listar personas', command: () => router.push('/reports/list-workers')}
+      ]
+    })
+  }
+
+  return items
+})
+</script>
+
+<template>
+  <div class="layout-menu h-screen overflow-hidden" :class="{ 'w-64': !collapsed, 'w-16': collapsed }">
+    <div class="h-full overflow-y-auto">
+      <!-- Perfil inline -->
+      <div v-if="!collapsed" class="profile p-4 text-center border-bottom-1 surface-border">
+        <Avatar icon="pi pi-user" size="xlarge" shape="circle" class="mb-3"/>
+        <div class="font-bold">{{ userStore.user?.fullName || 'Usuario' }}</div>
+        <div class="text-sm text-color-secondary">#{loginBean.identification}</div>
+      </div>
+
+      <!-- Menú principal -->
+      <PanelMenu
+          :model="menuItems"
+          :multiple="false"
+          class="border-none"
+      />
+    </div>
+
+    <!-- Botón para colapsar/expandir -->
+    <Button
+        icon="pi pi-chevron-left"
+        :class="{ 'rotate-180': collapsed }"
+        class="absolute bottom-4 right-2 p-button-text p-button-sm"
+        @click="toggleCollapse"
+    />
+  </div>
+</template>
+
+<style scoped>
+.layout-menu {
+  transition: width 0.3s ease;
+  background-color: #f5f5f5;
+  border-right: 1px solid #e0e0e0;
+  padding-top: 50px;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+</style>

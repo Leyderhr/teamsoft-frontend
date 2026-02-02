@@ -1,32 +1,34 @@
 <script setup>
-import { reactive } from 'vue';
-import {Card, InputGroup, InputGroupAddon, InputText} from 'primevue';
+import { reactive, ref } from 'vue';
+import { Card, InputGroup, InputGroupAddon, InputText } from 'primevue';
 import FloatLabel from 'primevue/floatlabel';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
-import 'primeicons/primeicons.css'
-
+import { useRouter } from 'vue-router';
+import 'primeicons/primeicons.css';
 
 const toast = useToast();
+const router = useRouter();
+
 const form = reactive({
   username: '',
   password: ''
 });
 
-const handleLogin = () => {
-  if (form.username && form.password) {
-    // Toast de éxito
-    toast.add({
-      severity: 'success',
-      summary: 'Login Exitoso',
-      detail: 'Iniciando sesión...',
-      life: 3000,
-      icon: 'pi pi-check-circle'
-    });
-  } else {
-    // Toast de error
+const isLoading = ref(false);
+
+// Credenciales válidas (en un caso real, esto vendría de una API)
+const validCredentials = [
+  { username: 'admin', password: 'admin123' },
+  { username: 'user', password: 'user123' },
+  { username: 'demo', password: 'demo123' }
+];
+
+const handleLogin = async () => {
+  // Validación básica
+  if (!form.username || !form.password) {
     toast.add({
       severity: 'error',
       summary: 'Error',
@@ -34,6 +36,71 @@ const handleLogin = () => {
       life: 3000,
       icon: 'pi pi-times-circle'
     });
+    return;
+  }
+
+  isLoading.value = true;
+
+  try {
+    // Simula un delay de API
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Verifica credenciales (en producción, esto sería una llamada a API)
+    const isValidUser = validCredentials.some(
+        cred => cred.username === form.username && cred.password === form.password
+    );
+
+    if (isValidUser) {
+      // Guarda la información del usuario en localStorage
+      const userData = {
+        username: form.username,
+        token: `jwt-token-${Date.now()}`,
+        role: form.username === 'admin' ? 'admin' : 'user',
+        lastLogin: new Date().toISOString()
+      };
+
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      // Muestra toast de éxito
+      toast.add({
+        severity: 'success',
+        summary: 'Login Exitoso',
+        detail: `Bienvenido ${form.username}!`,
+        life: 2000,
+        icon: 'pi pi-check-circle'
+      });
+
+      // Espera un momento y redirige al Dashboard
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
+
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: 'Credenciales Inválidas',
+        detail: 'Usuario o contraseña incorrectos',
+        life: 3000,
+        icon: 'pi pi-exclamation-triangle'
+      });
+    }
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error del Sistema',
+      detail: 'Ocurrió un error inesperado',
+      life: 3000,
+      icon: 'pi pi-times-circle'
+    });
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Permite login con Enter
+const handleKeyPress = (event) => {
+  if (event.key === 'Enter') {
+    handleLogin();
   }
 };
 </script>
@@ -44,6 +111,13 @@ const handleLogin = () => {
       <Card id="card" class="login-card">
         <template #content>
           <img src="@/assets/img/ic_menu_login.png" class="login-icon" alt="Login Icon" />
+
+          <div class="test-credentials">
+            <p><strong>Usuarios de prueba:</strong></p>
+            <p>admin / admin123</p>
+            <p>user / user123</p>
+            <p>demo / demo123</p>
+          </div>
 
           <form @submit.prevent="handleLogin" class="login-form">
             <Toast />
@@ -284,6 +358,24 @@ const handleLogin = () => {
   color: white !important;
 }
 
+.test-credentials {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 20px;
+  color: white;
+  font-size: 12px;
+}
+
+.test-credentials p {
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+.test-credentials strong {
+  color: #00BCD4;
+}
+
 
 /* Responsive */
 @media only screen and (max-width: 768px) {
@@ -299,6 +391,11 @@ const handleLogin = () => {
 
   :deep(.p-card-content) {
     padding: 30px 20px;
+  }
+
+  .test-credentials {
+    font-size: 11px;
+    padding: 8px;
   }
 }
 </style>
