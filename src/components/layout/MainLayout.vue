@@ -41,13 +41,14 @@ const toggleMenu = () => {
       <main class="flex-1 p-4 lg:ml-64 transition-all duration-300" :class="{ 'lg:ml-16': menuCollapsed }">
         <Breadcrumb class="mb-4" />
 
-        <slot />
+        <router-view />
       </main>
     </div>
   </div>
 </template>
 <style scoped>
 .transition-all {
+  margin-top: 70px;
   transition-property: all;
 }
 .duration-300 {

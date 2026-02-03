@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import Login from '@/views/Login.vue'
 import Dashboard from '@/views/Dashboard.vue'
+import {useAuthStore} from "@/store/authStore.js";
+import Religion from "@/views/nomenclatives/Religion.vue";
 
 const routes = [
     {
@@ -20,7 +22,7 @@ const routes = [
                 path: '',
                 name: 'Dashboard',
                 component: Dashboard,
-                meta:{
+                meta: {
                     breadcrumb: [
                         {
                             name: 'Dashboard', disable: true
@@ -28,6 +30,18 @@ const routes = [
                     ]
                 }
             },
+            {
+                path: 'nomenclatives/religion',
+                name: 'Religion',
+                component: Religion,
+                meta:{
+                    breadcrumb: [
+                        {
+                            name: 'Religión', disable: true
+                        }
+                    ]
+                }
+            }
             // {
             //     path: '/users',
             //     name: 'Users',
@@ -75,14 +89,18 @@ const router = createRouter({
 
 // Guard de autenticación
 router.beforeEach((to, from, next) => {
-    const isPublic = to.matched.some(record => record.meta.public)
-    const isAuthenticated = localStorage.getItem('user') // O tu lógica de auth
+    const authStore = useAuthStore();
+    const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
 
-    if (!isPublic && !isAuthenticated) {
-        return next('/login')
+    if (requiresAuth && !authStore.isAuthenticated) {
+        // Redirigir a login si requiere autenticación y no está autenticado
+        next('/login');
+    } else if (to.path === '/login' && authStore.isAuthenticated) {
+        // Si ya está autenticado y trata de ir a login, redirigir al dashboard
+        next('/');
+    } else {
+        next();
     }
-
-    next()
-})
+});
 
 export default router

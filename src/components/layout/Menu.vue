@@ -2,14 +2,14 @@
 import {ref, computed} from 'vue'
 import {useRouter} from 'vue-router'
 import {useSecurityStore} from '@/store/security'
-import {useUserStore} from '@/store/user'
+import {useAuthStore} from '@/store/authStore.js'
 import PanelMenu from 'primevue/panelmenu'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 
 const router = useRouter()
 const securityStore = useSecurityStore()
-const userStore = useUserStore()
+const userStore = useAuthStore()
 
 const collapsed = ref(false)
 
@@ -25,13 +25,14 @@ const menuItems = computed(() => {
   items.push({
     label: 'Inicio',
     icon: 'pi pi-home',
-    command: () => router.push('/')
+    command: () => router.push('/'),
+    class: 'ripplelink'
   })
 
   // Nomencladores (GESTOR)
   if (securityStore.isGestor) {
     items.push({
-      label: 'Nomencladores',
+      label: 'Configurar',
       icon: 'pi pi-list',
       items: [
         {
@@ -44,15 +45,15 @@ const menuItems = computed(() => {
         {
           label: 'Rol',
           items: [
-            {label: 'Costo teletrabajo', command: () => router.push('/nomenclatives/cost-distance')},
-            {label: 'Carga de rol', command: () => router.push('/nomenclatives/role-load')}
+            {label: 'Costo de trabajar a distancia', command: () => router.push('/nomenclatives/cost-distance')},
+            {label: 'Carga del rol', command: () => router.push('/nomenclatives/role-load')}
           ]
         },
         {
           label: 'Trabajador',
           items: [
             {label: 'Grupos', command: () => router.push('/nomenclatives/person-group')},
-            {label: 'Evaluación de rol', command: () => router.push('/nomenclatives/role-eval')},
+            {label: 'Evaluación en el rol', command: () => router.push('/nomenclatives/role-eval')},
             {label: 'Índice de conflicto', command: () => router.push('/nomenclatives/conflict-index')},
             {label: 'Nacionalidad', command: () => router.push('/nomenclatives/nacionality')},
             {label: 'Provincia', command: () => router.push('/nomenclatives/county')},
@@ -85,8 +86,8 @@ const menuItems = computed(() => {
         {
           label: 'Importar personas',
           items: [
-            {label: 'Importar solo personas', command: () => router.push('/import')},
-            {label: 'Importar configuración', command: () => router.push('/import/config')}
+            {label: 'Importar', command: () => router.push('/import')},
+            {label: 'Configurar', command: () => router.push('/import/config')}
           ]
         }
       ]
@@ -163,20 +164,20 @@ const menuItems = computed(() => {
 </script>
 
 <template>
-  <div class="layout-menu h-screen overflow-hidden" :class="{ 'w-64': !collapsed, 'w-16': collapsed }">
+  <div class="h-screen overflow-hidden layout-menu nano nano-content menu-scroll-content"
+       :class="{ 'w-64': !collapsed, 'w-16': collapsed }">
     <div class="h-full overflow-y-auto">
       <!-- Perfil inline -->
       <div v-if="!collapsed" class="profile p-4 text-center border-bottom-1 surface-border">
         <Avatar icon="pi pi-user" size="xlarge" shape="circle" class="mb-3"/>
-        <div class="font-bold">{{ userStore.user?.fullName || 'Usuario' }}</div>
-        <div class="text-sm text-color-secondary">#{loginBean.identification}</div>
+        <div class="profile-name font-bold">{{ userStore.username || 'Usuario' }}</div>
       </div>
 
       <!-- Menú principal -->
       <PanelMenu
           :model="menuItems"
           :multiple="false"
-          class="border-none"
+          class="border-none ultima-menu"
       />
     </div>
 
@@ -191,11 +192,16 @@ const menuItems = computed(() => {
 </template>
 
 <style scoped>
+@import '@/assets/css/site.css';
+@import "@/assets/ultima-layout/css/nanoscroller.css";
+@import "@/assets/ultima-layout/css/ripple.css";
+
 .layout-menu {
   transition: width 0.3s ease;
   background-color: #f5f5f5;
   border-right: 1px solid #e0e0e0;
-  padding-top: 50px;
+  width: 250px;
+  padding-top: 60px;
 }
 
 .rotate-180 {

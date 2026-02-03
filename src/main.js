@@ -21,6 +21,7 @@ import '@/assets/ultima-layout/css/animate.css'
 import '@/assets/ultima-layout/css/ripple.css'
 import '@/assets/ultima-layout/css/nanoscroller.css'
 
+
 // Estilos y js globales
 import '@/assets/css/materialize.min.css'
 // import '@/assets/css/cssLayout.css'

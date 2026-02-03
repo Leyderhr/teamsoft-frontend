@@ -1,20 +1,21 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import { useUserStore } from './user'
+import { useAuthStore } from './authStore.js'
 
 export const useSecurityStore = defineStore('security', () => {
-    const userStore = useUserStore()
+    const authStore = useAuthStore()
 
     const ifAnyGranteds = (rolesString) => {
-        return userStore.hasAnyRole(rolesString)
+        return authStore.hasAnyRole(rolesString)
     }
 
-    // Roles específicos como computed properties
-    const isGestor = computed(() => userStore.hasAnyRole('GESTOR'))
-    const isAdmin = computed(() => userStore.hasAnyRole('ADMIN'))
-    const isDirectivoTecnico = computed(() => userStore.hasAnyRole('DIRECTIVOTECNICO'))
-    const isExperimentador = computed(() => userStore.hasAnyRole('EXPERIMENTADOR'))
-    const isJefeEquipo = computed(() => userStore.hasAnyRole('JEFE_EQUIPO'))
+    // Roles específicos como computed properties que leen directamente de authStore
+    const isGestor = computed(() => authStore.hasAnyRole('ROLE_GESTOR_RRHH'))
+    const isAdmin = computed(() => authStore.hasAnyRole('ROLE_ADMIN'))
+    const isDirectivoTecnico = computed(() => authStore.hasAnyRole('ROLE_DIRECTIVO_TECNICO'))
+    const isExperimentador = computed(() => authStore.hasAnyRole('ROLE_EXPERIMENTADOR'))
+    const isJefeEquipo = computed(() => authStore.hasAnyRole('ROLE_JEFE_DE_EQUIPO'))
+    const isWorker = computed(() => authStore.hasAnyRole('ROLE_WORKER'))
 
     return {
         ifAnyGranteds,
@@ -22,6 +23,7 @@ export const useSecurityStore = defineStore('security', () => {
         isAdmin,
         isDirectivoTecnico,
         isExperimentador,
-        isJefeEquipo
+        isJefeEquipo,
+        isWorker
     }
 })

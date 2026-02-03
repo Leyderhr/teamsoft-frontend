@@ -1,16 +1,19 @@
 <script setup>
-import { reactive, ref } from 'vue';
-import { Card, InputGroup, InputGroupAddon, InputText } from 'primevue';
+import {onMounted, reactive, ref} from 'vue';
+import {Card, InputGroup, InputGroupAddon, InputText} from 'primevue';
+import authService from '@/api/authService.js';
+import {useAuthStore} from '@/store/authStore.js';
 import FloatLabel from 'primevue/floatlabel';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
-import { useToast } from 'primevue/usetoast';
-import { useRouter } from 'vue-router';
+import {useToast} from 'primevue/usetoast';
+import {useRouter} from 'vue-router';
 import 'primeicons/primeicons.css';
 
 const toast = useToast();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const form = reactive({
   username: '',
@@ -19,82 +22,85 @@ const form = reactive({
 
 const isLoading = ref(false);
 
-// Credenciales válidas (en un caso real, esto vendría de una API)
-const validCredentials = [
-  { username: 'admin', password: 'admin123' },
-  { username: 'user', password: 'user123' },
-  { username: 'demo', password: 'demo123' }
-];
+onMounted(() => {
+  if (authService.isAuthenticated()) {
+    router.push('/');
+
+  }
+})
 
 const handleLogin = async () => {
-  // Validación básica
-  if (!form.username || !form.password) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Por favor complete todos los campos requeridos',
-      life: 3000,
-      icon: 'pi pi-times-circle'
-    });
-    return;
-  }
+      // Validación básica
+      if (!form.username || !form.password) {
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Por favor complete todos los campos requeridos',
+          life: 3000,
+          icon: 'pi pi-times-circle'
+        });
+        return;
+      }
 
-  isLoading.value = true;
+      isLoading.value = true;
 
-  try {
-    // Simula un delay de API
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
 
-    // Verifica credenciales (en producción, esto sería una llamada a API)
-    const isValidUser = validCredentials.some(
-        cred => cred.username === form.username && cred.password === form.password
-    );
+        const response = await authService.login({
+          username: form.username,
+          password: form.password
+        });
 
-    if (isValidUser) {
-      // Guarda la información del usuario en localStorage
-      const userData = {
-        username: form.username,
-        token: `jwt-token-${Date.now()}`,
-        role: form.username === 'admin' ? 'admin' : 'user',
-        lastLogin: new Date().toISOString()
-      };
+        const expiresAt = Date.now() + (response.expiresIn || 1800000);
 
-      localStorage.setItem('user', JSON.stringify(userData));
+        await authStore.login({
+          username: form.username,
+          password: form.password
+        });
 
-      // Muestra toast de éxito
-      toast.add({
-        severity: 'success',
-        summary: 'Login Exitoso',
-        detail: `Bienvenido ${form.username}!`,
-        life: 2000,
-        icon: 'pi pi-check-circle'
-      });
+        // Muestra toast de éxito
+        toast.add({
+          severity: 'success',
+          summary: 'Login Exitoso',
+          detail: `Bienvenido ${authStore.username}!`,
+          life: 2000,
+          icon: 'pi pi-check-circle'
+        });
 
-      // Espera un momento y redirige al Dashboard
-      setTimeout(() => {
-        router.push('/');
-      }, 1500);
+        // Espera un momento y redirige al Dashboard
+        setTimeout(() => {
+          router.push('/');
+        }, 1000);
 
-    } else {
-      toast.add({
-        severity: 'error',
-        summary: 'Credenciales Inválidas',
-        detail: 'Usuario o contraseña incorrectos',
-        life: 3000,
-        icon: 'pi pi-exclamation-triangle'
-      });
-    }
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error del Sistema',
-      detail: 'Ocurrió un error inesperado',
-      life: 3000,
-      icon: 'pi pi-times-circle'
-    });
-  } finally {
-    isLoading.value = false;
-  }
+
+      } catch (error){
+        console.error('Error de autenticación', error);
+
+        let errorDetail = 'Ocurrió un error inesperado';
+        let errorSummary = 'Error de autenticación';
+
+        if (error.message?.includes('Network Error') || error.message?.includes('ECONNREFUSED')) {
+          errorDetail = 'No se puede conectar con el servidor. Verifica que la API esté corriendo en http://localhost:8081.';
+          errorSummary = 'Error de Conexión';
+        } else if (error.status === 401 || error.message?.toLowerCase().includes('credencial')) {
+          errorDetail = 'Usuario o contraseña incorrectos';
+          errorSummary = 'Credenciales Inválidas';
+        } else if (error.status === 400) {
+          errorDetail = error.message || 'Solicitud incorrecta';
+        } else if (error.status === 500) {
+          errorDetail = 'Error interno del servidor. Por favor, intente más tarde.';
+        }
+
+        toast.add({
+          severity: 'error',
+          summary: errorSummary,
+          detail: errorDetail,
+          life: 4000,
+          icon: 'pi pi-exclamation-triangle'
+        });
+      } finally {
+        isLoading.value = false;
+      }
 };
 
 // Permite login con Enter
@@ -110,17 +116,10 @@ const handleKeyPress = (event) => {
     <div class="container">
       <Card id="card" class="login-card">
         <template #content>
-          <img src="@/assets/img/ic_menu_login.png" class="login-icon" alt="Login Icon" />
-
-          <div class="test-credentials">
-            <p><strong>Usuarios de prueba:</strong></p>
-            <p>admin / admin123</p>
-            <p>user / user123</p>
-            <p>demo / demo123</p>
-          </div>
+          <img src="@/assets/img/ic_menu_login.png" class="login-icon" alt="Login Icon"/>
 
           <form @submit.prevent="handleLogin" class="login-form">
-            <Toast />
+            <Toast/>
 
             <!-- Campo Username -->
             <div class="field">
@@ -133,7 +132,7 @@ const handleKeyPress = (event) => {
                       v-tooltip="{ value: 'Tu usuario', showDelay: 1000, hideDelay: 300 }"
                       id="username"
                       v-model="form.username"
-                      :invalid="form.username"
+                      :invalid="true"
                       class="p-inputtext-lg"
                       required
                   />
@@ -273,7 +272,7 @@ const handleKeyPress = (event) => {
   transition: all 0.2s ease;
 }
 
-:deep(.p-floatlabel input.p-filled){
+:deep(.p-floatlabel input.p-filled) {
   padding-left: 10px;
 }
 
@@ -303,7 +302,6 @@ const handleKeyPress = (event) => {
   padding: 0.5rem 0.5rem 0.5rem 0.75rem;
   font-size: 16px;
 }
-
 
 
 /* Toggle mask icon positioning */

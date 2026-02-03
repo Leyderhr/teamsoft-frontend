@@ -1,17 +1,19 @@
 <script setup>
 import {ref, computed} from 'vue'
 import {useRouter} from 'vue-router'
-import {useUserStore} from '@/store/user'
+import {useAuthStore} from '@/store/authStore.js'
 import {useLocaleStore} from '@/store/locale'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
 
 const router = useRouter()
-const userStore = useUserStore()
+const userStore = useAuthStore()
 const localeStore = useLocaleStore()
 
 const profileMenuRef = ref()
 const languageMenuRef = ref()
+
+
 
 const toggleProfileMenu = (event) => {
   profileMenuRef.value.toggle(event)
@@ -36,9 +38,9 @@ const profileItems = computed(() => [
   {
     label: 'Cerrar sesión',
     icon: 'pi pi-sign-out',
-    command: () => {
-      userStore.logout()
-      router.push('/login')
+    command: async () => {
+      await userStore.logout();
+      router.push('/login');
     }
   }
 ])
@@ -66,11 +68,10 @@ defineEmits(['toggle-menu'])
 </script>
 
 <template>
-  <div class="topbar clearfix bg-primary p-3 flex align-items-center justify-content-between">
+  <div class="topbar clearfix bg-primary p-3 h-16 flex align-items-center justify-content-between">
     <!-- Logo y título -->
     <div class="topbar-left">
       <router-link to="/" class="flex align-items-center no-underline">
-        <i class="pi pi-home text-white text-6xl mr-2"></i>
         <span class="text-white text-4xl font-bold">TeamSoft<sup class="text-sm">+</sup></span>
       </router-link>
     </div>
@@ -87,7 +88,7 @@ defineEmits(['toggle-menu'])
       <!-- Menú de perfil -->
       <div class="profile-menu relative">
         <Button
-            :label="userStore.user?.fullName || 'Usuario'"
+            :label="userStore.username || 'Usuario'"
             icon="pi pi-user"
             class="p-button-text p-button-plain text-white"
             @click="toggleProfileMenu"
@@ -109,8 +110,9 @@ defineEmits(['toggle-menu'])
 </template>
 
 <style scoped>
+
+
 .topbar {
-  height: 60px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
