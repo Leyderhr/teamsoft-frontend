@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@primeuix/themes": "^2.0.2",
+    "@primevue/core": "^4.5.4",
     "axios": "^1.13.4",
     "pinia": "^3.0.4",
     "primeflex": "^4.0.0",

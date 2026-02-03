@@ -1,5 +1,5 @@
 <script setup>
-import {ref, computed, onMounted} from 'vue'
+import {ref, computed, watch} from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -7,6 +7,8 @@ import Panel from 'primevue/panel'
 import ConfirmDialog from 'primevue/confirmdialog'
 import {useConfirm} from 'primevue/useconfirm'
 import {useToast} from 'primevue/usetoast'
+import InputText from 'primevue/inputtext';
+import {FilterMatchMode} from '@primevue/core/api'
 
 const confirm = useConfirm()
 const toast = useToast()
@@ -72,6 +74,34 @@ const props = defineProps({
     required: true
   }
 })
+
+// Estado para filtros dinámicos
+const filters = ref({})
+
+// Inicializar filtros basado en las columnas
+const initializeFilters = () => {
+  const newFilters = {
+    global: {value: null, matchMode: FilterMatchMode.CONTAINS}
+  }
+
+  props.columns.forEach(col => {
+    if (col.filterable !== false) {
+      newFilters[col.field] = {value: null, matchMode: FilterMatchMode.STARTS_WITH}
+    }
+  })
+
+  filters.value = newFilters
+}
+
+const globalFilterFields = computed(() => {
+  return props.columns
+      .filter(col => col.filterable !== false)
+      .map(col => col.field)
+})
+
+// Llamar inicialización cuando cambien las columnas
+watch(() => props.columns, initializeFilters, {immediate: true})
+
 
 const emit = defineEmits(['update:selectedItem'])
 
@@ -194,27 +224,45 @@ const hasSelection = computed(() => !!localSelected.value)
 const getNestedValue = (obj, path) => {
   return path.split('.').reduce((current, prop) => current?.[prop], obj)
 }
+
+const tableMinWidth = computed(() => {
+  const totalWidth = props.columns.reduce((acc, col) => {
+    // Extraer el valor numérico del width (ej: "150px" → 150)
+    const widthValue = parseInt(col.width) || 150
+    return acc + widthValue
+  }, 0)
+
+  // Añadir un margen para filtros/botones (aprox 50px por columna filtrable)
+  const filterMargin = props.columns.filter(col => col.filterable !== false).length * 50
+
+  return `${totalWidth + filterMargin}px`
+})
 </script>
 
 <template>
   <div class="generic-list-view">
     <ConfirmDialog/>
 
-    <Panel :header="title" class="mb-4">
+    <Panel :header="title" class="mb-4 panel-with-horizontal-scroll">
       <!-- DataTable -->
-      <DataTable resizableColumns columnResizeMode="fit"
-                 scrollable scrollHeight="flex"
-                 :value="items"
-                 :selection="localSelected"
-                 selectionMode="single"
-                 @rowSelect="handleRowSelect"
-                 @rowUnselect="handleRowUnselect"
-                 :paginator="true"
-                 :rows="defaultRows"
-
-                 responsiveLayout="scroll"
-                 :loading="loading"
-                 stripedRows
+      <DataTable
+          resizableColumns
+          responsiveLayout="scroll"
+          scrollable
+          scrollHeight="calc(100vh - 370px)"
+          :value="items"
+          :selection="localSelected"
+          selectionMode="single"
+          @rowSelect="handleRowSelect"
+          @rowUnselect="handleRowUnselect"
+          :paginator="false"
+          :rows="defaultRows"
+          v-model:filters="filters"
+          filterDisplay="row"
+          :globalFilterFields="globalFilterFields"
+          :loading="loading"
+          stripedRows
+          class="datatable-scroll-x"
       >
         <!-- Columnas dinámicas -->
         <Column
@@ -222,7 +270,7 @@ const getNestedValue = (obj, path) => {
             :key="col.field"
             :field="col.field"
             :header="col.header"
-            :style="{ width: col.width || '150px' }"
+            :style="{ minWidth: col.width || '150px', width: col.width || '150px' }"
             :sortable="col.sortable !== false"
             :filter="col.filterable !== false"
             :filterPlaceholder="`Buscar por ${col.header}...`"
@@ -230,6 +278,15 @@ const getNestedValue = (obj, path) => {
           <template #body="slotProps">
             <!-- Soporte para campos anidados (ej: countyFk.countyName) -->
             <span>{{ getNestedValue(slotProps.data, col.field) }}</span>
+          </template>
+
+          <template #filter="{ filterModel, filterCallback }" v-if="col.filterable !== false">
+            <InputText
+                v-model="filterModel.value"
+                type="text"
+                @input="filterCallback()"
+                :placeholder="`Buscar por ${col.header}...`"
+            />
           </template>
         </Column>
 
@@ -269,8 +326,17 @@ const getNestedValue = (obj, path) => {
 </template>
 
 <style scoped>
+.panel-with-horizontal-scroll :deep(.p-panel-content-wrapper) {
+  overflow-x: auto !important;
+  overflow-y: hidden;
+}
+
+.datatable-scroll-x :deep(.p-datatable-table){
+  min-width: max-content;
+}
 .generic-list-view {
   width: 100%;
+  max-width: calc(100vw - 350px);
 }
 
 .flex {

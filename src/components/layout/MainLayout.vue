@@ -48,7 +48,6 @@ const toggleMenu = () => {
 </template>
 <style scoped>
 .transition-all {
-  margin-top: 70px;
   transition-property: all;
 }
 .duration-300 {

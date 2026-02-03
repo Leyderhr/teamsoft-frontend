@@ -50,7 +50,7 @@ const menuItems = computed(() => {
           ]
         },
         {
-          label: 'Trabajador',
+          label: 'Persona',
           items: [
             {label: 'Grupos', command: () => router.push('/nomenclatives/person-group')},
             {label: 'Evaluación en el rol', command: () => router.push('/nomenclatives/role-eval')},

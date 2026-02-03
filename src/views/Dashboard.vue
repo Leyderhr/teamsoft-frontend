@@ -3,10 +3,12 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Card, Button } from 'primevue';
 import { useToast } from 'primevue/usetoast';
+import {useAuthStore} from "@/store/authStore.js";
 
 const router = useRouter();
 const toast = useToast();
 const user = ref({});
+const authStore = useAuthStore();
 
 const loadUser = () => {
   const userData = localStorage.getItem('user');
@@ -45,7 +47,7 @@ onMounted(() => {
       <div class="user-info">
         <i class="pi pi-user"></i>
         <span>{{ user.username }}</span>
-        <span class="user-role">({{ user.role }})</span>
+        <span class="user-role">({{ authStore.roles[0] }})</span>
         <Button
             label="Cerrar Sesión"
             icon="pi pi-sign-out"

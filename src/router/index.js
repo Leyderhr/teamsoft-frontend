@@ -41,42 +41,20 @@ const routes = [
                         }
                     ]
                 }
+            },
+            {
+                path: 'person',
+                name: 'Person',
+                component: () => import('@/views/Person.vue'),
+                meta: {
+                    breadcrumb: [
+                        {
+                            name: 'Personas', disable: true
+                        }
+                    ]
+                }
             }
-            // {
-            //     path: '/users',
-            //     name: 'Users',
-            //     component: () => import('@/views/Users.vue'),
-            //     meta: {
-            //         breadcrumb: [
-            //             { name: 'Dashboard', to: '/' },
-            //             { name: 'Usuarios', disabled: true }
-            //         ]
-            //     }
-            // },
-            // {
-            //     path: '/users/create',
-            //     name: 'CreateUser',
-            //     component: () => import('@/views/CreateUser.vue'),
-            //     meta: {
-            //         breadcrumb: [
-            //             { name: 'Dashboard', to: '/' },
-            //             { name: 'Usuarios', to: '/users' },
-            //             { name: 'Crear Usuario', disabled: true }
-            //         ]
-            //     }
-            // },
-            // {
-            //     path: '/users/:id/edit',
-            //     name: 'EditUser',
-            //     component: () => import('@/views/EditUser.vue'),
-            //     meta: {
-            //         breadcrumb: [
-            //             { name: 'Dashboard', to: '/' },
-            //             { name: 'Usuarios', to: '/users' },
-            //             { name: 'Editar Usuario', disabled: true }
-            //         ]
-            //     }
-            // }
+
 
         ]
     }
