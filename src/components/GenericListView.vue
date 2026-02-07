@@ -5,16 +5,16 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Panel from 'primevue/panel'
 import ConfirmDialog from 'primevue/confirmdialog'
+import Checkbox from 'primevue/checkbox'  // ✅ NUEVO: Importar Checkbox
 import {useConfirm} from 'primevue/useconfirm'
 import {useToast} from 'primevue/usetoast'
-import InputText from 'primevue/inputtext';
+import InputText from 'primevue/inputtext'
 import {FilterMatchMode} from '@primevue/core/api'
 
 const confirm = useConfirm()
 const toast = useToast()
 
 const props = defineProps({
-  // Datos principales
   items: {
     type: Array,
     required: true,
@@ -24,15 +24,10 @@ const props = defineProps({
     type: Object,
     default: null
   },
-
-  // Configuración de columnas
   columns: {
     type: Array,
     required: true,
-    // Estructura esperada: [{ field: 'name', header: 'Nombre', width: '150px', filterable: true }]
   },
-
-  // Configuración de tabla
   title: {
     type: String,
     required: true
@@ -45,14 +40,14 @@ const props = defineProps({
     type: Number,
     default: 10
   },
-
-  // Estados
   loading: {
     type: Boolean,
     default: false
   },
-
-  // Handlers de eventos
+  showImportButton: {
+    type: Boolean,
+    default: false
+  },
   onRowSelect: {
     type: Function,
     default: null
@@ -72,13 +67,15 @@ const props = defineProps({
   onDeleteConfirm: {
     type: Function,
     required: true
+  },
+  onImportClick: {
+    type: Function,
+    default: null
   }
 })
 
-// Estado para filtros dinámicos
 const filters = ref({})
 
-// Inicializar filtros basado en las columnas
 const initializeFilters = () => {
   const newFilters = {
     global: {value: null, matchMode: FilterMatchMode.CONTAINS}
@@ -99,16 +96,12 @@ const globalFilterFields = computed(() => {
       .map(col => col.field)
 })
 
-// Llamar inicialización cuando cambien las columnas
 watch(() => props.columns, initializeFilters, {immediate: true})
-
 
 const emit = defineEmits(['update:selectedItem'])
 
-// Estado local para la selección
 const localSelected = ref(props.selectedItem)
 
-// Watchers para sincronizar cambios
 const handleRowSelect = (event) => {
   localSelected.value = event.data
   emit('update:selectedItem', event.data)
@@ -125,7 +118,6 @@ const handleRowUnselect = () => {
   }
 }
 
-// Manejo de crear
 const handleCreate = () => {
   try {
     if (typeof props.onCreateClick === 'function') {
@@ -143,7 +135,6 @@ const handleCreate = () => {
   }
 }
 
-// Manejo de editar
 const handleEdit = () => {
   if (!localSelected.value) {
     toast.add({
@@ -170,7 +161,6 @@ const handleEdit = () => {
   }
 }
 
-// Manejo de eliminar con confirmación
 const handleDelete = () => {
   if (!localSelected.value) {
     toast.add({
@@ -217,26 +207,33 @@ const handleDelete = () => {
   })
 }
 
-// Computed para validar si hay item seleccionado
+const handleImport = () => {
+  try {
+    if (typeof props.onImportClick === 'function') {
+      props.onImportClick()
+    } else {
+      console.warn('onImportClick no es una función')
+    }
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error.message || 'Error al importar',
+      life: 3000
+    })
+  }
+}
+
 const hasSelection = computed(() => !!localSelected.value)
 
-// Función helper para obtener valor anidado (para campos como countyFk.countyName)
 const getNestedValue = (obj, path) => {
   return path.split('.').reduce((current, prop) => current?.[prop], obj)
 }
 
-const tableMinWidth = computed(() => {
-  const totalWidth = props.columns.reduce((acc, col) => {
-    // Extraer el valor numérico del width (ej: "150px" → 150)
-    const widthValue = parseInt(col.width) || 150
-    return acc + widthValue
-  }, 0)
-
-  // Añadir un margen para filtros/botones (aprox 50px por columna filtrable)
-  const filterMargin = props.columns.filter(col => col.filterable !== false).length * 50
-
-  return `${totalWidth + filterMargin}px`
-})
+// Función para determinar el tipo de renderizado
+const getColumnType = (col) => {
+  return col.type || 'text'
+}
 </script>
 
 <template>
@@ -244,7 +241,6 @@ const tableMinWidth = computed(() => {
     <ConfirmDialog/>
 
     <Panel :header="title" class="mb-4 panel-with-horizontal-scroll">
-      <!-- DataTable -->
       <DataTable
           resizableColumns
           responsiveLayout="scroll"
@@ -275,9 +271,19 @@ const tableMinWidth = computed(() => {
             :filter="col.filterable !== false"
             :filterPlaceholder="`Buscar por ${col.header}...`"
         >
+          <!-- Template body con renderizado condicional -->
           <template #body="slotProps">
-            <!-- Soporte para campos anidados (ej: countyFk.countyName) -->
-            <span>{{ getNestedValue(slotProps.data, col.field) }}</span>
+            <!-- Renderizado para booleanos (checkbox) -->
+            <div v-if="getColumnType(col) === 'boolean'" class="flex justify-center">
+              <Checkbox
+                  :modelValue="getNestedValue(slotProps.data, col.field)"
+                  :binary="true"
+                  disabled
+              />
+            </div>
+
+            <!-- Renderizado por defecto (texto) -->
+            <span v-else>{{ getNestedValue(slotProps.data, col.field) }}</span>
           </template>
 
           <template #filter="{ filterModel, filterCallback }" v-if="col.filterable !== false">
@@ -293,7 +299,6 @@ const tableMinWidth = computed(() => {
         <!-- Footer con botones CRUD -->
         <template #footer>
           <div class="flex gap-2">
-            <!-- Botón Crear -->
             <Button
                 icon="pi pi-plus"
                 label="Crear"
@@ -301,7 +306,6 @@ const tableMinWidth = computed(() => {
                 class="p-button-success"
             />
 
-            <!-- Botón Editar -->
             <Button
                 icon="pi pi-pencil"
                 label="Editar"
@@ -310,13 +314,20 @@ const tableMinWidth = computed(() => {
                 :disabled="!hasSelection"
             />
 
-            <!-- Botón Eliminar -->
             <Button
                 icon="pi pi-trash"
                 label="Eliminar"
                 @click="handleDelete"
                 class="p-button-danger"
                 :disabled="!hasSelection"
+            />
+
+            <Button
+                v-if="showImportButton"
+                icon="pi pi-upload"
+                label="Importar"
+                @click="handleImport"
+                class="p-button-info"
             />
           </div>
         </template>
@@ -334,6 +345,7 @@ const tableMinWidth = computed(() => {
 .datatable-scroll-x :deep(.p-datatable-table){
   min-width: max-content;
 }
+
 .generic-list-view {
   width: 100%;
   max-width: calc(100vw - 350px);
@@ -345,5 +357,19 @@ const tableMinWidth = computed(() => {
 
 .gap-2 {
   gap: 0.5rem;
+}
+
+/* Estilos para centrar checkbox */
+.justify-content-center {
+  justify-content: center;
+}
+
+/* Deshabilitar pointer en checkbox readonly */
+:deep(.p-checkbox.p-disabled) {
+  opacity: 1;
+}
+
+:deep(.p-checkbox.p-disabled .p-checkbox-box) {
+  cursor: default;
 }
 </style>

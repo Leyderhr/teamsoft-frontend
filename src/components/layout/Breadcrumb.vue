@@ -49,13 +49,13 @@ defineExpose({updateBreadcrumb})
 
 <template>
   <template>
-    <nav class="breadcrumb-nav p-3 surface-ground">
+    <nav class="breadcrumb-nav p-3 bg-gray-100">
       <Breadcrumb :home="home" :model="items">
         <template #item="{ item }">
           <router-link
               v-if="item.to"
               :to="item.to"
-              class="text-color hover:text-primary no-underline"
+              class="text-gray-700 hover:text-blue-600 no-underline"
           >
             {{ item.label }}
           </router-link>

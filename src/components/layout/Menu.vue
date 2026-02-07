@@ -57,7 +57,7 @@ const menuItems = computed(() => {
             {label: 'Índice de conflicto', command: () => router.push('/nomenclatives/conflict-index')},
             {label: 'Nacionalidad', command: () => router.push('/nomenclatives/nacionality')},
             {label: 'Provincia', command: () => router.push('/nomenclatives/county')},
-            {label: 'Municipio', command: () => router.push('/nomenclatives/municipality')},
+            // {label: 'Municipio', command: () => router.push('/nomenclatives/municipality')},
             {label: 'Raza', command: () => router.push('/nomenclatives/race')},
             {label: 'Religión', command: () => router.push('/nomenclatives/religion')},
             {label: 'Rango de edad', command: () => router.push('/nomenclatives/age-group')}
@@ -164,13 +164,13 @@ const menuItems = computed(() => {
 </script>
 
 <template>
-  <div class="h-screen overflow-hidden layout-menu nano nano-content menu-scroll-content"
+  <div class="layout-menu"
        :class="{ 'w-64': !collapsed, 'w-16': collapsed }">
-    <div class="h-full overflow-y-auto">
+    <div class="menu-content">
       <!-- Perfil inline -->
-      <div v-if="!collapsed" class="profile p-4 text-center border-bottom-1 surface-border">
+      <div v-if="!collapsed" class="profile p-4 text-center border-b border-gray-200">
         <Avatar icon="pi pi-user" size="xlarge" shape="circle" class="mb-3"/>
-        <div class="profile-name font-bold">{{ userStore.username || 'Usuario' }}</div>
+        <div class="text-black font-bold">{{ userStore.username || 'Usuario' }}</div>
       </div>
 
       <!-- Menú principal -->
@@ -180,32 +180,41 @@ const menuItems = computed(() => {
           class="border-none ultima-menu"
       />
     </div>
-
-    <!-- Botón para colapsar/expandir -->
-    <Button
-        icon="pi pi-chevron-left"
-        :class="{ 'rotate-180': collapsed }"
-        class="absolute bottom-4 right-2 p-button-text p-button-sm"
-        @click="toggleCollapse"
-    />
   </div>
 </template>
 
 <style scoped>
-@import '@/assets/css/site.css';
-@import "@/assets/ultima-layout/css/nanoscroller.css";
-@import "@/assets/ultima-layout/css/ripple.css";
+:deep(.p-panelmenu-panel){
+  box-shadow: none;
+}
+:deep(.p-panelmenu-panel:has(.p-panelmenu-header-active)){
+  margin: 0;
+}
+.ultima-menu {
+  margin:0;
+  padding:0;
+  list-style:none;
+  font-family: Roboto,sans-serif;
+}
 
 .layout-menu {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  height: calc(100% - 60px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   transition: width 0.3s ease;
   background-color: #f5f5f5;
   border-right: 1px solid #e0e0e0;
   width: 250px;
-  padding-top: 60px;
+  padding-top: 20px;
+  box-shadow: 2px 0 7px rgba(0, 0, 0, 0.5);
 }
 
-.rotate-180 {
-  transform: rotate(180deg);
-  transition: transform 0.3s ease;
+.layout-menu::-webkit-scrollbar {
+  display: none;
 }
+
 </style>

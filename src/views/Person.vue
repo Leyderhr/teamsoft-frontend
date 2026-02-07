@@ -83,8 +83,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4">
-    <h1 class="text-2xl font-bold mb-4">Personas</h1>
+  <div class="p-4 pl-15">
+    <h1 class="text-black titulo text-left font-bold mb-4">Personas</h1>
 
     <GenericListView
         :items="items"
@@ -99,3 +99,12 @@ onMounted(() => {
     />
   </div>
 </template>
+
+<style scoped>
+.titulo{
+  font-size: 2.5rem;
+  margin: 20px 0;
+  font-family: Arial, "Arial CE", "Lucida Grande CE", lucida, "Helvetica CE", sans-serif;
+}
+
+</style>

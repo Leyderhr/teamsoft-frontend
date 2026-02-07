@@ -64,8 +64,8 @@ onMounted(() => {
           <i class="pi pi-home"></i> Bienvenido al Sistema
         </template>
         <template #content>
-          <p>Has iniciado sesión correctamente como <strong>{{ user.username }}</strong>.</p>
-          <p>Tu rol en el sistema es: <strong>{{ user.role }}</strong></p>
+          <p>Has iniciado sesión correctamente como <strong>{{ authStore.username }}</strong>.</p>
+          <p>Tu rol en el sistema es: <strong>{{ authStore.roles }}</strong></p>
           <p>Último acceso: <strong>{{ formatDate(user.lastLogin) }}</strong></p>
 
           <div class="quick-actions">
@@ -89,7 +89,7 @@ onMounted(() => {
           <i class="pi pi-info-circle"></i> Información del Usuario
         </template>
         <template #content>
-          <pre>{{ JSON.stringify(user, null, 2) }}</pre>
+          <pre  class="text-left ">{{ JSON.stringify(user, null, 2) }}</pre>
         </template>
       </Card>
     </div>
@@ -99,6 +99,7 @@ onMounted(() => {
 <style scoped>
 .dashboard-container {
   padding: 20px;
+  margin-top: 50px;
 }
 
 .header {
@@ -122,6 +123,7 @@ onMounted(() => {
   background: #f5f5f5;
   padding: 10px 20px;
   border-radius: 20px;
+  color: black;
 }
 
 .user-info i {

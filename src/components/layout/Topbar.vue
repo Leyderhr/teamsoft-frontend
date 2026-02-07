@@ -68,16 +68,24 @@ defineEmits(['toggle-menu'])
 </script>
 
 <template>
-  <div class="topbar clearfix bg-primary p-3 h-16 flex align-items-center justify-content-between">
+  <div class="topbar clearfix bg-primary p-3 h-16 flex align-center justify-between">
     <!-- Logo y título -->
     <div class="topbar-left">
-      <router-link to="/" class="flex align-items-center no-underline">
+      <router-link to="/" class="flex items-center no-underline">
         <span class="text-white text-4xl font-bold">TeamSoft<sup class="text-sm">+</sup></span>
       </router-link>
+
+      <!-- Botón para colapsar/expandir -->
+      <Button
+          icon="pi pi-chevron-left"
+          :class="{ 'rotate-180': collapsed }"
+          class="absolute bottom-4 right-2 p-button-text p-button-sm"
+          @click="toggleCollapse"
+      />
     </div>
 
     <!-- Menú derecho -->
-    <div class="topbar-right flex align-items-center gap-4">
+    <div class="topbar-right flex align-items-center gap-4 text-amber-100">
       <!-- Botón menú móvil -->
       <Button
           icon="pi pi-bars"
@@ -86,7 +94,7 @@ defineEmits(['toggle-menu'])
       />
 
       <!-- Menú de perfil -->
-      <div class="profile-menu relative">
+      <div class="profile-menu relative text-white">
         <Button
             :label="userStore.username || 'Usuario'"
             icon="pi pi-user"
@@ -118,6 +126,9 @@ defineEmits(['toggle-menu'])
 
 .topbar-left a {
   text-decoration: none;
+  width: 250px;
+  align-content: center;
+  box-shadow: 2px 0 7px rgba(0, 0, 0, 0.5);
 }
 
 /* Ajustes responsive */

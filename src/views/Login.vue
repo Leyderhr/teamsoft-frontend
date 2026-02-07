@@ -211,6 +211,7 @@ const handleKeyPress = (event) => {
 .login-icon {
   max-width: 64px;
   margin-bottom: 30px;
+  justify-self: center;
 }
 
 /* Formulario */

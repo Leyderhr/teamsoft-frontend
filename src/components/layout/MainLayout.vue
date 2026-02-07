@@ -24,21 +24,21 @@ const toggleMenu = () => {
   <Toast position="top-right" />
   <AppLoading />
 
-  <div class="flex flex-column min-h-screen">
+  <div class="flex flex-col min-h-screen bg-gray-50">
     <!-- Topbar fija -->
-    <Topbar @toggle-menu="toggleMenu" class="fixed top-0 left-0 w-full z-5" />
+    <Topbar @toggle-menu="toggleMenu" class="fixed top-0 left-0 pl-0 w-full z-50 bg-sky-400" />
 
     <!-- Contenedor principal -->
     <div class="flex flex-row flex-1 pt-16">
       <!-- Menú lateral (oculto en móvil) -->
       <Menu
-          :class="{ 'hidden lg:block': menuCollapsed, 'block': !menuCollapsed }"
-          class="fixed lg:relative h-screen z-4"
+          :class="{ 'hidden lg:block': menuCollapsed, 'block': !menuCollapsed}"
+          class="fixed lg:relative h-screen z-40 bg-white"
           :collapsed="menuCollapsed"
       />
 
       <!-- Contenido principal -->
-      <main class="flex-1 p-4 lg:ml-64 transition-all duration-300" :class="{ 'lg:ml-16': menuCollapsed }">
+      <main class="flex-1 lg:ml-64 transition-all duration-300" :class="{ 'lg:ml-64': menuCollapsed }">
         <Breadcrumb class="mb-4" />
 
         <router-view />
@@ -46,6 +46,7 @@ const toggleMenu = () => {
     </div>
   </div>
 </template>
+
 <style scoped>
 .transition-all {
   transition-property: all;

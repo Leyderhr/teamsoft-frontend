@@ -14,7 +14,7 @@ import Tooltip from 'primevue/tooltip'
 import Material from '@primeuix/themes/material';
 
 import 'primeicons/primeicons.css';
-import 'primeflex/primeflex.css'
+import './style.css'
 
 // Estilos de ultima layout
 import '@/assets/ultima-layout/css/animate.css'

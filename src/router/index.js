@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import Login from '@/views/Login.vue'
-import Dashboard from '@/views/Dashboard.vue'
 import {useAuthStore} from "@/store/authStore.js";
-import Religion from "@/views/nomenclatives/Religion.vue";
+import nomenclativesRoutes from './nomenclatives.routes.js'
 
 const routes = [
     {
@@ -21,7 +20,7 @@ const routes = [
             {
                 path: '',
                 name: 'Dashboard',
-                component: Dashboard,
+                component: () => import('@/views/Dashboard.vue'),
                 meta: {
                     breadcrumb: [
                         {
@@ -30,14 +29,27 @@ const routes = [
                     ]
                 }
             },
+            ...nomenclativesRoutes,
             {
-                path: 'nomenclatives/religion',
-                name: 'Religion',
-                component: Religion,
-                meta:{
+                path: 'manage-competences/competence',
+                name: 'Competence',
+                component: () => import('@/views/Competence.vue'),
+                meta: {
                     breadcrumb: [
                         {
-                            name: 'Religión', disable: true
+                            name: 'Competencias', disable: true
+                        }
+                    ]
+                }
+            },
+            {
+                path: 'manage-roles/role',
+                name: 'Role',
+                component: () => import('@/views/Role.vue'),
+                meta: {
+                    breadcrumb: [
+                        {
+                            name: 'Roles', disable: true
                         }
                     ]
                 }
