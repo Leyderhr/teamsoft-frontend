@@ -5,11 +5,12 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Panel from 'primevue/panel'
 import ConfirmDialog from 'primevue/confirmdialog'
-import Checkbox from 'primevue/checkbox'  // ✅ NUEVO: Importar Checkbox
+import Checkbox from 'primevue/checkbox'
 import {useConfirm} from 'primevue/useconfirm'
 import {useToast} from 'primevue/usetoast'
 import InputText from 'primevue/inputtext'
 import {FilterMatchMode} from '@primevue/core/api'
+import GenericFormDialog from './GenericFormDialog.vue'
 
 const confirm = useConfirm()
 const toast = useToast()
@@ -27,6 +28,14 @@ const props = defineProps({
   columns: {
     type: Array,
     required: true,
+  },
+  fields: {
+    type: Array,
+    default: () => []
+  },
+  service: {
+    type: Object,
+    required: true
   },
   title: {
     type: String,
@@ -57,14 +66,6 @@ const props = defineProps({
     default: null
   },
   onCreateClick: {
-    type: Function,
-    required: true
-  },
-  onEditClick: {
-    type: Function,
-    required: true
-  },
-  onDeleteConfirm: {
     type: Function,
     required: true
   },
@@ -101,6 +102,9 @@ watch(() => props.columns, initializeFilters, {immediate: true})
 const emit = defineEmits(['update:selectedItem'])
 
 const localSelected = ref(props.selectedItem)
+const dialogVisible = ref(false)
+const dialogMode = ref('create')
+const editingItem = ref(null)
 
 const handleRowSelect = (event) => {
   localSelected.value = event.data
@@ -119,20 +123,9 @@ const handleRowUnselect = () => {
 }
 
 const handleCreate = () => {
-  try {
-    if (typeof props.onCreateClick === 'function') {
-      props.onCreateClick()
-    } else {
-      console.warn('onCreateClick no es una función')
-    }
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: error.message || 'Error al crear',
-      life: 3000
-    })
-  }
+  dialogMode.value = 'create'
+  editingItem.value = null
+  dialogVisible.value = true
 }
 
 const handleEdit = () => {
@@ -145,17 +138,39 @@ const handleEdit = () => {
     })
     return
   }
+  dialogMode.value = 'edit'
+  editingItem.value = { ...localSelected.value }
+  dialogVisible.value = true
+}
+
+const handleSave = async (formData) => {
   try {
-    if (typeof props.onEditClick === 'function') {
-      props.onEditClick(localSelected.value)
+    if (dialogMode.value === 'create') {
+      await props.service.create(formData)
+      toast.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: 'Elemento creado correctamente',
+        life: 3000
+      })
     } else {
-      console.warn('onEditClick no es una función')
+      await props.service.update(editingItem.value.id, formData)
+      toast.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: 'Elemento actualizado correctamente',
+        life: 3000
+      })
+    }
+    dialogVisible.value = false
+    if (typeof props.onCreateClick === 'function') {
+      props.onCreateClick()
     }
   } catch (error) {
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: error.message || 'Error al editar',
+      detail: error.message || 'Error al guardar',
       life: 3000
     })
   }
@@ -178,20 +193,21 @@ const handleDelete = () => {
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
       try {
-        if (typeof props.onDeleteConfirm === 'function') {
-          await props.onDeleteConfirm(localSelected.value)
-        } else {
-          console.warn('onDeleteConfirm no es una función')
-          return
-        }
+        await props.service.delete(localSelected.value.id)
+        
         localSelected.value = null
         emit('update:selectedItem', null)
+        
         toast.add({
           severity: 'success',
           summary: 'Éxito',
           detail: 'Elemento eliminado correctamente',
           life: 3000
         })
+        
+        if (typeof props.onCreateClick === 'function') {
+          props.onCreateClick()
+        }
       } catch (error) {
         toast.add({
           severity: 'error',
@@ -239,6 +255,16 @@ const getColumnType = (col) => {
 <template>
   <div class="generic-list-view">
     <ConfirmDialog/>
+
+    <GenericFormDialog
+      v-model:visible="dialogVisible"
+      :mode="dialogMode"
+      :fields="fields"
+      :initial-data="editingItem"
+      :title="title"
+      @save="handleSave"
+      @cancel="dialogVisible = false"
+    />
 
     <Panel :header="title" class="mb-4 panel-with-horizontal-scroll">
       <DataTable

@@ -39,38 +39,6 @@ const loadData = async () => {
   }
 }
 
-const handleCreate = () => {
-  console.log(`Crear nuevo/a ${props.config.entityName.singular}`)
-  // TODO: Implementar lógica para crear
-}
-
-const handleEdit = (item) => {
-  console.log(`Editar ${props.config.entityName.singular}:`, item)
-  // TODO: Implementar lógica para editar
-}
-
-const handleDelete = async (item) => {
-  try {
-    console.log(`Eliminar ${props.config.entityName.singular}:`, item.id)
-    await props.config.service.delete(item.id)
-    toast.add({
-      severity: 'success',
-      summary: 'Éxito',
-      detail: `${props.config.entityName.singular.charAt(0).toUpperCase() + props.config.entityName.singular.slice(1)} eliminado/a correctamente`,
-      life: 3000
-    })
-    await loadData()
-  } catch (error) {
-    console.error('Error eliminando:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: `No se pudo eliminar ${props.config.entityName.singular}`,
-      life: 3000
-    })
-  }
-}
-
 watch(() => props.config, (newConfig, oldConfig) => {
   // Limpiar selección al cambiar de nomenclador
   selectedItem.value = null
@@ -90,12 +58,12 @@ onMounted(() => {
     <GenericListView
         :items="items"
         :columns="config.columns"
+        :fields="config.fields"
+        :service="config.service"
         :selected-item="selectedItem"
         :title="config.listTitle"
         :loading="loading"
-        :on-create-click="handleCreate"
-        :on-edit-click="handleEdit"
-        :on-delete-confirm="handleDelete"
+        :on-create-click="loadData"
         @update:selectedItem="selectedItem = $event"
     />
   </div>

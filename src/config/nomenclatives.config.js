@@ -11,6 +11,7 @@ import roleLoadService from '@/api/roleLoadService'
 import clientService from '@/api/clientService'
 import competenceImportanceService from '@/api/competenceImportanceService'
 import levelsService from '@/api/levelsService'
+import projectStructureService from "@/api/projectStructureService.js";
 
 export const nomenclativeConfigs = {
     religion: {
@@ -25,6 +26,9 @@ export const nomenclativeConfigs = {
         columns: [
             { field: 'id', header: 'ID', width: '80px', sortable: true },
             { field: 'religionName', header: 'Nombre', width: '250px', sortable: true, filterable: true }
+        ],
+        fields: [
+            { name: 'religionName', label: 'Nombre de la Religión', type: 'text', required: true }
         ],
         breadcrumb: [{ name: 'Religión', disable: true }],
         showImportButton: false
@@ -42,6 +46,9 @@ export const nomenclativeConfigs = {
         columns: [
             { field: 'id', header: 'ID', width: '80px', sortable: true },
             { field: 'raceName', header: 'Nombre', width: '200px', sortable: true, filterable: true }
+        ],
+        fields: [
+            { name: 'raceName', label: 'Nombre de la Raza', type: 'text', required: true }
         ],
         breadcrumb: [{ name: 'Raza', disable: true }],
         showImportButton: false
@@ -62,6 +69,11 @@ export const nomenclativeConfigs = {
             { field: 'minAge', header: 'Edad Mínima', width: '120px', sortable: true },
             { field: 'maxAge', header: 'Edad Máxima', width: '120px', sortable: true }
         ],
+        fields: [
+            { name: 'ageGroupName', label: 'Nombre del Grupo', type: 'text', required: true },
+            { name: 'minAge', label: 'Edad Mínima', type: 'number', required: true, min: 0 },
+            { name: 'maxAge', label: 'Edad Máxima', type: 'number', required: true, min: 0 }
+        ],
         breadcrumb: [{ name: 'Grupos de Edad', disable: true }],
         showImportButton: false
     },
@@ -79,6 +91,10 @@ export const nomenclativeConfigs = {
             { field: 'id', header: 'ID', width: '80px', sortable: true },
             { field: 'paisNac', header: 'País', width: '200px', sortable: true, filterable: true },
             { field: 'gentilicioNac', header: 'Gentilicio', width: '200px', sortable: true, filterable: true }
+        ],
+        fields: [
+            { name: 'paisNac', label: 'País', type: 'text', required: true },
+            { name: 'gentilicioNac', label: 'Gentilicio', type: 'text', required: true }
         ],
         breadcrumb: [{ name: 'Nacionalidades', disable: true }],
         showImportButton: false
@@ -98,6 +114,10 @@ export const nomenclativeConfigs = {
             { field: 'countyName', header: 'Nombre', width: '200px', sortable: true, filterable: true },
             { field: 'code', header: 'Código', width: '120px', sortable: true, filterable: true }
         ],
+        fields: [
+            { name: 'countyName', label: 'Nombre de la Provincia', type: 'text', required: true },
+            { name: 'code', label: 'Código', type: 'text', required: true }
+        ],
         breadcrumb: [{ name: 'Provincias', disable: true }],
         showImportButton: false
     },
@@ -115,6 +135,10 @@ export const nomenclativeConfigs = {
             { field: 'id', header: 'ID', width: '80px', sortable: true },
             { field: 'description', header: 'Descripción', width: '200px', sortable: true, filterable: true },
             { field: 'weight', header: 'Peso', width: '120px', sortable: true }
+        ],
+        fields: [
+            { name: 'description', label: 'Descripción', type: 'text', required: true },
+            { name: 'weight', label: 'Peso', type: 'number', required: true, min: 0 }
         ],
         breadcrumb: [{ name: 'Índices de Conflicto', disable: true }],
         showImportButton: false
@@ -134,6 +158,10 @@ export const nomenclativeConfigs = {
             { field: 'levels', header: 'Nivel', width: '120px', sortable: true },
             { field: 'significance', header: 'Significado', width: '200px', sortable: true, filterable: true }
         ],
+        fields: [
+            { name: 'levels', label: 'Nivel', type: 'number', required: true, min: 0 },
+            { name: 'significance', label: 'Significado', type: 'text', required: true }
+        ],
         breadcrumb: [{ name: 'Evaluación en el Rol', disable: true }],
         showImportButton: false
     },
@@ -151,6 +179,10 @@ export const nomenclativeConfigs = {
             { field: 'id', header: 'ID', width: '80px', sortable: true },
             { field: 'name', header: 'Nombre', width: '250px', sortable: true, filterable: true },
             { field: 'father.name', header: 'Grupo Padre', width: '200px', sortable: true, filterable: true }
+        ],
+        fields: [
+            { name: 'name', label: 'Nombre del Grupo', type: 'text', required: true },
+            { name: 'parentGroupId', label: 'Grupo Padre', type: 'select', required: false, optionsService: personGroupService, optionLabel: 'name', optionValue: 'id' }
         ],
         breadcrumb: [{ name: 'Grupos de Personas', disable: true }],
         showImportButton: false
@@ -171,6 +203,11 @@ export const nomenclativeConfigs = {
             { field: 'countyB.countyName', header: 'Provincia B', width: '180px', sortable: true, filterable: true },
             { field: 'costDistance', header: 'Costo', width: '120px', sortable: true }
         ],
+        fields: [
+            { name: 'costDistance', label: 'Costo', type: 'number', required: true, min: 0 },
+            { name: 'countyAId', label: 'Provincia A', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id' },
+            { name: 'countyBId', label: 'Provincia B', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id' }
+        ],
         breadcrumb: [{ name: 'Costo de Trabajar a Distancia', disable: true }],
         showImportButton: false
     },
@@ -188,6 +225,10 @@ export const nomenclativeConfigs = {
             { field: 'id', header: 'ID', width: '80px', sortable: true },
             { field: 'value', header: 'Valor', width: '120px', sortable: true },
             { field: 'significance', header: 'Significado', width: '200px', sortable: true, filterable: true }
+        ],
+        fields: [
+            { name: 'value', label: 'Valor', type: 'number', required: true, min: 0 },
+            { name: 'significance', label: 'Significado', type: 'text', required: true }
         ],
         breadcrumb: [{ name: 'Carga del Rol', disable: true }],
         showImportButton: false
@@ -208,6 +249,11 @@ export const nomenclativeConfigs = {
             { field: 'address', header: 'Dirección', width: '200px', sortable: true, filterable: true },
             { field: 'phone', header: 'Teléfono', width: '150px', sortable: true, filterable: true }
         ],
+        fields: [
+            { name: 'entityName', label: 'Nombre de la Entidad', type: 'text', required: true },
+            { name: 'address', label: 'Dirección', type: 'text', required: true },
+            { name: 'phone', label: 'Teléfono', type: 'text', required: true }
+        ],
         breadcrumb: [{ name: 'Clientes', disable: true }],
         showImportButton: false
     },
@@ -225,6 +271,10 @@ export const nomenclativeConfigs = {
             { field: 'id', header: 'ID', width: '80px', sortable: true },
             { field: 'levels', header: 'Nivel', width: '120px', sortable: true },
             { field: 'significance', header: 'Significado', width: '200px', sortable: true, filterable: true }
+        ],
+        fields: [
+            { name: 'levels', label: 'Nivel', type: 'number', required: true, min: 0 },
+            { name: 'significance', label: 'Significado', type: 'text', required: true }
         ],
         breadcrumb: [{ name: 'Importancia de Competencias', disable: true }],
         showImportButton: false
@@ -244,7 +294,32 @@ export const nomenclativeConfigs = {
             { field: 'levels', header: 'Nivel', width: '120px', sortable: true },
             { field: 'significance', header: 'Significado', width: '200px', sortable: true, filterable: true }
         ],
+        fields: [
+            { name: 'levels', label: 'Nivel', type: 'number', required: true, min: 0 },
+            { name: 'significance', label: 'Significado', type: 'text', required: true }
+        ],
         breadcrumb: [{ name: 'Niveles de Competencias', disable: true }],
         showImportButton: false
+    },
+
+    projectStructure: {
+        key: 'project-structure',
+        title: 'Estructuras de Proyecto',
+        listTitle: 'Lista de Estructuras de Proyecto',
+        entityName: {
+            singular: 'estructura de proyecto',
+            plural: 'estructuras de proyecto'
+        },
+        service: projectStructureService,
+        columns: [
+            { field: 'id', header: 'ID', width: '80px', sortable: true },
+            { field: 'name', header: 'Nombre', width: '250px', sortable: true, filterable: true }
+        ],
+        fields: [
+            { name: 'name', label: 'Nombre de la Estructura', type: 'text', required: true }
+        ],
+        breadcrumb: [{ name: 'Estructuras de Proyecto', disable: true }],
+        showImportButton: false
     }
+
 }

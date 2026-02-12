@@ -5,7 +5,6 @@ import {useSecurityStore} from '@/store/security'
 import {useAuthStore} from '@/store/authStore.js'
 import PanelMenu from 'primevue/panelmenu'
 import Avatar from 'primevue/avatar'
-import Button from 'primevue/button'
 
 const router = useRouter()
 const securityStore = useSecurityStore()
