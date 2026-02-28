@@ -9,6 +9,12 @@ const items = ref([])
 const loading = ref(false)
 const selectedItem = ref(null)
 
+// Configuración para usar el diálogo personalizado
+const personConfig = {
+  useCustomDialog: true,
+  customDialogComponent: 'PersonFormDialog'
+}
+
 // Columnas para mostrar información básica de las personas
 const columns = ref([
   { field: 'id', header: 'ID', width: '80px', sortable: true },
@@ -44,39 +50,6 @@ const loadData = async () => {
   }
 }
 
-// Métodos CRUD
-const handleCreate = () => {
-  console.log('Crear nueva persona')
-  // TODO: Implementar lógica para crear
-}
-
-const handleEdit = (item) => {
-  console.log('Editar persona:', item)
-  // TODO: Implementar lógica para editar
-}
-
-const handleDelete = async (item) => {
-  try {
-    console.log('Eliminar persona:', item.id)
-    await personService.delete(item.id)
-    toast.add({
-      severity: 'success',
-      summary: 'Éxito',
-      detail: 'Persona eliminada correctamente',
-      life: 3000
-    })
-    await loadData()
-  } catch (error) {
-    console.error('Error eliminando:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'No se pudo eliminar la persona',
-      life: 3000
-    })
-  }
-}
-
 onMounted(() => {
   loadData()
 })
@@ -90,11 +63,11 @@ onMounted(() => {
         :items="items"
         :columns="columns"
         :selected-item="selectedItem"
+        :service="personService"
+        :config="personConfig"
         title="Lista de Personas"
         :loading="loading"
-        :on-create-click="handleCreate"
-        :on-edit-click="handleEdit"
-        :on-delete-confirm="handleDelete"
+        :on-create-click="loadData"
         @update:selectedItem="selectedItem = $event"
     />
   </div>

@@ -11,6 +11,9 @@ import {useToast} from 'primevue/usetoast'
 import InputText from 'primevue/inputtext'
 import {FilterMatchMode} from '@primevue/core/api'
 import GenericFormDialog from './GenericFormDialog.vue'
+import ProjectStructureFormDialog from './ProjectStructureFormDialog.vue'
+import ProjectFormDialog from "@/components/ProjectFormDialog.vue"
+import PersonFormDialog from "@/components/PersonFormDialog.vue";
 
 const confirm = useConfirm()
 const toast = useToast()
@@ -36,6 +39,10 @@ const props = defineProps({
   service: {
     type: Object,
     required: true
+  },
+  config: {
+    type: Object,
+    default: null
   },
   title: {
     type: String,
@@ -68,6 +75,10 @@ const props = defineProps({
   onCreateClick: {
     type: Function,
     required: true
+  },
+  onEditClick: {
+    type: Function,
+    default: null
   },
   onImportClick: {
     type: Function,
@@ -106,6 +117,21 @@ const dialogVisible = ref(false)
 const dialogMode = ref('create')
 const editingItem = ref(null)
 
+const customDialog = computed(() => {
+  if (props.config?.useCustomDialog) {
+    if (props.config.customDialogComponent === 'ProjectStructureFormDialog') {
+      return ProjectStructureFormDialog
+    }
+    if (props.config.customDialogComponent === 'ProjectFormDialog') {
+      return ProjectFormDialog
+    }
+    if (props.config.customDialogComponent === 'PersonFormDialog') {
+      return PersonFormDialog
+    }
+  }
+  return null
+})
+
 const handleRowSelect = (event) => {
   localSelected.value = event.data
   emit('update:selectedItem', event.data)
@@ -128,7 +154,7 @@ const handleCreate = () => {
   dialogVisible.value = true
 }
 
-const handleEdit = () => {
+const handleEdit = async () => {
   if (!localSelected.value) {
     toast.add({
       severity: 'warn',
@@ -138,9 +164,21 @@ const handleEdit = () => {
     })
     return
   }
-  dialogMode.value = 'edit'
-  editingItem.value = { ...localSelected.value }
-  dialogVisible.value = true
+  
+  try {
+    // Consultar getById para obtener datos completos
+    const fullData = await props.service.getById(localSelected.value.id)
+    dialogMode.value = 'edit'
+    editingItem.value = fullData
+    dialogVisible.value = true
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'No se pudieron cargar los datos completos',
+      life: 3000
+    })
+  }
 }
 
 const handleSave = async (formData) => {
@@ -256,7 +294,18 @@ const getColumnType = (col) => {
   <div class="generic-list-view">
     <ConfirmDialog/>
 
+    <component
+      v-if="customDialog"
+      :is="customDialog"
+      v-model:visible="dialogVisible"
+      :mode="dialogMode"
+      :initial-data="editingItem"
+      @save="handleSave"
+      @cancel="dialogVisible = false"
+    />
+
     <GenericFormDialog
+      v-else
       v-model:visible="dialogVisible"
       :mode="dialogMode"
       :fields="fields"

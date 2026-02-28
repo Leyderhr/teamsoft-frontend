@@ -65,6 +65,18 @@ const routes = [
                         }
                     ]
                 }
+            },
+            {
+                path: 'manage-projects/project',
+                name: 'Project',
+                component: () => import('@/views/Project.vue'),
+                meta: {
+                    breadcrumb: [
+                        {
+                            name: 'Proyectos', disable: true
+                        }
+                    ]
+                }
             }
 
 

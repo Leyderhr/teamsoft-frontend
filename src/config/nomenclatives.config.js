@@ -318,6 +318,8 @@ export const nomenclativeConfigs = {
         fields: [
             { name: 'name', label: 'Nombre de la Estructura', type: 'text', required: true }
         ],
+        useCustomDialog: true,
+        customDialogComponent: 'ProjectStructureFormDialog',
         breadcrumb: [{ name: 'Estructuras de Proyecto', disable: true }],
         showImportButton: false
     }

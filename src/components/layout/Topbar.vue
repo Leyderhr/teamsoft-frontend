@@ -74,14 +74,6 @@ defineEmits(['toggle-menu'])
       <router-link to="/" class="flex items-center no-underline">
         <span class="text-white text-4xl font-bold">TeamSoft<sup class="text-sm">+</sup></span>
       </router-link>
-
-      <!-- Botón para colapsar/expandir -->
-      <Button
-          icon="pi pi-chevron-left"
-          :class="{ 'rotate-180': collapsed }"
-          class="absolute bottom-4 right-2 p-button-text p-button-sm"
-          @click="toggleCollapse"
-      />
     </div>
 
     <!-- Menú derecho -->
