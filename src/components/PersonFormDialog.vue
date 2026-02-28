@@ -463,35 +463,28 @@ const handleSave = () => {
     phone: phone.value,
     sex: sex.value,
     email: email.value,
-    inDate: inDate.value?.toISOString(),
+    inDate: inDate.value ? inDate.value.toISOString().split('T')[0] : null,
     workload: workload.value,
     experience: experience.value,
     status: status.value,
-    birthDate: birthDate.value?.toISOString(),
+    birthDate: birthDate.value ? birthDate.value.toISOString().split('T')[0] : null,
     county: selectedCounty.value,
     race: selectedRace.value,
     group: selectedGroup.value,
     nacionality: selectedNacionality.value,
     religion: selectedReligion.value,
-    competenceValues: competenceValues.value.map(cv => ({
-      competenceId: cv.competenceId,
-      levelsId: cv.levelsId
-    })),
-    personalInterests: personalInterests.value.map(pi => ({
-      roleId: pi.roleId,
-      preference: pi.preference
-    })),
-    personalProjectInterests: personalProjectInterests.value.map(ppi => ({
-      projectId: ppi.projectId,
-      preference: ppi.preference
-    })),
-    mbtiType: mbtiType.value,
-    belbinRoles: belbinRoles.value,
-    personTest: personTest.value,
-    personConflicts: personConflicts.value.map(pc => ({
-      conflictIndexId: pc.conflictIndexId,
-      personConflictId: pc.personConflictId
-    }))
+    personTest: {
+      tipoMB: mbtiType.value || '',
+      e_S: belbinRoles.value.implementador.charAt(0),
+      i_D: belbinRoles.value.coordinador.charAt(0),
+      c_O: belbinRoles.value.cerebro.charAt(0),
+      i_S: belbinRoles.value.investigador.charAt(0),
+      c_E: belbinRoles.value.monitor.charAt(0),
+      i_R: belbinRoles.value.cohesionador.charAt(0),
+      m_E: belbinRoles.value.impulsor.charAt(0),
+      c_H: belbinRoles.value.finalizador.charAt(0),
+      i_F: belbinRoles.value.especialista.charAt(0)
+    }
   }
   
   emit('save', data)
