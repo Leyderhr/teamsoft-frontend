@@ -380,84 +380,84 @@ watch(() => props.visible, async (newVal) => {
       :visible="visible"
       :modal="true"
       :closable="true"
-      :style="{ width: '95vw', maxHeight: '95vh' }"
+      :style="{ width: '95vw', height: '95vh' }"
       @update:visible="$emit('update:visible', $event)"
   >
     <template #header>
       <h3 class="text-xl font-bold">{{ dialogTitle }}</h3>
     </template>
 
-    <div class="form-container overflow-y-auto" style="max-height: calc(95vh - 200px)">
+    <div class="form-container">
       <TabView>
         <!-- Tab 1: Datos Básicos -->
         <TabPanel header="Datos Básicos">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Nombre <span class="text-red-500">*</span></label>
+              <label class="block mb-1 text-xs font-semibold">Nombre <span class="text-red-500">*</span></label>
               <InputText v-model="personName" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Apellidos <span class="text-red-500">*</span></label>
+              <label class="block mb-1 text-xs font-semibold">Apellidos <span class="text-red-500">*</span></label>
               <InputText v-model="surName" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">CI <span class="text-red-500">*</span></label>
+              <label class="block mb-1 text-xs font-semibold">CI <span class="text-red-500">*</span></label>
               <InputText v-model="card" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Dirección</label>
+              <label class="block mb-1 text-xs font-semibold">Dirección</label>
               <InputText v-model="address" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Teléfono</label>
+              <label class="block mb-1 text-xs font-semibold">Teléfono</label>
               <InputText v-model="phone" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Email</label>
+              <label class="block mb-1 text-xs font-semibold">Email</label>
               <InputText v-model="email" type="email" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Sexo</label>
+              <label class="block mb-1 text-xs font-semibold">Sexo</label>
               <Dropdown v-model="sex" :options="sexOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Fecha de Nacimiento</label>
+              <label class="block mb-1 text-xs font-semibold">Fecha de Nacimiento</label>
               <Calendar v-model="birthDate" dateFormat="dd/mm/yy" showIcon class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Fecha de Ingreso</label>
+              <label class="block mb-1 text-xs font-semibold">Fecha de Ingreso</label>
               <Calendar v-model="inDate" dateFormat="dd/mm/yy" showIcon class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Carga de Trabajo</label>
+              <label class="block mb-1 text-xs font-semibold">Carga de Trabajo</label>
               <InputNumber v-model="workload" :min="0" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Experiencia (años)</label>
+              <label class="block mb-1 text-xs font-semibold">Experiencia (años)</label>
               <InputNumber v-model="experience" :min="0" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Estado</label>
+              <label class="block mb-1 text-xs font-semibold">Estado</label>
               <Dropdown v-model="status" :options="statusOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Provincia</label>
+              <label class="block mb-1 text-xs font-semibold">Provincia</label>
               <Dropdown v-model="selectedCounty" :options="countyOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Raza</label>
+              <label class="block mb-1 text-xs font-semibold">Raza</label>
               <Dropdown v-model="selectedRace" :options="raceOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Grupo</label>
+              <label class="block mb-1 text-xs font-semibold">Grupo</label>
               <Dropdown v-model="selectedGroup" :options="groupOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Nacionalidad</label>
+              <label class="block mb-1 text-xs font-semibold">Nacionalidad</label>
               <Dropdown v-model="selectedNacionality" :options="nacionalityOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Religión</label>
+              <label class="block mb-1 text-xs font-semibold">Religión</label>
               <Dropdown v-model="selectedReligion" :options="religionOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
           </div>
@@ -465,13 +465,13 @@ watch(() => props.visible, async (newVal) => {
 
         <!-- Tab 2: Competencias -->
         <TabPanel header="Competencias">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Competencia</label>
+              <label class="block mb-1 text-xs font-semibold">Competencia</label>
               <Dropdown v-model="selectedCompetence" :options="competenceOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Nivel</label>
+              <label class="block mb-1 text-xs font-semibold">Nivel</label>
               <Dropdown v-model="selectedLevel" :options="levelOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
             </div>
             <div class="field flex items-end">
@@ -493,10 +493,10 @@ watch(() => props.visible, async (newVal) => {
 
         <!-- Tab 3: Intereses -->
         <TabPanel header="Intereses">
-          <h4 class="font-semibold mb-3">Intereses en Roles</h4>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <h4 class="text-sm font-semibold mb-2">Intereses en Roles</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Rol</label>
+              <label class="block mb-1 text-xs font-semibold">Rol</label>
               <Dropdown v-model="selectedRole" :options="roleOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
             <div class="field flex items-center">
@@ -517,10 +517,10 @@ watch(() => props.visible, async (newVal) => {
             </Column>
           </DataTable>
 
-          <h4 class="font-semibold mb-3">Intereses en Proyectos</h4>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <h4 class="text-sm font-semibold mb-2">Intereses en Proyectos</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Proyecto</label>
+              <label class="block mb-1 text-xs font-semibold">Proyecto</label>
               <Dropdown v-model="selectedProject" :options="projectOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
             <div class="field flex items-center">
@@ -544,45 +544,45 @@ watch(() => props.visible, async (newVal) => {
 
         <!-- Tab 4: Test Psicológico -->
         <TabPanel header="Test Psicológico">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Tipo MB</label>
+              <label class="block mb-1 text-xs font-semibold">Tipo MB</label>
               <InputText v-model="personTest.tipoMB" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">E_S</label>
+              <label class="block mb-1 text-xs font-semibold">E_S</label>
               <InputText v-model="personTest.e_S" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">I_D</label>
+              <label class="block mb-1 text-xs font-semibold">I_D</label>
               <InputText v-model="personTest.i_D" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">C_O</label>
+              <label class="block mb-1 text-xs font-semibold">C_O</label>
               <InputText v-model="personTest.c_O" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">I_S</label>
+              <label class="block mb-1 text-xs font-semibold">I_S</label>
               <InputText v-model="personTest.i_S" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">C_E</label>
+              <label class="block mb-1 text-xs font-semibold">C_E</label>
               <InputText v-model="personTest.c_E" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">I_R</label>
+              <label class="block mb-1 text-xs font-semibold">I_R</label>
               <InputText v-model="personTest.i_R" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">M_E</label>
+              <label class="block mb-1 text-xs font-semibold">M_E</label>
               <InputText v-model="personTest.m_E" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">C_H</label>
+              <label class="block mb-1 text-xs font-semibold">C_H</label>
               <InputText v-model="personTest.c_H" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">I_F</label>
+              <label class="block mb-1 text-xs font-semibold">I_F</label>
               <InputText v-model="personTest.i_F" class="w-full" />
             </div>
           </div>
@@ -590,13 +590,13 @@ watch(() => props.visible, async (newVal) => {
 
         <!-- Tab 5: Conflictos -->
         <TabPanel header="Conflictos">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Índice de Conflicto</label>
+              <label class="block mb-1 text-xs font-semibold">Índice de Conflicto</label>
               <Dropdown v-model="selectedConflictIndex" :options="conflictIndexOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
             <div class="field">
-              <label class="block mb-2 text-sm font-semibold">Persona en Conflicto</label>
+              <label class="block mb-1 text-xs font-semibold">Persona en Conflicto</label>
               <Dropdown v-model="selectedConflictPerson" :options="personOptions" optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" :filter="true" />
             </div>
             <div class="field flex items-end">
@@ -621,10 +621,49 @@ watch(() => props.visible, async (newVal) => {
 
 <style scoped>
 .form-container {
-  padding: 1rem 0;
+  padding: 0.5rem 0;
+  max-height: calc(95vh - 180px);
+  overflow-y: auto;
 }
 
 .field {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+:deep(.p-tabview) {
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.p-tabview-panels) {
+  flex: 1;
+  overflow: visible;
+  padding: 0.75rem;
+}
+
+:deep(.p-tabview-panel) {
+  overflow: visible;
+}
+
+:deep(.p-inputtext),
+:deep(.p-dropdown),
+:deep(.p-calendar),
+:deep(.p-inputnumber-input) {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+:deep(.p-button) {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+:deep(.p-datatable-sm .p-datatable-tbody > tr > td) {
+  padding: 0.4rem 0.5rem;
+}
+
+:deep(.p-datatable-sm .p-datatable-thead > tr > th) {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.875rem;
 }
 </style>
