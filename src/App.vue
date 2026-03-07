@@ -1,5 +1,5 @@
 <script setup>
-import Login from "@/views/Login.vue";
+import Login from "@/features/auth/views/Login.vue";
 
 import { provide } from 'vue'
 import { useToast } from 'primevue/usetoast'
