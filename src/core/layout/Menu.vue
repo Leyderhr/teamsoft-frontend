@@ -100,13 +100,13 @@ const menuItems = computed(() => {
     if (securityStore.isDirectivoTecnico || securityStore.isExperimentador) {
       projectItems.push(
           {label: 'Proyectos', command: () => router.push('/manage-projects/project')},
-          {label: 'Formar equipo', command: () => router.push('/team-formation')}
+          {label: 'Formar equipo', command: () => router.push('/manage-projects/team-formation')}
       )
     }
 
     if (securityStore.isJefeEquipo) {
       projectItems.push(
-          {label: 'Finalizar el proyecto', command: () => router.push('/close-project/finalize')}
+          {label: 'Finalizar el proyecto', command: () => router.push('/manage-projects/close-project')}
       )
     }
 
