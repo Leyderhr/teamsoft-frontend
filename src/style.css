@@ -1,76 +1,250 @@
 @import "tailwindcss";
 
+/* ============================================
+   TeamSoft+ Design Token System
+   Extracted from legacy PrimeFaces Ultima Blue theme
+   ============================================ */
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* ── Primary Brand ── */
+  --ts-primary: #1094b9;
+  --ts-primary-dark: #0d6a84;
+  --ts-primary-darker: #017494;
+  --ts-primary-light: rgba(16, 148, 185, 0.12);
+
+  /* ── Accent ── */
+  --ts-accent: #FF5722;
+  --ts-accent-dark: #ea3901;
+
+  /* ── Dark / Neutral ── */
+  --ts-dark: #2b2b2b;
+  --ts-dark-soft: #393939;
+
+  /* ── Semantic Colors ── */
+  --ts-success: #4CAF50;
+  --ts-success-dark: #388E3C;
+  --ts-success-darker: #2E7D32;
+  --ts-error: #F44336;
+  --ts-error-dark: #d32f2f;
+  --ts-warning: #FFC107;
+  --ts-warning-dark: #ef6c00;
+  --ts-info: #03A9F4;
+  --ts-info-dark: #0277BD;
+
+  /* ── Extended Palette ── */
+  --ts-cyan: #00BCD4;
+  --ts-cyan-dark: #00838F;
+  --ts-teal: #009688;
+  --ts-teal-dark: #00796b;
+  --ts-purple: #673AB7;
+  --ts-purple-dark: #4527A0;
+  --ts-pink: #E91E63;
+  --ts-pink-dark: #c51c55;
+  --ts-amber: #FFC107;
+  --ts-blue-grey: #607D8B;
+  --ts-blue-grey-dark: #37474F;
+
+  /* ── Background / Surface ── */
+  --ts-bg-body: #efefef;
+  --ts-bg-surface: #ffffff;
+  --ts-bg-surface-alt: #fafafa;
+  --ts-bg-hover: #e8e8e8;
+  --ts-bg-sidebar: #f5f5f5;
+
+  /* ── Text ── */
+  --ts-text-primary: #212121;
+  --ts-text-secondary: #757575;
+  --ts-text-muted: #9e9e9e;
+  --ts-text-on-dark: #ffffff;
+  --ts-text-on-primary: #ffffff;
+
+  /* ── Borders ── */
+  --ts-border: #e0e0e0;
+  --ts-border-light: #eeeeee;
+  --ts-border-dark: #d0cece;
+
+  /* ── Shadows (Material elevation) ── */
+  --ts-shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --ts-shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+  --ts-shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+  --ts-shadow-btn: 2px 3px 2.5px 0 rgba(0,0,0,0.26), 0 1px 5px 0 rgba(0,0,0,0.16);
+  --ts-shadow-sidebar: 2px 0 7px rgba(0,0,0,0.5);
+  --ts-shadow-topbar: 0 2px 5px 0 rgba(0,0,0,0.26);
+
+  /* ── Typography ── */
+  --ts-font-body: 'Roboto', system-ui, -apple-system, sans-serif;
+  --ts-font-display: 'Roboto', system-ui, sans-serif;
+
+  /* ── Spacing ── */
+  --ts-topbar-height: 64px;
+  --ts-sidebar-width: 256px;
+  --ts-sidebar-collapsed: 64px;
+
+  /* ── Transitions ── */
+  --ts-transition-fast: 0.2s ease;
+  --ts-transition-normal: 0.3s ease;
+  --ts-transition-slow: 0.5s ease;
+
+  /* ── Dashboard Card Colors ── */
+  --ts-dash-green: #4CAF50;
+  --ts-dash-green-dark: #2E7D32;
+  --ts-dash-blue: #03A9F4;
+  --ts-dash-blue-dark: #0277BD;
+  --ts-dash-purple: #673AB7;
+  --ts-dash-purple-dark: #4527A0;
+  --ts-dash-teal: #009688;
+  --ts-dash-teal-dark: #00695C;
+
+  /* ── Base Rendering ── */
+  font-family: var(--ts-font-body);
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color: var(--ts-text-primary);
+  background-color: var(--ts-bg-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* ── Global Resets ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
-}
-
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.card {
-  padding: 2em;
+  background-color: var(--ts-bg-body);
+  color: var(--ts-text-primary);
 }
 
 #app {
   width: 100%;
-  margin: 0 auto;
-  text-align: center;
+  min-height: 100vh;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+a {
+  color: var(--ts-primary);
+  text-decoration: none;
+  transition: color var(--ts-transition-fast);
+}
+a:hover {
+  color: var(--ts-primary-dark);
+}
+
+/* ============================================
+   PrimeVue Global Overrides — TeamSoft+ Theme
+   ============================================ */
+
+/* ── Dialog title bar: gradient from legacy ── */
+.p-dialog .p-dialog-header {
+  background-image: linear-gradient(277deg, var(--ts-primary) 0%, var(--ts-dark) 80%) !important;
+  color: var(--ts-text-on-dark) !important;
+  border-bottom: none !important;
+}
+
+.p-dialog .p-dialog-header .p-dialog-title {
+  color: var(--ts-text-on-dark) !important;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.p-dialog .p-dialog-header .p-dialog-header-icon {
+  color: var(--ts-text-on-dark) !important;
+  transition: color var(--ts-transition-fast);
+}
+
+.p-dialog .p-dialog-header .p-dialog-header-icon:hover {
+  color: var(--ts-primary) !important;
+  background: rgba(255,255,255,0.1) !important;
+}
+
+/* ── Panel header: dark style from legacy ── */
+.p-panel .p-panel-header {
+  background: var(--ts-dark) !important;
+  color: var(--ts-text-on-dark) !important;
+  border-color: var(--ts-dark) !important;
+  padding: 0.75rem 1.25rem !important;
+}
+
+.p-panel .p-panel-header .p-panel-title {
+  color: var(--ts-text-on-dark) !important;
+  font-weight: 600;
+}
+
+.p-panel .p-panel-header .p-panel-header-icon {
+  color: var(--ts-text-on-dark) !important;
+}
+
+/* ── DataTable selected row ── */
+.p-datatable .p-datatable-tbody > tr.p-highlight {
+  background: var(--ts-primary) !important;
+  color: var(--ts-text-on-dark) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr.p-highlight td {
+  color: var(--ts-text-on-dark) !important;
+}
+
+/* ── DataTable striped rows ── */
+.p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background: var(--ts-bg-surface-alt);
+}
+
+/* ── Toast tweaks ── */
+.p-toast-message-success {
+  border-left: 4px solid var(--ts-success) !important;
+}
+
+.p-toast-message-error {
+  border-left: 4px solid var(--ts-error) !important;
+}
+
+.p-toast-message-warn {
+  border-left: 4px solid var(--ts-warning) !important;
+}
+
+.p-toast-message-info {
+  border-left: 4px solid var(--ts-info) !important;
+}
+
+/* ── Confirm Dialog severity icon color ── */
+.p-confirmdialog .p-confirmdialog-icon {
+  color: var(--ts-warning) !important;
+  font-size: 1.75rem;
+}
+
+/* ── Input focus state: legacy cyan underline ── */
+.p-inputtext:focus {
+  border-color: var(--ts-primary) !important;
+  box-shadow: 0 0 0 1px var(--ts-primary) !important;
+}
+
+/* ── Float label active color ── */
+.p-floatlabel:has(> .p-inputtext:focus) label,
+.p-floatlabel:has(> .p-inputwrapper-focus) label {
+  color: var(--ts-cyan) !important;
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ts-text-muted);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ts-text-secondary);
 }

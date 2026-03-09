@@ -1,6 +1,6 @@
 <script setup>
-import {ref, watch} from 'vue'
-import {useRoute} from 'vue-router'
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Breadcrumb from 'primevue/breadcrumb'
 
 const route = useRoute()
@@ -10,66 +10,65 @@ const home = ref({
   to: '/'
 })
 
-// Actualizar breadcrumb basado en la ruta actual
 const updateBreadcrumb = () => {
   const breadcrumbs = []
 
-  // Agregar home si no es la página principal
-  if (route.path !== '/') {
-    breadcrumbs.push({label: 'Inicio', to: '/'})
-  }
-
-  // Agregar partes de la ruta
   route.matched.forEach(match => {
     if (match.meta?.breadcrumb) {
-      breadcrumbs.push({
-        label: match.meta.breadcrumb,
-        to: match.path
+      const crumbs = Array.isArray(match.meta.breadcrumb) ? match.meta.breadcrumb : [match.meta.breadcrumb]
+      crumbs.forEach(crumb => {
+        if (typeof crumb === 'string') {
+          breadcrumbs.push({ label: crumb })
+        } else if (crumb.name) {
+          breadcrumbs.push({ label: crumb.name, to: crumb.disable ? null : crumb.to })
+        }
       })
     }
   })
 
-  // Agregar la página actual (sin link)
-  if (route.meta?.title) {
-    breadcrumbs.push({
-      label: route.meta.title,
-      to: null
-    })
-  }
-
   items.value = breadcrumbs
 }
 
-// Observar cambios en la ruta
-watch(() => route.path, updateBreadcrumb, {immediate: true})
-
-// Exponer método para actualizar manualmente
-defineExpose({updateBreadcrumb})
+watch(() => route.path, updateBreadcrumb, { immediate: true })
 </script>
 
 <template>
-  <template>
-    <nav class="breadcrumb-nav p-3 bg-gray-100">
-      <Breadcrumb :home="home" :model="items">
-        <template #item="{ item }">
-          <router-link
-              v-if="item.to"
-              :to="item.to"
-              class="text-gray-700 hover:text-blue-600 no-underline"
-          >
-            {{ item.label }}
-          </router-link>
-          <span v-else class="text-color">
+  <nav class="breadcrumb-nav" v-if="items.length > 0">
+    <Breadcrumb :home="home" :model="items">
+      <template #item="{ item }">
+        <router-link
+            v-if="item.to"
+            :to="item.to"
+            class="breadcrumb-link"
+        >
           {{ item.label }}
-        </span>
-        </template>
-      </Breadcrumb>
-    </nav>
-  </template>
+        </router-link>
+        <span v-else class="breadcrumb-current">{{ item.label }}</span>
+      </template>
+    </Breadcrumb>
+  </nav>
 </template>
 
 <style scoped>
 .breadcrumb-nav {
-  border-bottom: 1px solid #e0e0e0;
+  padding: 0.5rem 1.5rem;
+  background: var(--ts-bg-surface);
+  border-bottom: 1px solid var(--ts-border-light);
+}
+
+.breadcrumb-link {
+  color: var(--ts-primary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color var(--ts-transition-fast);
+}
+
+.breadcrumb-link:hover {
+  color: var(--ts-primary-dark);
+}
+
+.breadcrumb-current {
+  color: var(--ts-text-secondary);
+  font-size: 0.875rem;
 }
 </style>

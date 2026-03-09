@@ -1,17 +1,22 @@
 import axios from 'axios';
+import { useLoading } from '@/core/composables/useLoading.js';
+import { useAuthStore } from '@/core/store/authStore.js';
+
+const { startLoading, stopLoading } = useLoading();
 
 // Configuración base de axios
 const apiClient = axios.create({
-    baseURL: 'http://localhost:8081',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
     }
 });
 
-// Interceptor para agregar el token a las peticiones
+// Interceptor para agregar el token y activar loading
 apiClient.interceptors.request.use(
     (config) => {
+        startLoading();
         const user = JSON.parse(localStorage.getItem('user'));
         if (user?.token) {
             config.headers.Authorization = `Bearer ${user.token}`;
@@ -19,16 +24,22 @@ apiClient.interceptors.request.use(
         return config;
     },
     (error) => {
+        stopLoading();
         return Promise.reject(error);
     }
 );
 
-// Interceptor para manejar errores de respuesta
+// Interceptor para manejar errores de respuesta y desactivar loading
 apiClient.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        stopLoading();
+        return response;
+    },
     (error) => {
+        stopLoading();
         if (error.response?.status === 401) {
-            // Token expirado o inválido
+            const authStore = useAuthStore();
+            authStore.user = null;
             localStorage.removeItem('user');
             globalThis.location.href = '/login';
         }

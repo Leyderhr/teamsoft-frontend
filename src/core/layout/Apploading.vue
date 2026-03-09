@@ -1,65 +1,54 @@
 <script setup>
-import {ref, onMounted, onUnmounted} from 'vue'
+import { useLoading } from '@/core/composables/useLoading.js'
 import ProgressSpinner from 'primevue/progressspinner'
 
-const loading = ref(false)
-
-// Simular eventos de carga (deberás conectar esto con Axios interceptors)
-let timer = null
-
-const startLoading = () => {
-  loading.value = true
-}
-
-const stopLoading = () => {
-  loading.value = false
-}
-
-// Para pruebas, puedes exponer estos métodos
-defineExpose({startLoading, stopLoading})
+const { isLoading } = useLoading()
 </script>
 
 <template>
-  <div v-if="loading" class="app-loading">
-    <div class="loading-card">
-      <ProgressSpinner style="width: 40px; height: 40px"/>
-      <span class="loading-text">Procesando...</span>
+  <Transition name="fade-slide">
+    <div v-if="isLoading" class="app-loading">
+      <div class="loading-card">
+        <ProgressSpinner style="width: 32px; height: 32px" strokeWidth="4" />
+        <span class="loading-text">Procesando...</span>
+      </div>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <style scoped>
 .app-loading {
   position: fixed;
-  top: 130px;
+  top: calc(var(--ts-topbar-height) + 12px);
   right: 20px;
   z-index: 10000;
-  animation: fadeIn 0.3s ease-in;
 }
 
 .loading-card {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(3, 169, 244, 0.3);
+  box-shadow: var(--ts-shadow-2);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  background: white linear-gradient(135deg, #03a9f4, #2196f3);
+  gap: 0.75rem;
+  background: linear-gradient(135deg, var(--ts-primary), var(--ts-primary-dark));
+  color: var(--ts-text-on-dark);
   font-weight: 600;
+  font-size: 0.875rem;
 }
 
 .loading-text {
   white-space: nowrap;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all var(--ts-transition-normal);
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

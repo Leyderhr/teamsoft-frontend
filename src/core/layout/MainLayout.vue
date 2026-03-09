@@ -6,7 +6,7 @@ import AppLoading from '@/core/layout/Apploading.vue'
 import Topbar from '@/core/layout/Topbar.vue'
 import Menu from '@/core/layout/Menu.vue'
 import Breadcrumb from './Breadcrumb.vue'
-
+import Footer from './Footer.vue'
 
 const localeStore = useLocaleStore()
 const menuCollapsed = ref(false)
@@ -24,41 +24,81 @@ const toggleMenu = () => {
   <Toast position="top-right" />
   <AppLoading />
 
-  <div class="flex flex-col min-h-screen bg-gray-50">
-    <!-- Topbar fija -->
-    <Topbar @toggle-menu="toggleMenu" class="fixed top-0 left-0 pl-0 w-full z-50 bg-sky-400" />
+  <div class="layout-wrapper">
+    <Topbar @toggle-menu="toggleMenu" />
 
-    <!-- Contenedor principal -->
-    <div class="flex flex-row flex-1 pt-16">
-      <!-- Menú lateral (oculto en móvil) -->
-      <Menu
-          :class="{ 'hidden lg:block': menuCollapsed, 'block': !menuCollapsed}"
-          class="fixed lg:relative h-screen z-40 bg-white"
-          :collapsed="menuCollapsed"
+    <div class="layout-body">
+      <!-- Mobile backdrop -->
+      <div
+          v-if="!menuCollapsed"
+          class="sidebar-backdrop"
+          @click="menuCollapsed = true"
       />
 
-      <!-- Contenido principal -->
-      <main class="flex-1 lg:ml-64 transition-all duration-300" :class="{ 'lg:ml-64': menuCollapsed }">
-        <Breadcrumb class="mb-4" />
+      <Menu :collapsed="menuCollapsed" />
 
-        <router-view />
-      </main>
+      <div class="layout-content" :class="{ 'sidebar-collapsed': menuCollapsed }">
+<!--        <Breadcrumb />-->
+
+        <main class="page-content">
+          <router-view />
+        </main>
+
+        <Footer />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.transition-all {
-  transition-property: all;
-}
-.duration-300 {
-  transition-duration: 300ms;
+.layout-wrapper {
+  min-height: 100vh;
+  background: var(--ts-bg-body);
 }
 
-/* Ajustes responsive */
+.layout-body {
+  display: flex;
+  padding-top: var(--ts-topbar-height);
+}
+
+.layout-content {
+  flex: 1;
+  margin-left: var(--ts-sidebar-width);
+  min-height: calc(100vh - var(--ts-topbar-height));
+  display: flex;
+  flex-direction: column;
+  transition: margin-left var(--ts-transition-normal);
+}
+
+.layout-content.sidebar-collapsed {
+  margin-left: var(--ts-sidebar-collapsed);
+}
+
+.page-content {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+/* Mobile backdrop */
+.sidebar-backdrop {
+  display: none;
+}
+
 @media (max-width: 1024px) {
-  .lg\:ml-64, .lg\:ml-16 {
+  .layout-content {
     margin-left: 0 !important;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    top: var(--ts-topbar-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 899;
+    transition: opacity var(--ts-transition-fast);
   }
 }
 </style>

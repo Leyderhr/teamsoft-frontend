@@ -1,10 +1,11 @@
 <script setup>
-import {ref, computed} from 'vue'
-import {useRouter} from 'vue-router'
-import {useAuthStore} from '@/core/store/authStore.js'
-import {useLocaleStore} from '@/core/store/locale.store.js'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/core/store/authStore.js'
+import { useLocaleStore } from '@/core/store/locale.store.js'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
+import Avatar from 'primevue/avatar'
 
 const router = useRouter()
 const userStore = useAuthStore()
@@ -12,8 +13,6 @@ const localeStore = useLocaleStore()
 
 const profileMenuRef = ref()
 const languageMenuRef = ref()
-
-
 
 const toggleProfileMenu = (event) => {
   profileMenuRef.value.toggle(event)
@@ -23,114 +22,217 @@ const toggleLanguageMenu = (event) => {
   languageMenuRef.value.toggle(event)
 }
 
-// Items del menú de perfil
 const profileItems = computed(() => [
   {
-    separator: true
+    label: userStore.username || 'Usuario',
+    icon: 'pi pi-user',
+    disabled: true,
+    class: 'profile-header-item'
   },
+  { separator: true },
   {
-    label: 'Cambiar contraseña',
+    label: 'Cambiar contrase\u00f1a',
     icon: 'pi pi-key',
-    command: () => {
-      router.push('/change-password')
-    }
+    command: () => router.push('/change-password')
   },
   {
-    label: 'Cerrar sesión',
+    label: 'Cerrar sesi\u00f3n',
     icon: 'pi pi-sign-out',
     command: async () => {
-      await userStore.logout();
-      router.push('/login');
+      await userStore.logout()
+      router.push('/login')
     }
   }
 ])
 
-// Items del menú de idioma
 const languageItems = computed(() => [
   {
-    label: 'Español',
+    label: 'Espa\u00f1ol',
     icon: localeStore.currentLanguage === 'es' ? 'pi pi-check' : '',
-    command: () => {
-      localeStore.setLanguage('es')
-    }
+    command: () => localeStore.setLanguage('es')
   },
   {
-    label: 'Inglés',
+    label: 'English',
     icon: localeStore.currentLanguage === 'en' ? 'pi pi-check' : '',
-    command: () => {
-      localeStore.setLanguage('en')
-    }
+    command: () => localeStore.setLanguage('en')
   }
 ])
 
-// Emit para controlar menú en móvil
 defineEmits(['toggle-menu'])
 </script>
 
 <template>
-  <div class="topbar clearfix bg-primary p-3 h-16 flex align-center justify-between">
-    <!-- Logo y título -->
+  <header class="topbar">
+    <!-- Logo area -->
     <div class="topbar-left">
-      <router-link to="/" class="flex items-center no-underline">
-        <span class="text-white text-4xl font-bold">TeamSoft<sup class="text-sm">+</sup></span>
+      <router-link to="/" class="logo-link">
+        <span class="logo-text">TeamSoft<sup>+</sup></span>
       </router-link>
     </div>
 
-    <!-- Menú derecho -->
-    <div class="topbar-right flex align-items-center gap-4 text-amber-100">
-      <!-- Botón menú móvil -->
+    <!-- Right actions -->
+    <div class="topbar-right">
+      <!-- Mobile menu toggle -->
       <Button
           icon="pi pi-bars"
-          class="p-button-text p-button-plain text-white lg:hidden"
+          text
+          rounded
+          class="menu-toggle-btn lg:hidden"
           @click="$emit('toggle-menu')"
       />
 
-      <!-- Menú de perfil -->
-      <div class="profile-menu relative text-white">
-        <Button
-            :label="userStore.username || 'Usuario'"
-            icon="pi pi-user"
-            class="p-button-text p-button-plain text-white"
-            @click="toggleProfileMenu"
-        />
-        <Menu ref="profileMenuRef" :model="profileItems" :popup="true"/>
+      <!-- Profile -->
+      <div class="topbar-item">
+        <button class="topbar-action-btn" @click="toggleProfileMenu">
+          <Avatar icon="pi pi-user" shape="circle" size="small" class="avatar" />
+          <span class="username-label">{{ userStore.username || 'Usuario' }}</span>
+          <i class="pi pi-chevron-down chevron" />
+        </button>
+        <Menu ref="profileMenuRef" :model="profileItems" :popup="true" />
       </div>
 
-      <!-- Selector de idioma -->
-      <div class="language-menu relative">
-        <Button
-            icon="pi pi-flag"
-            class="p-button-text p-button-plain text-white"
-            @click="toggleLanguageMenu"
-        />
-        <Menu ref="languageMenuRef" :model="languageItems" :popup="true"/>
+      <!-- Language selector -->
+      <div class="topbar-item">
+        <button class="topbar-action-btn" @click="toggleLanguageMenu">
+          <i class="pi pi-globe" />
+          <span class="lang-code">{{ localeStore.currentLanguage.toUpperCase() }}</span>
+        </button>
+        <Menu ref="languageMenuRef" :model="languageItems" :popup="true" />
       </div>
     </div>
-  </div>
+  </header>
 </template>
 
 <style scoped>
-
-
 .topbar {
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--ts-topbar-height);
+  background: var(--ts-primary);
+  box-shadow: var(--ts-shadow-topbar);
+  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
 }
 
-.topbar-left a {
+/* ── Logo area ── */
+.topbar-left {
+  width: var(--ts-sidebar-width);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 1.25rem;
+  background: var(--ts-primary-dark);
+  box-shadow: 3px 0 6px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.logo-link {
   text-decoration: none;
-  width: 250px;
-  align-content: center;
-  box-shadow: 2px 0 7px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
 }
 
-/* Ajustes responsive */
+.logo-text {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--ts-text-on-dark);
+  letter-spacing: -0.5px;
+}
+
+.logo-text sup {
+  font-size: 0.6em;
+  color: var(--ts-accent-dark);
+  margin-left: 1px;
+}
+
+/* ── Right actions ── */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: 1.25rem;
+  margin-left: auto;
+}
+
+.topbar-item {
+  position: relative;
+}
+
+.topbar-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background var(--ts-transition-fast), color var(--ts-transition-fast);
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.topbar-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ts-text-on-dark);
+}
+
+.avatar {
+  background: var(--ts-primary) !important;
+  color: var(--ts-text-on-dark) !important;
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 0.875rem !important;
+}
+
+.username-label {
+  font-weight: 500;
+}
+
+.chevron {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.lang-code {
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.menu-toggle-btn {
+  color: var(--ts-text-on-dark) !important;
+}
+
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .topbar-left span {
-    font-size: 1.5rem;
+  .topbar-left {
+    width: auto;
+    padding: 0 0.75rem;
+    box-shadow: none;
+  }
+
+  .logo-text {
+    font-size: 1.25rem;
+  }
+
+  .username-label {
+    display: none;
+  }
+
+  .lang-code {
+    display: none;
   }
 
   .topbar-right {
-    gap: 1rem;
+    gap: 0.25rem;
+    padding-right: 0.75rem;
   }
 }
 </style>
