@@ -1,15 +1,13 @@
 <script setup>
-import {onMounted, reactive, ref} from 'vue';
-import {Card, InputGroup, InputGroupAddon, InputText} from 'primevue';
-import authService from '@/core/api/authService.js';
-import {useAuthStore} from '@/core/store/authStore.js';
+import { reactive, ref } from 'vue';
+import { Card, InputGroup, InputGroupAddon, InputText } from 'primevue';
+import { useAuthStore } from '@/core/store/authStore.js';
 import FloatLabel from 'primevue/floatlabel';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
-import {useToast} from 'primevue/usetoast';
-import {useRouter} from 'vue-router';
-import 'primeicons/primeicons.css';
+import { useToast } from 'primevue/usetoast';
+import { useRouter } from 'vue-router';
 
 const toast = useToast();
 const router = useRouter();
@@ -21,15 +19,10 @@ const form = reactive({
 });
 
 const isLoading = ref(false);
-
-onMounted(() => {
-  if (authService.isAuthenticated()) {
-    router.push('/');
-
-  }
-})
+const submitted = ref(false);
 
 const handleLogin = async () => {
+      submitted.value = true;
       // Validación básica
       if (!form.username || !form.password) {
         toast.add({
@@ -45,14 +38,6 @@ const handleLogin = async () => {
       isLoading.value = true;
 
       try {
-
-        const response = await authService.login({
-          username: form.username,
-          password: form.password
-        });
-
-        const expiresAt = Date.now() + (response.expiresIn || 1800000);
-
         await authStore.login({
           username: form.username,
           password: form.password
@@ -102,13 +87,6 @@ const handleLogin = async () => {
         isLoading.value = false;
       }
 };
-
-// Permite login con Enter
-const handleKeyPress = (event) => {
-  if (event.key === 'Enter') {
-    handleLogin();
-  }
-};
 </script>
 
 <template>
@@ -132,7 +110,7 @@ const handleKeyPress = (event) => {
                       v-tooltip="{ value: 'Tu usuario', showDelay: 1000, hideDelay: 300 }"
                       id="username"
                       v-model="form.username"
-                      :invalid="true"
+                      :invalid="submitted && !form.username"
                       class="p-inputtext-lg"
                       required
                   />
@@ -232,7 +210,7 @@ const handleKeyPress = (event) => {
 :deep(.p-inputgroupaddon) {
   background-color: transparent;
   border: none;
-  border-bottom: 1px solid #9e9e9e;
+  border-bottom: 1px solid var(--ts-text-muted);
   border-right: none;
   padding: 0.5rem 0.75rem;
   display: flex;
@@ -253,7 +231,7 @@ const handleKeyPress = (event) => {
 :deep(.p-floatlabel input) {
   background-color: transparent !important;
   border: none !important;
-  border-bottom: 1px solid #9e9e9e !important;
+  border-bottom: 1px solid var(--ts-text-muted) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   color: white !important;
@@ -296,7 +274,7 @@ const handleKeyPress = (event) => {
   background-color: transparent !important;
   color: white !important;
   border: none !important;
-  border-bottom: 1px solid #9e9e9e !important;
+  border-bottom: 1px solid var(--ts-text-muted) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   width: 100%;
@@ -331,8 +309,8 @@ const handleKeyPress = (event) => {
   padding: 7px !important;
   height: auto !important;
   transition: 0.5s !important;
-  background-color: #1094b9 !important;
-  border: 6px solid #1094b9 !important;
+  background-color: var(--ts-primary) !important;
+  border: 6px solid var(--ts-primary) !important;
   font-weight: bold;
   letter-spacing: 2px;
   color: white !important;
@@ -372,7 +350,7 @@ const handleKeyPress = (event) => {
 }
 
 .test-credentials strong {
-  color: #00BCD4;
+  color: var(--ts-cyan);
 }
 
 

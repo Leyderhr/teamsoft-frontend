@@ -34,29 +34,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4 pl-15">
-    <h1 class="titulo text-black text-left">{{ roleConfig.title }}</h1>
-
+  <div>
     <GenericListView
-        :items="items"
-        :columns="roleConfig.columns"
-        :fields="roleConfig.fields"
-        :service="roleConfig.service"
-        :config="roleConfig"
-        :selected-item="selectedItem"
-        :title="roleConfig.listTitle"
-        :loading="loading"
-        :show-import-button="roleConfig.showImportButton"
-        @update:selectedItem="selectedItem = $event"
+      :items="items"
+      :columns="roleConfig.columns"
+      :fields="roleConfig.fields"
+      :service="roleConfig.service"
+      :config="roleConfig"
+      :selected-item="selectedItem"
+      :title="roleConfig.listTitle"
+      :loading="loading"
+      :show-import-button="roleConfig.showImportButton"
+      :on-create-click="loadData"
+      @update:selectedItem="selectedItem = $event"
     />
   </div>
 </template>
-
-<style scoped>
-.titulo{
-  font-size: 2.5rem;
-  margin: 20px 0;
-  font-family: Arial, "Arial CE", "Lucida Grande CE", lucida, "Helvetica CE", sans-serif;
-}
-
-</style>

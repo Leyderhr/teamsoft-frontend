@@ -16,7 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
 
         user.value = {
             username: response.username,
-            token: response.token,
+            token: response.token || response.accessToken,
             type: response.type,
             authorities: response.authorities,
             expiresAt,
@@ -24,6 +24,11 @@ export const useAuthStore = defineStore('auth', () => {
         };
 
         localStorage.setItem('user', JSON.stringify(user.value));
+        
+        if (response.refreshToken) {
+            localStorage.setItem('refreshToken', response.refreshToken);
+        }
+        
         return response;
     };
 
