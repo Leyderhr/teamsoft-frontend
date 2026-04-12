@@ -1,10 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import GenericListView from '@/shared/components/GenericListView.vue'
+import Button from 'primevue/button'
 import { userConfig } from '@/features/users/config/user.config.js'
 
 const toast = useToast()
+const confirm = useConfirm()
 const items = ref([])
 const loading = ref(false)
 const selectedItem = ref(null)
@@ -25,6 +28,42 @@ const loadData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleResetPassword = () => {
+  if (!selectedItem.value) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Advertencia',
+      detail: 'Selecciona un usuario para resetear su contraseña',
+      life: 3000
+    })
+    return
+  }
+
+  confirm.require({
+    message: `¿Está seguro de resetear la contraseña del usuario ${selectedItem.value.username}?`,
+    header: 'Confirmación',
+    icon: 'pi pi-exclamation-triangle',
+    accept: async () => {
+      try {
+        await userConfig.service.resetPassword(selectedItem.value.id)
+        toast.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Contraseña reseteada correctamente',
+          life: 3000
+        })
+      } catch (error) {
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: error.message || 'Error al resetear contraseña',
+          life: 3000
+        })
+      }
+    }
+  })
 }
 
 onMounted(() => {
@@ -48,7 +87,17 @@ onMounted(() => {
         :show-import-button="userConfig.showImportButton"
         :on-create-click="loadData"
         @update:selectedItem="selectedItem = $event"
-    />
+    >
+      <template #extraButtons>
+        <Button
+          icon="pi pi-key"
+          label="Resetear Contraseña"
+          @click="handleResetPassword"
+          class="p-button-info"
+          :disabled="!selectedItem"
+        />
+      </template>
+    </GenericListView>
   </div>
 </template>
 

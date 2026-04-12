@@ -1,56 +1,36 @@
 import apiClient from '@/core/api/axios.js'
 
-const ENDPOINT = '/user'
+const ENDPOINT = '/users'
 
 const userService = {
     async getAll() {
-        try {
-            const response = await apiClient.get(ENDPOINT)
-            return response.data
-        } catch (error) {
-            console.error('Error al obtener usuarios:', error)
-            throw error
-        }
+        const response = await apiClient.get(ENDPOINT)
+        return response.data
     },
 
     async getById(id) {
-        try {
-            const response = await apiClient.get(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al obtener usuario con ID ${id}:`, error)
-            throw error
-        }
+        const response = await apiClient.get(`${ENDPOINT}/${id}`)
+        return response.data
     },
 
     async create(user) {
-        try {
-            const response = await apiClient.post(ENDPOINT, user)
-            return response.data
-        } catch (error) {
-            console.error('Error al crear usuario:', error)
-            throw error
-        }
-    },
-
-    async update(id, user) {
-        try {
-            const response = await apiClient.put(`${ENDPOINT}/${id}`, user)
-            return response.data
-        } catch (error) {
-            console.error(`Error al actualizar usuario con ID ${id}:`, error)
-            throw error
-        }
+        const response = await apiClient.post(ENDPOINT, user)
+        return response.data
     },
 
     async delete(id) {
-        try {
-            const response = await apiClient.delete(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al eliminar usuario con ID ${id}:`, error)
-            throw error
-        }
+        const response = await apiClient.delete(`${ENDPOINT}/${id}`)
+        return response.data
+    },
+
+    async resetPassword(id) {
+        const response = await apiClient.post(`${ENDPOINT}/${id}/reset-password`)
+        return response.data
+    },
+
+    async getRoles() {
+        const response = await apiClient.get('/role')
+        return response.data
     }
 }
 

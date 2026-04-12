@@ -2,11 +2,11 @@
 import { ref, watch, computed, onMounted } from 'vue'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
 import { useToast } from 'primevue/usetoast'
-import personService from '@/features/persons/services/personService.js'
+import userService from '@/features/users/services/userService.js'
 
 const props = defineProps({
   visible: Boolean,
@@ -18,34 +18,27 @@ const emit = defineEmits(['update:visible', 'save', 'cancel'])
 const toast = useToast()
 
 // Form fields
-const username = ref('')
-const password = ref('')
-const selectedPerson = ref(null)
-const selectedRole = ref(null)
+const personName = ref('')
+const surname = ref('')
+const card = ref('')
+const mail = ref('')
+const enabled = ref(true)
+const selectedRoles = ref([])
 
 // Options
-const personOptions = ref([])
+const roleOptions = ref([])
 
-const roleOptions = [
-  { label: 'Administrador', value: 'ROLE_ADMIN' },
-  { label: 'Gestor RRHH', value: 'ROLE_GESTOR_RRHH' },
-  { label: 'Directivo Técnico', value: 'ROLE_DIRECTIVO_TECNICO' },
-  { label: 'Experimentador', value: 'ROLE_EXPERIMENTADOR' },
-  { label: 'Jefe de Equipo', value: 'ROLE_JEFE_DE_EQUIPO' },
-  { label: 'Trabajador', value: 'ROLE_WORKER' }
-]
-
-// Load persons on mount
+// Load roles on mount
 onMounted(async () => {
   try {
-    const data = await personService.getAll()
-    personOptions.value = data
+    const data = await userService.getRoles()
+    roleOptions.value = data
   } catch (error) {
-    console.error('Error cargando personas:', error)
+    console.error('Error cargando roles:', error)
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: 'No se pudieron cargar las personas',
+      detail: 'No se pudieron cargar los roles',
       life: 3000
     })
   }
@@ -53,10 +46,12 @@ onMounted(async () => {
 
 // Reset form
 const resetForm = () => {
-  username.value = ''
-  password.value = ''
-  selectedPerson.value = null
-  selectedRole.value = null
+  personName.value = ''
+  surname.value = ''
+  card.value = ''
+  mail.value = ''
+  enabled.value = true
+  selectedRoles.value = []
 }
 
 // Populate form in edit mode
@@ -65,10 +60,12 @@ watch(
   (val) => {
     if (val) {
       if (props.mode === 'edit' && props.initialData) {
-        username.value = props.initialData.username || ''
-        password.value = ''
-        selectedPerson.value = props.initialData.person?.id ?? props.initialData.personId ?? null
-        selectedRole.value = props.initialData.role || null
+        personName.value = props.initialData.personName || ''
+        surname.value = props.initialData.surname || ''
+        card.value = props.initialData.idCard || ''
+        mail.value = props.initialData.mail || ''
+        enabled.value = props.initialData.enabled ?? true
+        selectedRoles.value = props.initialData.roles?.map(r => r.id) || []
       } else {
         resetForm()
       }
@@ -77,38 +74,40 @@ watch(
 )
 
 const dialogTitle = computed(() =>
-  props.mode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'
+  props.mode === 'create' ? 'Nuevo Usuario' : 'Ver Usuario'
 )
 
 const isEditMode = computed(() => props.mode === 'edit')
 
 const handleSave = () => {
-  if (!username.value?.trim()) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre de usuario es requerido', life: 3000 })
+  if (!personName.value?.trim()) {
+    toast.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre es requerido', life: 3000 })
     return
   }
-  if (!selectedPerson.value) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'Debe seleccionar una persona', life: 3000 })
+  if (!surname.value?.trim()) {
+    toast.add({ severity: 'warn', summary: 'Validación', detail: 'El apellido es requerido', life: 3000 })
     return
   }
-  if (!selectedRole.value) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'Debe seleccionar un rol', life: 3000 })
+  if (!card.value?.trim()) {
+    toast.add({ severity: 'warn', summary: 'Validación', detail: 'La cédula es requerida', life: 3000 })
     return
   }
-  if (!isEditMode.value && !password.value?.trim()) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'La contraseña es requerida', life: 3000 })
+  if (!mail.value?.trim()) {
+    toast.add({ severity: 'warn', summary: 'Validación', detail: 'El correo es requerido', life: 3000 })
+    return
+  }
+  if (!selectedRoles.value || selectedRoles.value.length === 0) {
+    toast.add({ severity: 'warn', summary: 'Validación', detail: 'Debe seleccionar al menos un rol', life: 3000 })
     return
   }
 
   const payload = {
-    username: username.value.trim(),
-    personId: selectedPerson.value,
-    role: selectedRole.value
-  }
-
-  // Only include password if provided
-  if (password.value?.trim()) {
-    payload.password = password.value.trim()
+    personName: personName.value.trim(),
+    surname: surname.value.trim(),
+    card: card.value.trim(),
+    mail: mail.value.trim(),
+    enabled: enabled.value,
+    roleIds: selectedRoles.value
   }
 
   emit('save', payload)
@@ -127,85 +126,93 @@ const handleCancel = () => {
     :header="dialogTitle"
     :modal="true"
     :closable="true"
-    :style="{ width: '480px' }"
+    :style="{ width: '520px' }"
     @update:visible="$emit('update:visible', $event)"
     @hide="handleCancel"
   >
     <div class="flex flex-col gap-4 pt-2">
-      <!-- Persona -->
+      <!-- Nombre -->
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Persona <span class="text-red-500">*</span>
-        </label>
-        <Select
-          v-model="selectedPerson"
-          :options="personOptions"
-          optionLabel="personName"
-          optionValue="id"
-          placeholder="Seleccione una persona"
-          filter
-          filterPlaceholder="Buscar persona..."
-          class="w-full"
-        >
-          <template #option="{ option }">
-            <span>{{ option.personName }} {{ option.surName }}</span>
-          </template>
-          <template #value="{ value }">
-            <span v-if="value">
-              {{
-                personOptions.find(p => p.id === value)
-                  ? `${personOptions.find(p => p.id === value).personName} ${personOptions.find(p => p.id === value).surName}`
-                  : value
-              }}
-            </span>
-            <span v-else class="text-[var(--ts-text-muted)]">Seleccione una persona</span>
-          </template>
-        </Select>
-      </div>
-
-      <!-- Username -->
-      <div class="flex flex-col gap-1">
-        <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Nombre de usuario <span class="text-red-500">*</span>
+          Nombre <span class="text-red-500">*</span>
         </label>
         <InputText
-          v-model="username"
-          placeholder="Ingrese el nombre de usuario"
+          v-model="personName"
+          placeholder="Ingrese el nombre"
           class="w-full"
-          autocomplete="off"
+          :disabled="isEditMode"
         />
       </div>
 
-      <!-- Password -->
+      <!-- Apellido -->
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Contraseña <span v-if="!isEditMode" class="text-red-500">*</span>
-          <span v-else class="text-xs font-normal text-[var(--ts-text-muted)]"> (dejar en blanco para no cambiar)</span>
+          Apellido <span class="text-red-500">*</span>
         </label>
-        <Password
-          v-model="password"
-          :placeholder="isEditMode ? 'Nueva contraseña (opcional)' : 'Ingrese la contraseña'"
-          :toggleMask="true"
-          :feedback="true"
+        <InputText
+          v-model="surname"
+          placeholder="Ingrese el apellido"
           class="w-full"
-          inputClass="w-full"
-          autocomplete="new-password"
+          :disabled="isEditMode"
         />
       </div>
 
-      <!-- Rol -->
+      <!-- Cédula -->
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Rol <span class="text-red-500">*</span>
+          Cédula <span class="text-red-500">*</span>
+        </label>
+        <InputText
+          v-model="card"
+          placeholder="Ingrese la cédula"
+          class="w-full"
+          :disabled="isEditMode"
+        />
+      </div>
+
+      <!-- Correo -->
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
+          Correo <span class="text-red-500">*</span>
+        </label>
+        <InputText
+          v-model="mail"
+          type="email"
+          placeholder="Ingrese el correo electrónico"
+          class="w-full"
+          :disabled="isEditMode"
+        />
+      </div>
+
+      <!-- Roles -->
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
+          Roles <span class="text-red-500">*</span>
         </label>
         <Select
-          v-model="selectedRole"
+          v-model="selectedRoles"
           :options="roleOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Seleccione un rol"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Seleccione roles"
+          multiple
+          filter
           class="w-full"
+          :disabled="isEditMode"
         />
+      </div>
+
+      <!-- Habilitado -->
+      <div class="flex items-center gap-2">
+        <Checkbox
+          v-model="enabled"
+          inputId="enabled"
+          :binary="true"
+          :disabled="isEditMode"
+        />
+        <label for="enabled" class="text-sm font-semibold text-[var(--ts-text-primary)]">
+          Usuario habilitado
+        </label>
       </div>
     </div>
 
@@ -213,13 +220,14 @@ const handleCancel = () => {
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button
-          label="Cancelar"
+          label="Cerrar"
           icon="pi pi-times"
           severity="secondary"
           outlined
           @click="handleCancel"
         />
         <Button
+          v-if="!isEditMode"
           label="Guardar"
           icon="pi pi-check"
           @click="handleSave"

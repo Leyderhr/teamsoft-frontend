@@ -6,25 +6,13 @@ import {createPinia} from "pinia";
 // PrimeVue
 import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
-import ConfirmationService from 'primevue/confirmationservice'
 import Tooltip from 'primevue/tooltip'
 
 // Tema de PrimeVue
-//import Lara from '@primeuix/themes/lara' //Por si queremos usar otro tema
 import Material from '@primeuix/themes/material';
 
 import 'primeicons/primeicons.css';
 import './style.css'
-
-// Estilos de ultima layout
-import '@/assets/ultima-layout/css/animate.css'
-import '@/assets/ultima-layout/css/ripple.css'
-import '@/assets/ultima-layout/css/nanoscroller.css'
-
-
-// Estilos y js globales
-import '@/assets/css/materialize.min.css'
-// import '@/assets/css/cssLayout.css'
 
 
 
@@ -45,7 +33,6 @@ app.use(PrimeVue, {
     }
 })
 app.use(ToastService)
-app.use(ConfirmationService)
 app.use(router)
 app.use(pinia)
 app.mount('#app')

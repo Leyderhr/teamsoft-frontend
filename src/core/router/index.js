@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MainLayout from '@/core/layout/MainLayout.vue'
+import TeamSoftLayout from '@/core/layout/TeamSoftLayout.vue'
 import Login from '@/features/auth/views/Login.vue'
 import {useAuthStore} from "@/core/store/authStore.js";
 import nomenclativesRoutes from './nomenclatives.routes.js'
@@ -16,7 +16,7 @@ const routes = [
     },
     {
         path: '/',
-        component: MainLayout,
+        component: TeamSoftLayout,
         meta: { requiresAuth: true },
         children: [
             {
@@ -37,49 +37,81 @@ const routes = [
                 path: 'manage-competences/competence',
                 name: 'Competence',
                 component: () => import('@/features/competences/views/Competence.vue'),
-                meta: {
-                    breadcrumb: [
-                        {
-                            name: 'Competencias', disable: true
-                        }
-                    ]
-                }
+                meta: { breadcrumb: [{ name: 'Competencias', disable: true }] }
+            },
+            {
+                path: 'manage-competences/competence/create',
+                name: 'CompetenceCreate',
+                component: () => import('@/features/competences/views/CompetenceFormPage.vue'),
+                props: { mode: 'create' },
+                meta: { breadcrumb: [{ name: 'Competencias', disable: true }] }
+            },
+            {
+                path: 'manage-competences/competence/edit/:id',
+                name: 'CompetenceEdit',
+                component: () => import('@/features/competences/views/CompetenceFormPage.vue'),
+                props: route => ({ mode: 'edit', itemId: route.params.id }),
+                meta: { breadcrumb: [{ name: 'Competencias', disable: true }] }
             },
             {
                 path: 'manage-roles/role',
                 name: 'Role',
                 component: () => import('@/features/roles/views/Role.vue'),
-                meta: {
-                    breadcrumb: [
-                        {
-                            name: 'Roles', disable: true
-                        }
-                    ]
-                }
+                meta: { breadcrumb: [{ name: 'Roles', disable: true }] }
+            },
+            {
+                path: 'manage-roles/role/create',
+                name: 'RoleCreate',
+                component: () => import('@/features/roles/views/RoleFormPage.vue'),
+                props: { mode: 'create' },
+                meta: { breadcrumb: [{ name: 'Roles', disable: true }] }
+            },
+            {
+                path: 'manage-roles/role/edit/:id',
+                name: 'RoleEdit',
+                component: () => import('@/features/roles/views/RoleFormPage.vue'),
+                props: route => ({ mode: 'edit', itemId: route.params.id }),
+                meta: { breadcrumb: [{ name: 'Roles', disable: true }] }
             },
             {
                 path: 'person',
                 name: 'Person',
                 component: () => import('@/features/persons/views/Person.vue'),
-                meta: {
-                    breadcrumb: [
-                        {
-                            name: 'Personas', disable: true
-                        }
-                    ]
-                }
+                meta: { breadcrumb: [{ name: 'Personas', disable: true }] }
+            },
+            {
+                path: 'person/create',
+                name: 'PersonCreate',
+                component: () => import('@/features/persons/views/PersonFormPage.vue'),
+                props: { mode: 'create' },
+                meta: { breadcrumb: [{ name: 'Personas', disable: true }] }
+            },
+            {
+                path: 'person/edit/:id',
+                name: 'PersonEdit',
+                component: () => import('@/features/persons/views/PersonFormPage.vue'),
+                props: route => ({ mode: 'edit', itemId: route.params.id }),
+                meta: { breadcrumb: [{ name: 'Personas', disable: true }] }
             },
             {
                 path: 'manage-projects/project',
                 name: 'Project',
                 component: () => import('@/features/projects/views/Project.vue'),
-                meta: {
-                    breadcrumb: [
-                        {
-                            name: 'Proyectos', disable: true
-                        }
-                    ]
-                }
+                meta: { breadcrumb: [{ name: 'Proyectos', disable: true }] }
+            },
+            {
+                path: 'manage-projects/project/create',
+                name: 'ProjectCreate',
+                component: () => import('@/features/projects/views/ProjectFormPage.vue'),
+                props: { mode: 'create' },
+                meta: { breadcrumb: [{ name: 'Proyectos', disable: true }] }
+            },
+            {
+                path: 'manage-projects/project/edit/:id',
+                name: 'ProjectEdit',
+                component: () => import('@/features/projects/views/ProjectFormPage.vue'),
+                props: route => ({ mode: 'edit', itemId: route.params.id }),
+                meta: { breadcrumb: [{ name: 'Proyectos', disable: true }] }
             },
             {
                 path: 'manage-projects/team-formation',
@@ -110,10 +142,21 @@ const routes = [
                 path: 'manage-user-role/users',
                 name: 'UserManagement',
                 component: () => import('@/features/users/views/UserManagement.vue'),
-                meta: {
-                    breadcrumb: [{ name: 'Usuarios', disable: true }],
-                    roles: ['ROLE_ADMIN']
-                }
+                meta: { breadcrumb: [{ name: 'Usuarios', disable: true }], roles: ['ROLE_ADMIN'] }
+            },
+            {
+                path: 'manage-user-role/users/create',
+                name: 'UserCreate',
+                component: () => import('@/features/users/views/UserFormPage.vue'),
+                props: { mode: 'create' },
+                meta: { breadcrumb: [{ name: 'Usuarios', disable: true }], roles: ['ROLE_ADMIN'] }
+            },
+            {
+                path: 'manage-user-role/users/edit/:id',
+                name: 'UserEdit',
+                component: () => import('@/features/users/views/UserFormPage.vue'),
+                props: route => ({ mode: 'edit', itemId: route.params.id }),
+                meta: { breadcrumb: [{ name: 'Usuarios', disable: true }], roles: ['ROLE_ADMIN'] }
             },
             {
                 path: 'change-password',

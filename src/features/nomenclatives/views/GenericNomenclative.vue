@@ -52,29 +52,18 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4 pl-15">
-    <h1 class="titulo text-left font-bold mb-4 text-black">{{ config.title }}</h1>
-
+  <div>
     <GenericListView
-        :items="items"
-        :columns="config.columns"
-        :fields="config.fields"
-        :service="config.service"
-        :config="config"
-        :selected-item="selectedItem"
-        :title="config.listTitle"
-        :loading="loading"
-        :on-create-click="loadData"
-        @update:selectedItem="selectedItem = $event"
+      :items="items"
+      :columns="config.columns"
+      :fields="config.fields"
+      :service="config.service"
+      :config="config"
+      :selected-item="selectedItem"
+      :title="config.listTitle"
+      :loading="loading"
+      :on-create-click="loadData"
+      @update:selectedItem="selectedItem = $event"
     />
   </div>
 </template>
-
-<style scoped>
-.titulo{
-  font-size: 2.5rem;
-  margin: 20px 0;
-  font-family: Arial, "Arial CE", "Lucida Grande CE", lucida, "Helvetica CE", sans-serif;
-}
-
-</style>

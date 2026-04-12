@@ -109,7 +109,7 @@ defineEmits(['toggle-menu'])
   align-items: center;
   justify-content: space-between;
   height: var(--ts-topbar-height);
-  background: var(--ts-primary);
+  background: var(--ts-dash-blue);
   box-shadow: var(--ts-shadow-topbar);
   padding: 0;
   position: fixed;
@@ -126,7 +126,7 @@ defineEmits(['toggle-menu'])
   display: flex;
   align-items: center;
   padding: 0 1.25rem;
-  background: var(--ts-primary-dark);
+  background: var(--ts-dash-blue-dark);
   box-shadow: 3px 0 6px rgba(0, 0, 0, 0.3);
   flex-shrink: 0;
 }
@@ -179,12 +179,12 @@ defineEmits(['toggle-menu'])
 }
 
 .topbar-action-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--ts-dash-blue-dark);
   color: var(--ts-text-on-dark);
 }
 
 .avatar {
-  background: var(--ts-primary) !important;
+  background: var(--ts-dash-blue) !important;
   color: var(--ts-text-on-dark) !important;
   width: 32px !important;
   height: 32px !important;

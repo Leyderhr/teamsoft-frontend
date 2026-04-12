@@ -11,21 +11,39 @@ const authService = {
         }
     },
 
+    // Refresh token
+    async refreshToken(refreshToken) {
+        try {
+            const response = await apiClient.post('/auth/refresh', null, {
+                headers: {
+                    Authorization: `Bearer ${refreshToken}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+
     // Logout
     async logout() {
         try {
-            const token = this.getToken();
-            if (token) {
-                await apiClient.post('/auth/logout', {}, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
+            const user = this.getCurrentUser();
+            if (user?.token && user?.refreshToken) {
+                await apiClient.post('/auth/logout', 
+                    { refreshToken: user.refreshToken },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${user.token}`
+                        }
                     }
-                });
+                );
             }
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
             localStorage.removeItem('user');
+            localStorage.removeItem('refreshToken');
         }
     },
 
@@ -59,9 +77,8 @@ const authService = {
 
         try {
             const user = JSON.parse(userStr);
-            // Verificar si el token no ha expirado (si tenemos expiresIn)
+            // Verificar si el token no ha expirado
             if (user.expiresAt && Date.now() > user.expiresAt) {
-                this.logout();
                 return null;
             }
             return user;
@@ -81,6 +98,20 @@ const authService = {
     getToken() {
         const user = this.getCurrentUser();
         return user ? user.token : null;
+    },
+
+    // Obtener refresh token
+    getRefreshToken() {
+        return localStorage.getItem('refreshToken');
+    },
+
+    // Verificar si el token está por expirar (menos de 5 minutos)
+    isTokenExpiringSoon() {
+        const user = this.getCurrentUser();
+        if (!user || !user.expiresAt) return false;
+        
+        const fiveMinutes = 5 * 60 * 1000;
+        return (user.expiresAt - Date.now()) < fiveMinutes;
     }
 };
 

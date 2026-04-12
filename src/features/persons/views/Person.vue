@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import reportService from '@/features/reports/services/reportService.js'
 import personService from '@/features/persons/services/personService.js'
 import GenericListView from '@/shared/components/GenericListView.vue'
 
@@ -9,75 +10,58 @@ const items = ref([])
 const loading = ref(false)
 const selectedItem = ref(null)
 
-// Configuración para usar el diálogo personalizado
-const personConfig = {
-  useCustomDialog: true,
-  customDialogComponent: 'PersonFormDialog'
-}
-
-// Columnas para mostrar información básica de las personas
+// Columnas con los field names correctos del endpoint /person/report
 const columns = ref([
-  { field: 'id', header: 'ID', width: '80px', sortable: true },
-  { field: 'personName', header: 'Nombre', width: '150px', sortable: true, filterable: true },
-  { field: 'surName', header: 'Apellidos', width: '150px', sortable: true, filterable: true },
-  { field: 'card', header: 'CI', width: '150px', sortable: true, filterable: true },
-  { field: 'email', header: 'Email', width: '200px', sortable: true, filterable: true },
-  { field: 'phone', header: 'Teléfono', width: '120px', sortable: true },
-  { field: 'sex', header: 'Sexo', width: '80px', sortable: true },
-  { field: 'age', header: 'Edad', width: '80px', sortable: true },
-  { field: 'status', header: 'Estado', width: '100px', sortable: true },
-  { field: 'county.countyName', header: 'Provincia', width: '120px', sortable: true },
-  { field: 'religion.religionName', header: 'Religión', width: '120px', sortable: true }
+  { field: 'personName', header: 'Nombre', sortable: true },
+  { field: 'surName', header: 'Apellidos', sortable: true },
+  { field: 'card', header: 'CI', sortable: true },
+  { field: 'email', header: 'Email', sortable: true },
+  { field: 'phone', header: 'Teléfono' },
+  { field: 'sex', header: 'Sexo' },
+  { field: 'status', header: 'Estado', type: 'badge', sortable: true },
+  { field: 'countyFk.countyName', header: 'Provincia', sortable: true },
+  { field: 'raceFk.raceName', header: 'Raza', sortable: true },
+  { field: 'groupFk.name', header: 'Grupo', sortable: true },
 ])
 
-// Cargar datos
 const loadData = async () => {
   loading.value = true
   try {
-    const data = await personService.getAll()
-    console.log('Datos recibidos de la API:', data)
-    items.value = data
+    // Usar el endpoint enriquecido que devuelve relaciones (countyFk, raceFk, groupFk, etc.)
+    items.value = await reportService.getPersonReport()
   } catch (error) {
-    console.error('Error cargando personas:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'No se pudieron cargar las personas',
-      life: 3000
-    })
+    console.error('Error cargando personas (report):', error)
+    // Fallback al endpoint básico
+    try {
+      items.value = await personService.getAll()
+    } catch (e) {
+      console.error('Error en fallback personService.getAll():', e)
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudieron cargar las personas',
+        life: 3000
+      })
+    }
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => {
-  loadData()
-})
+onMounted(loadData)
 </script>
 
 <template>
-  <div class="p-4 pl-15">
-    <h1 class="text-black titulo text-left font-bold mb-4">Personas</h1>
-
+  <div>
     <GenericListView
-        :items="items"
-        :columns="columns"
-        :selected-item="selectedItem"
-        :service="personService"
-        :config="personConfig"
-        title="Lista de Personas"
-        :loading="loading"
-        :on-create-click="loadData"
-        @update:selectedItem="selectedItem = $event"
+      :items="items"
+      :columns="columns"
+      :selected-item="selectedItem"
+      :service="personService"
+      title="Personas"
+      :loading="loading"
+      @update:selectedItem="selectedItem = $event"
+      @refresh="loadData"
     />
   </div>
 </template>
-
-<style scoped>
-.titulo{
-  font-size: 2.5rem;
-  margin: 20px 0;
-  font-family: Arial, "Arial CE", "Lucida Grande CE", lucida, "Helvetica CE", sans-serif;
-}
-
-</style>

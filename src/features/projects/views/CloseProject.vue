@@ -43,7 +43,7 @@ const loadProjects = async () => {
 // Estado / helpers
 // ===========================
 const canClose = computed(() =>
-  selectedProject.value \!== null && \!selectedProject.value.close
+  selectedProject.value !== null && !selectedProject.value.close
 )
 
 const projectStatusSeverity = (project) => {
@@ -62,7 +62,7 @@ const projectStatusLabel = (project) => {
 // Cerrar proyecto
 // ===========================
 const confirmClose = () => {
-  if (\!selectedProject.value) return
+  if (!selectedProject.value) return
 
   confirm.require({
     message:  `¿Está seguro de que desea cerrar el proyecto "${selectedProject.value.projectName}"? Esta acción cambiará su estado a Cerrado.`,

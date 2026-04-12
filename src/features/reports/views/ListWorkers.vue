@@ -340,4 +340,8 @@ onMounted(loadFilterOptions)
   margin: 20px 0;
   font-family: Arial, "Arial CE", "Lucida Grande CE", lucida, "Helvetica CE", sans-serif;
 }
+
+.p-tab-active {
+  background-color: transparent;
+}
 </style>

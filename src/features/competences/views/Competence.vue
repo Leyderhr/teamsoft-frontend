@@ -47,31 +47,20 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4 pl-15">
-    <h1 class="text-black titulo text-left font-bold py-0 my-0">{{ competenceConfig.title }}</h1>
-
+  <div>
     <GenericListView
-        :items="items"
-        :columns="competenceConfig.columns"
-        :fields="competenceConfig.fields"
-        :service="competenceConfig.service"
-        :config="competenceConfig"
-        :selected-item="selectedItem"
-        :title="competenceConfig.listTitle"
-        :loading="loading"
-        :show-import-button="competenceConfig.showImportButton"
-        :on-create-click="loadData"
-        :on-import-click="handleImport"
-        @update:selectedItem="selectedItem = $event"
+      :items="items"
+      :columns="competenceConfig.columns"
+      :fields="competenceConfig.fields"
+      :service="competenceConfig.service"
+      :config="competenceConfig"
+      :selected-item="selectedItem"
+      :title="competenceConfig.listTitle"
+      :loading="loading"
+      :show-import-button="competenceConfig.showImportButton"
+      :on-create-click="loadData"
+      :on-import-click="handleImport"
+      @update:selectedItem="selectedItem = $event"
     />
   </div>
 </template>
-
-<style scoped>
-.titulo{
-  font-size: 2.5rem;
-  margin: 20px 0;
-  font-family: Arial, "Arial CE", "Lucida Grande CE", lucida, "Helvetica CE", sans-serif;
-}
-
-</style>

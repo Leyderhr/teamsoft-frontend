@@ -1,4 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
+
+@theme {
+  /* Fonts */
+  --font-outfit: "Outfit", sans-serif;
+
+  /* Breakpoints adicionales */
+  --breakpoint-2xsm: 375px;
+  --breakpoint-xsm: 425px;
+  --breakpoint-3xl: 2000px;
+
+  /* Text sizes */
+  --text-title-2xl: 72px;
+  --text-title-xl: 60px;
+  --text-title-lg: 48px;
+  --text-title-md: 36px;
+  --text-title-sm: 30px;
+  --text-theme-xl: 20px;
+  --text-theme-lg: 18px;
+  --text-theme-md: 16px;
+  --text-theme-sm: 14px;
+  --text-theme-xs: 12px;
+
+  /* Brand palette — TeamSoft cyan-blue (#1094b9) */
+  --color-brand-25: #f0f9fc;
+  --color-brand-50: #e0f3f8;
+  --color-brand-100: #b3e3f0;
+  --color-brand-200: #80d0e8;
+  --color-brand-300: #4dbce0;
+  --color-brand-400: #26abd6;
+  --color-brand-500: #1094b9;
+  --color-brand-600: #0d78a0;
+  --color-brand-700: #0a5d7d;
+  --color-brand-800: #07455e;
+  --color-brand-900: #04303f;
+  --color-brand-950: #021e28;
+
+  /* Success */
+  --color-success-25: #f6fef9;
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-200: #a6f4c5;
+  --color-success-300: #6ce9a6;
+  --color-success-400: #32d583;
+  --color-success-500: #12b76a;
+  --color-success-600: #039855;
+  --color-success-700: #027a48;
+  --color-success-800: #05603a;
+  --color-success-900: #054f31;
+
+  /* Error */
+  --color-error-25: #fffbfa;
+  --color-error-50: #fef3f2;
+  --color-error-100: #fee4e2;
+  --color-error-200: #fecdca;
+  --color-error-300: #fda29b;
+  --color-error-400: #f97066;
+  --color-error-500: #f04438;
+  --color-error-600: #d92d20;
+  --color-error-700: #b42318;
+  --color-error-800: #912018;
+  --color-error-900: #7a271a;
+
+  /* Warning */
+  --color-warning-25: #fffcf5;
+  --color-warning-50: #fffaeb;
+  --color-warning-100: #fef0c7;
+  --color-warning-200: #fedf89;
+  --color-warning-300: #fec84b;
+  --color-warning-400: #fdb022;
+  --color-warning-500: #f79009;
+  --color-warning-600: #dc6803;
+  --color-warning-700: #b54708;
+  --color-warning-800: #93370d;
+  --color-warning-900: #7a2e0e;
+
+  /* Blue Light (info) */
+  --color-blue-light-25: #f5fbff;
+  --color-blue-light-50: #f0f9ff;
+  --color-blue-light-100: #e0f2fe;
+  --color-blue-light-200: #b9e6fe;
+  --color-blue-light-300: #7cd4fd;
+  --color-blue-light-400: #36bffa;
+  --color-blue-light-500: #0ba5ec;
+  --color-blue-light-600: #0086c9;
+  --color-blue-light-700: #026aa2;
+  --color-blue-light-800: #065986;
+  --color-blue-light-900: #0b4a6f;
+
+  /* Gray */
+  --color-gray-25: #fcfcfd;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f2f4f7;
+  --color-gray-200: #eaecf0;
+  --color-gray-300: #d0d5dd;
+  --color-gray-400: #98a2b3;
+  --color-gray-500: #667085;
+  --color-gray-600: #475467;
+  --color-gray-700: #344054;
+  --color-gray-800: #1d2939;
+  --color-gray-900: #101828;
+  --color-gray-950: #0c111d;
+
+  /* Shadows */
+  --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  --shadow-theme-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-theme-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-theme-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08), 0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(16, 148, 185, 0.12);
+
+  /* Z-index */
+  --z-index-1: 1;
+  --z-index-99: 99;
+  --z-index-999: 999;
+  --z-index-9999: 9999;
+  --z-index-99999: 99999;
+  --z-index-999999: 999999;
+}
+
+/* ── Menu utility classes ── */
+@utility menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+@utility menu-item-active {
+  background-color: var(--color-brand-50);
+  color: var(--color-brand-500);
+}
+@utility menu-item-inactive {
+  color: #6b7280;
+}
+@utility menu-item-icon-active {
+  color: var(--color-brand-500);
+}
+@utility menu-item-icon-inactive {
+  color: #9ca3af;
+}
+@utility menu-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+@utility menu-dropdown-item-active {
+  background-color: var(--color-brand-50);
+  color: var(--color-brand-500);
+}
+@utility menu-dropdown-item-inactive {
+  color: #6b7280;
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+@utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+@utility pag-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  color: #4b5563;
+  transition: background-color 0.2s;
+}
+
+@layer base {
+  /* Default border color — matches vue-tailwind convention so bare `border` = gray-200 */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
+  /* Fuente global */
+  body {
+    font-family: var(--font-outfit, "Outfit", system-ui, sans-serif);
+  }
+
+  /* Resets */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: var(--ts-bg-body);
+    color: var(--ts-text-primary);
+  }
+
+  #app {
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  /*
+   * IMPORTANTE: a {} va aquí dentro de @layer base, NO fuera.
+   * En Tailwind v4 las reglas fuera de @layer tienen mayor prioridad
+   * que @layer utilities, lo que hace que a { color } invalide todas
+   * las utilidades de color aplicadas a <router-link> (que renderiza como <a>).
+   */
+  a {
+    color: var(--ts-primary);
+    text-decoration: none;
+    transition: color var(--ts-transition-fast);
+  }
+  a:hover {
+    color: var(--ts-primary-dark);
+  }
+}
 
 /* ============================================
    TeamSoft+ Design Token System
@@ -45,7 +278,7 @@
   --ts-blue-grey-dark: #37474F;
 
   /* ── Background / Surface ── */
-  --ts-bg-body: #efefef;
+  --ts-bg-body: #f9fafb;
   --ts-bg-surface: #ffffff;
   --ts-bg-surface-alt: #fafafa;
   --ts-bg-hover: #e8e8e8;
@@ -107,93 +340,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Global Resets ── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background-color: var(--ts-bg-body);
-  color: var(--ts-text-primary);
-}
-
-#app {
-  width: 100%;
-  min-height: 100vh;
-}
-
-a {
-  color: var(--ts-primary);
-  text-decoration: none;
-  transition: color var(--ts-transition-fast);
-}
-a:hover {
-  color: var(--ts-primary-dark);
-}
-
 /* ============================================
    PrimeVue Global Overrides — TeamSoft+ Theme
    ============================================ */
-
-/* ── Dialog title bar: gradient from legacy ── */
-.p-dialog .p-dialog-header {
-  background-image: linear-gradient(277deg, var(--ts-primary) 0%, var(--ts-dark) 80%) !important;
-  color: var(--ts-text-on-dark) !important;
-  border-bottom: none !important;
-}
-
-.p-dialog .p-dialog-header .p-dialog-title {
-  color: var(--ts-text-on-dark) !important;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.p-dialog .p-dialog-header .p-dialog-header-icon {
-  color: var(--ts-text-on-dark) !important;
-  transition: color var(--ts-transition-fast);
-}
-
-.p-dialog .p-dialog-header .p-dialog-header-icon:hover {
-  color: var(--ts-primary) !important;
-  background: rgba(255,255,255,0.1) !important;
-}
-
-/* ── Panel header: dark style from legacy ── */
-.p-panel .p-panel-header {
-  background: var(--ts-dark) !important;
-  color: var(--ts-text-on-dark) !important;
-  border-color: var(--ts-dark) !important;
-  padding: 0.75rem 1.25rem !important;
-}
-
-.p-panel .p-panel-header .p-panel-title {
-  color: var(--ts-text-on-dark) !important;
-  font-weight: 600;
-}
-
-.p-panel .p-panel-header .p-panel-header-icon {
-  color: var(--ts-text-on-dark) !important;
-}
-
-/* ── DataTable selected row ── */
-.p-datatable .p-datatable-tbody > tr.p-highlight {
-  background: var(--ts-primary) !important;
-  color: var(--ts-text-on-dark) !important;
-}
-
-.p-datatable .p-datatable-tbody > tr.p-highlight td {
-  color: var(--ts-text-on-dark) !important;
-}
-
-/* ── DataTable striped rows ── */
-.p-datatable .p-datatable-tbody > tr:nth-child(even) {
-  background: var(--ts-bg-surface-alt);
-}
 
 /* ── Toast tweaks ── */
 .p-toast-message-success {
@@ -210,12 +359,6 @@ a:hover {
 
 .p-toast-message-info {
   border-left: 4px solid var(--ts-info) !important;
-}
-
-/* ── Confirm Dialog severity icon color ── */
-.p-confirmdialog .p-confirmdialog-icon {
-  color: var(--ts-warning) !important;
-  font-size: 1.75rem;
 }
 
 /* ── Input focus state: legacy cyan underline ── */

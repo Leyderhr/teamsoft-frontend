@@ -11,11 +11,13 @@ export const userConfig = {
     service: userService,
     columns: [
         { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'username', header: 'Usuario', width: '180px', sortable: true, filterable: true },
-        { field: 'person.personName', header: 'Nombre', width: '160px', sortable: true, filterable: true },
-        { field: 'person.surName', header: 'Apellidos', width: '160px', sortable: true, filterable: true },
-        { field: 'person.email', header: 'Correo', width: '200px', sortable: true, filterable: true },
-        { field: 'role', header: 'Rol', width: '180px', sortable: true, filterable: true }
+        { field: 'personName', header: 'Nombre', width: '140px', sortable: true, filterable: true },
+        { field: 'surname', header: 'Apellido', width: '140px', sortable: true, filterable: true },
+        { field: 'idCard', header: 'Cédula', width: '120px', sortable: true, filterable: true },
+        { field: 'mail', header: 'Correo', width: '200px', sortable: true, filterable: true },
+        { field: 'username', header: 'Usuario', width: '200px', sortable: true, filterable: true },
+        { field: 'roles', header: 'Roles', width: '200px', sortable: false, type: 'roles' },
+        { field: 'enabled', header: 'Habilitado', width: '100px', sortable: true, type: 'boolean' }
     ],
     fields: [],
     useCustomDialog: true,
