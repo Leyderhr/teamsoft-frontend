@@ -1,259 +1,152 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import TabPanel from 'primevue/tabpanel'
-import InputText from 'primevue/inputtext'
-import Tag from 'primevue/tag'
-import Button from 'primevue/button'
-import { FilterMatchMode } from '@primevue/core/api'
+import { RefreshCw, Loader2 } from 'lucide-vue-next'
+import DataTable from '@/shared/components/DataTable.vue'
 import auditService from '@/features/audit/services/auditService.js'
 
 const toast = useToast()
 const loading = ref(false)
-const activeTab = ref('0')
+const activeTab = ref('general')
 
-// Datos por categoría
 const generalActions = ref([])
 const closeActions = ref([])
 const cancelActions = ref([])
 const ioActions = ref([])
 
-// Filtros para tabla general
-const filtersGeneral = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    user: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    action: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    ip: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    affectedTable: { value: null, matchMode: FilterMatchMode.CONTAINS }
-})
+const auditTabs = [
+  { key: 'general', label: 'Acciones Generales' },
+  { key: 'cierres', label: 'Cierres / Pausas' },
+  { key: 'cancelaciones', label: 'Cancelaciones' },
+  { key: 'io', label: 'Importación / Exportación' },
+]
 
-const filtersIO = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    user: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    action: { value: null, matchMode: FilterMatchMode.CONTAINS }
-})
+const generalColumns = [
+  { field: 'user', header: 'Usuario', sortable: true },
+  { field: 'action', header: 'Acción Realizada', sortable: true, type: 'badge' },
+  { field: 'date', header: 'Fecha', sortable: true },
+  { field: 'ip', header: 'IP (v4)', sortable: false },
+  { field: 'affectedTable', header: 'Tabla Afectada', sortable: true },
+]
 
-const globalFilterGeneral = ref('')
-const globalFilterIO = ref('')
+const closeColumns = [
+  { field: 'user', header: 'Usuario', sortable: true },
+  { field: 'action', header: 'Acción Realizada', sortable: true, type: 'badge' },
+  { field: 'date', header: 'Fecha', sortable: true },
+  { field: 'ip', header: 'IP (v4)', sortable: false },
+  { field: 'affectedRowId', header: 'ID Fila Afectada', sortable: false },
+]
 
-// Mapeo de colores para acciones
-const actionSeverity = (action) => {
-    const map = {
-        'CREATE': 'success',
-        'UPDATE': 'info',
-        'DELETE': 'danger',
-        'CREATE/UPDATE': 'info',
-        'CERRAR': 'warn',
-        'DETENER': 'warn',
-        'REANUDAR': 'success',
-        'CANCELAR': 'danger',
-        'IMPORTAR': 'secondary',
-        'EXPORTAR': 'secondary'
-    }
-    return map[action] || 'secondary'
-}
+const cancelColumns = [
+  { field: 'user', header: 'Usuario', sortable: true },
+  { field: 'action', header: 'Acción Realizada', sortable: true, type: 'badge' },
+  { field: 'date', header: 'Fecha', sortable: true },
+  { field: 'ip', header: 'IP (v4)', sortable: false },
+  { field: 'affectedTable', header: 'Tabla Afectada', sortable: true },
+  { field: 'affectedRowId', header: 'ID Fila Afectada', sortable: false },
+]
+
+const ioColumns = [
+  { field: 'user', header: 'Usuario', sortable: true },
+  { field: 'action', header: 'Acción', sortable: true, type: 'badge' },
+  { field: 'date', header: 'Fecha', sortable: true },
+  { field: 'hasErrors', header: 'Errores', sortable: false, type: 'boolean' },
+  { field: 'ip', header: 'IP (v4)', sortable: false },
+  { field: 'comment', header: 'Comentario', sortable: false },
+]
 
 const loadAllData = async () => {
-    loading.value = true
-    try {
-        const [general, close, cancel, io] = await Promise.allSettled([
-            auditService.getGeneralActions(),
-            auditService.getCloseActions(),
-            auditService.getCancelActions(),
-            auditService.getIOActions()
-        ])
-        if (general.status === 'fulfilled') generalActions.value = general.value || []
-        if (close.status === 'fulfilled') closeActions.value = close.value || []
-        if (cancel.status === 'fulfilled') cancelActions.value = cancel.value || []
-        if (io.status === 'fulfilled') ioActions.value = io.value || []
-    } catch (error) {
-        console.error('Error cargando trazas:', error)
-        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las trazas del sistema', life: 3000 })
-    } finally {
-        loading.value = false
-    }
+  loading.value = true
+  try {
+    const [general, close, cancel, io] = await Promise.allSettled([
+      auditService.getGeneralActions(),
+      auditService.getCloseActions(),
+      auditService.getCancelActions(),
+      auditService.getIOActions()
+    ])
+    if (general.status === 'fulfilled') generalActions.value = general.value || []
+    if (close.status === 'fulfilled') closeActions.value = close.value || []
+    if (cancel.status === 'fulfilled') cancelActions.value = cancel.value || []
+    if (io.status === 'fulfilled') ioActions.value = io.value || []
+  } catch (error) {
+    console.error('Error cargando trazas:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las trazas del sistema', life: 3000 })
+  } finally {
+    loading.value = false
+  }
 }
 
-onMounted(() => {
-    loadAllData()
-})
+onMounted(loadAllData)
 </script>
 
 <template>
-  <div class="p-4 pl-15">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="titulo text-black font-bold">Auditar Sistema</h1>
-      <Button
-        label="Actualizar"
-        icon="pi pi-refresh"
-        severity="secondary"
-        outlined
-        :loading="loading"
+  <div class="p-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">Auditar Sistema</h1>
+      <button
         @click="loadAllData"
-      />
+        :disabled="loading"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Loader2 v-if="loading" class="w-4 h-4 animate-spin" />
+        <RefreshCw v-else class="w-4 h-4" />
+        Actualizar
+      </button>
     </div>
 
-    <Tabs v-model:value="activeTab">
-      <TabList>
-        <Tab value="0">Acciones Generales</Tab>
-        <Tab value="1">Cierres / Pauses</Tab>
-        <Tab value="2">Cancelaciones</Tab>
-        <Tab value="3">Importación / Exportación</Tab>
-      </TabList>
+    <!-- Tabs card -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+      <!-- Tab nav -->
+      <div class="flex border-b border-gray-200 overflow-x-auto no-scrollbar">
+        <button
+          v-for="tab in auditTabs"
+          :key="tab.key"
+          @click="activeTab = tab.key"
+          class="px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors border-b-2"
+          :class="activeTab === tab.key
+            ? 'border-brand-500 text-brand-500'
+            : 'border-transparent text-gray-500 hover:text-gray-700'"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
 
-      <TabPanels>
-        <!-- TAB 1: Acciones Generales -->
-        <TabPanel value="0">
-          <div class="flex justify-end mb-3">
-            <InputText
-              v-model="filtersGeneral['global'].value"
-              placeholder="Buscar..."
-              class="w-64"
-            />
-          </div>
-          <DataTable
-            :value="generalActions"
-            :loading="loading"
-            v-model:filters="filtersGeneral"
-            filterDisplay="menu"
-            :globalFilterFields="['user', 'action', 'ip', 'affectedTable']"
-            paginator
-            :rows="10"
-            :rowsPerPageOptions="[10, 20, 30, 50]"
-            sortField="date"
-            :sortOrder="-1"
-            removableSort
-            class="p-datatable-sm"
-            emptyMessage="No hay registros de auditoría"
-            currentPageReportTemplate="{first} a {last} de {totalRecords}"
-            paginatorTemplate="CurrentPageReport FirstPageLink PreviousPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-          >
-            <Column field="user" header="Usuario" sortable :style="{ minWidth: '130px' }" />
-            <Column field="action" header="Acción Realizada" sortable :style="{ minWidth: '160px' }">
-              <template #body="{ data }">
-                <Tag :value="data.action" :severity="actionSeverity(data.action)" />
-              </template>
-            </Column>
-            <Column field="date" header="Fecha" sortable :style="{ minWidth: '180px' }" />
-            <Column field="ip" header="IP (v4)" :style="{ minWidth: '130px' }" />
-            <Column field="affectedTable" header="Tabla Afectada" sortable :style="{ minWidth: '160px' }" />
-          </DataTable>
-        </TabPanel>
-
-        <!-- TAB 2: Cierres / Detenidos / Reanudados -->
-        <TabPanel value="1">
-          <DataTable
-            :value="closeActions"
-            :loading="loading"
-            paginator
-            :rows="10"
-            :rowsPerPageOptions="[10, 20, 30, 50]"
-            sortField="date"
-            :sortOrder="-1"
-            removableSort
-            class="p-datatable-sm"
-            emptyMessage="No hay registros"
-            currentPageReportTemplate="{first} a {last} de {totalRecords}"
-            paginatorTemplate="CurrentPageReport FirstPageLink PreviousPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-          >
-            <Column field="user" header="Usuario" sortable :style="{ minWidth: '130px' }" />
-            <Column field="action" header="Acción Realizada" sortable :style="{ minWidth: '150px' }">
-              <template #body="{ data }">
-                <Tag :value="data.action" :severity="actionSeverity(data.action)" />
-              </template>
-            </Column>
-            <Column field="date" header="Fecha" sortable :style="{ minWidth: '180px' }" />
-            <Column field="ip" header="IP (v4)" :style="{ minWidth: '130px' }" />
-            <Column field="affectedRowId" header="ID Fila Afectada" :style="{ minWidth: '150px' }" />
-          </DataTable>
-        </TabPanel>
-
-        <!-- TAB 3: Cancelaciones -->
-        <TabPanel value="2">
-          <DataTable
-            :value="cancelActions"
-            :loading="loading"
-            paginator
-            :rows="10"
-            :rowsPerPageOptions="[10, 20, 30, 50]"
-            sortField="date"
-            :sortOrder="-1"
-            removableSort
-            class="p-datatable-sm"
-            emptyMessage="No hay registros"
-            currentPageReportTemplate="{first} a {last} de {totalRecords}"
-            paginatorTemplate="CurrentPageReport FirstPageLink PreviousPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-          >
-            <Column field="user" header="Usuario" sortable :style="{ minWidth: '130px' }" />
-            <Column field="action" header="Acción Realizada" sortable :style="{ minWidth: '150px' }">
-              <template #body="{ data }">
-                <Tag :value="data.action" :severity="actionSeverity(data.action)" />
-              </template>
-            </Column>
-            <Column field="date" header="Fecha" sortable :style="{ minWidth: '180px' }" />
-            <Column field="ip" header="IP (v4)" :style="{ minWidth: '130px' }" />
-            <Column field="affectedTable" header="Tabla Afectada" :style="{ minWidth: '160px' }" />
-            <Column field="affectedRowId" header="ID Fila Afectada" :style="{ minWidth: '150px' }" />
-          </DataTable>
-        </TabPanel>
-
-        <!-- TAB 4: Importación / Exportación -->
-        <TabPanel value="3">
-          <div class="flex justify-end mb-3">
-            <InputText
-              v-model="filtersIO['global'].value"
-              placeholder="Buscar..."
-              class="w-64"
-            />
-          </div>
-          <DataTable
-            :value="ioActions"
-            :loading="loading"
-            v-model:filters="filtersIO"
-            filterDisplay="menu"
-            :globalFilterFields="['user', 'action', 'comment']"
-            paginator
-            :rows="10"
-            :rowsPerPageOptions="[10, 20, 30, 50]"
-            sortField="date"
-            :sortOrder="-1"
-            removableSort
-            class="p-datatable-sm"
-            emptyMessage="No hay registros"
-            currentPageReportTemplate="{first} a {last} de {totalRecords}"
-            paginatorTemplate="CurrentPageReport FirstPageLink PreviousPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-          >
-            <Column field="user" header="Usuario" sortable :style="{ minWidth: '130px' }" />
-            <Column field="action" header="Acción" sortable :style="{ minWidth: '130px' }">
-              <template #body="{ data }">
-                <Tag :value="data.action" :severity="actionSeverity(data.action)" />
-              </template>
-            </Column>
-            <Column field="date" header="Fecha" sortable :style="{ minWidth: '180px' }" />
-            <Column field="hasErrors" header="Errores" :style="{ minWidth: '100px' }">
-              <template #body="{ data }">
-                <Tag :value="data.hasErrors ? 'SÍ' : 'NO'" :severity="data.hasErrors ? 'danger' : 'success'" />
-              </template>
-            </Column>
-            <Column field="ip" header="IP (v4)" :style="{ minWidth: '130px' }" />
-            <Column field="comment" header="Comentario" :style="{ minWidth: '200px' }" />
-          </DataTable>
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+      <!-- Tab content -->
+      <div class="p-6">
+        <DataTable
+          v-if="activeTab === 'general'"
+          :columns="generalColumns"
+          :items="generalActions"
+          :loading="loading"
+          :show-actions="false"
+          :default-rows="10"
+        />
+        <DataTable
+          v-else-if="activeTab === 'cierres'"
+          :columns="closeColumns"
+          :items="closeActions"
+          :loading="loading"
+          :show-actions="false"
+          :default-rows="10"
+        />
+        <DataTable
+          v-else-if="activeTab === 'cancelaciones'"
+          :columns="cancelColumns"
+          :items="cancelActions"
+          :loading="loading"
+          :show-actions="false"
+          :default-rows="10"
+        />
+        <DataTable
+          v-else-if="activeTab === 'io'"
+          :columns="ioColumns"
+          :items="ioActions"
+          :loading="loading"
+          :show-actions="false"
+          :default-rows="10"
+        />
+      </div>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.titulo {
-  font-size: 2.5rem;
-  margin: 20px 0;
-  font-family: Arial, "Arial CE", "Lucida Grande CE", lucida, "Helvetica CE", sans-serif;
-}
-</style>
