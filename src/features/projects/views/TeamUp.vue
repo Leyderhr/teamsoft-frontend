@@ -1,25 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import Panel from 'primevue/panel'
-import Button from 'primevue/button'
-import MultiSelect from 'primevue/multiselect'
-import InputNumber from 'primevue/inputnumber'
-import Checkbox from 'primevue/checkbox'
-import RadioButton from 'primevue/radiobutton'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Accordion from 'primevue/accordion'
-import AccordionPanel from 'primevue/accordionpanel'
-import AccordionHeader from 'primevue/accordionheader'
-import AccordionContent from 'primevue/accordioncontent'
-import Tag from 'primevue/tag'
-import Divider from 'primevue/divider'
-import ProgressSpinner from 'primevue/progressspinner'
-
+import { Check, Briefcase, Users, Loader2, Cog, RefreshCw, Save, ArrowLeft, ArrowRight } from 'lucide-vue-next'
+import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import projectService from '@/features/projects/services/projectService.js'
 import personGroupService from '@/features/nomenclatives/services/personGroupService.js'
 import teamFormationService from '@/features/projects/services/teamFormationService.js'
+
 const toast = useToast()
 
 // ===========================
@@ -38,15 +25,12 @@ const loadingGroups     = ref(false)
 const selectedProjectIds = ref([])
 const selectedGroupIds   = ref([])
 
-// Configuración de roles
-const confRole     = ref('custom')  // 'custom' | 'all'
+const confRole     = ref('custom')
 const maximumRoles = ref(3)
 
-// Opciones booleanas de formación
 const onlyOneProject = ref(true)
 const confAllGroup   = ref(false)
 
-// Modo de formación (1-4)
 const confFormMode    = ref(2)
 const formModeOptions = [
   { label: 'Secuencial — asignando jefe primero',   value: 1 },
@@ -86,17 +70,17 @@ const maxRoleLoad        = ref(40.0)
 // ===========================
 const generating = ref(false)
 const saving     = ref(false)
-const proposal   = ref(null)   // { formattedEval, projectsProposal }
+const proposal   = ref(null)
 
 // ===========================
 // Validaciones computadas
 // ===========================
 const step1Valid = computed(() =>
-    selectedProjectIds.value.length > 0 && selectedGroupIds.value.length > 0
+  selectedProjectIds.value.length > 0 && selectedGroupIds.value.length > 0
 )
 
 const atLeastOneFuncSelected = computed(() =>
-    maxCompetences.value || maxInterests.value || minIncomp.value || takeWorkLoad.value
+  maxCompetences.value || maxInterests.value || minIncomp.value || takeWorkLoad.value
 )
 
 const totalWeights = computed(() => {
@@ -118,8 +102,8 @@ const loadProjects = async () => {
   try {
     const data = await projectService.getAll()
     availableProjects.value = data
-        .filter(p => !p.close)
-        .map(p => ({ id: p.id, label: p.projectName }))
+      .filter(p => !p.close)
+      .map(p => ({ id: p.id, label: p.projectName }))
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los proyectos', life: 3000 })
   } finally {
@@ -165,7 +149,7 @@ const prevStep = () => {
 }
 
 // ===========================
-// Construcción del payload para la API
+// Construcción del payload
 // ===========================
 const buildPayload = () => ({
   teamFormationParameters: {
@@ -193,7 +177,7 @@ const buildPayload = () => ({
 })
 
 // ===========================
-// Generar propuesta de equipo
+// Generar propuesta
 // ===========================
 const generateTeams = async () => {
   generating.value = true
@@ -210,7 +194,7 @@ const generateTeams = async () => {
 }
 
 // ===========================
-// Guardar equipos en la BD
+// Guardar equipos
 // ===========================
 const saveTeams = async () => {
   if (!proposal.value) return
@@ -229,6 +213,8 @@ const saveTeams = async () => {
   }
 }
 
+const stepLabels = ['Selección y Configuración', 'Parámetros del Algoritmo', 'Generar y Guardar']
+
 onMounted(() => {
   loadProjects()
   loadGroups()
@@ -236,380 +222,442 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4 pl-15">
-    <h1 class="titulo text-black text-left">Formar Equipo</h1>
+  <div class="space-y-6">
+    <PageBreadcrumb page-title="Formar Equipo" />
 
-    <!-- ======================== -->
-    <!-- Indicador de pasos       -->
-    <!-- ======================== -->
-    <div class="steps-bar flex align-items-center gap-0 mb-6">
-      <div
-          v-for="(stepLabel, idx) in ['Selección y Configuración', 'Parámetros del Algoritmo', 'Generar y Guardar']"
-          :key="idx"
-          class="step-item flex align-items-center"
-      >
-        <div class="flex align-items-center gap-2 step-btn" @click="idx + 1 < currentStep && (currentStep = idx + 1)">
-          <div :class="['step-circle', currentStep > idx + 1 ? 'done' : currentStep === idx + 1 ? 'active' : '']">
-            <i v-if="currentStep > idx + 1" class="pi pi-check" style="font-size: 0.85rem"/>
+    <!-- Stepper -->
+    <div class="flex items-center gap-1 overflow-x-auto pb-1">
+      <template v-for="(label, idx) in stepLabels" :key="idx">
+        <div
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all"
+          :class="currentStep === idx + 1
+            ? 'bg-brand-500 text-white font-semibold'
+            : currentStep > idx + 1
+              ? 'bg-brand-50 text-brand-600 font-medium cursor-pointer'
+              : 'bg-gray-100 text-gray-500 border border-gray-200'"
+          @click="currentStep > idx + 1 && (currentStep = idx + 1)"
+        >
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+            :class="currentStep === idx + 1 ? 'bg-white/20' : currentStep > idx + 1 ? 'bg-brand-100 text-brand-600' : 'bg-gray-200 text-gray-500'"
+          >
+            <Check v-if="currentStep > idx + 1" class="w-3 h-3" />
             <span v-else>{{ idx + 1 }}</span>
-          </div>
-          <span :class="['step-label', currentStep === idx + 1 ? 'active-label' : '']">{{ stepLabel }}</span>
+          </span>
+          {{ label }}
         </div>
-        <div v-if="idx < 2" class="step-line"/>
+        <div v-if="idx < stepLabels.length - 1" class="h-px w-4 bg-gray-200 shrink-0" />
+      </template>
+    </div>
+
+    <!-- ============================== PASO 1 ============================== -->
+    <div v-show="currentStep === 1" class="space-y-5">
+
+      <!-- Proyectos y Grupos -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800">Selección de Proyectos y Grupos</h3>
+        </div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- Proyectos -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-gray-700">
+              Proyectos a formar equipo <span class="text-error-500">*</span>
+            </label>
+            <div v-if="loadingProjects" class="flex items-center gap-2 text-sm text-gray-400 py-2">
+              <Loader2 class="w-4 h-4 animate-spin" /> Cargando proyectos...
+            </div>
+            <div v-else class="overflow-y-auto max-h-48 rounded-lg border border-gray-200 divide-y divide-gray-100">
+              <label
+                v-for="proj in availableProjects"
+                :key="proj.id"
+                class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :value="proj.id"
+                  v-model="selectedProjectIds"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer"
+                />
+                <span class="text-sm text-gray-700">{{ proj.label }}</span>
+              </label>
+              <div v-if="!availableProjects.length" class="px-4 py-6 text-center text-sm text-gray-400">
+                Sin proyectos disponibles
+              </div>
+            </div>
+            <p class="text-xs text-gray-400">{{ selectedProjectIds.length }} seleccionado(s)</p>
+          </div>
+
+          <!-- Grupos -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-gray-700">
+              Grupos de búsqueda <span class="text-error-500">*</span>
+            </label>
+            <div v-if="loadingGroups" class="flex items-center gap-2 text-sm text-gray-400 py-2">
+              <Loader2 class="w-4 h-4 animate-spin" /> Cargando grupos...
+            </div>
+            <div v-else class="overflow-y-auto max-h-48 rounded-lg border border-gray-200 divide-y divide-gray-100">
+              <label
+                v-for="grp in availableGroups"
+                :key="grp.id"
+                class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :value="grp.id"
+                  v-model="selectedGroupIds"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer"
+                />
+                <span class="text-sm text-gray-700">{{ grp.label }}</span>
+              </label>
+              <div v-if="!availableGroups.length" class="px-4 py-6 text-center text-sm text-gray-400">
+                Sin grupos disponibles
+              </div>
+            </div>
+            <p class="text-xs text-gray-400">{{ selectedGroupIds.length }} seleccionado(s)</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Configuración de Roles -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800">Configuración de Roles</h3>
+        </div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <div class="flex flex-col gap-3">
+            <p class="text-sm font-medium text-gray-700">Cantidad máxima de roles por persona</p>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="radio" v-model="confRole" value="custom" class="w-4 h-4 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+              <span class="text-sm text-gray-700">Limitar cantidad máxima de roles</span>
+            </label>
+            <div v-if="confRole === 'custom'" class="ml-7">
+              <input
+                v-model.number="maximumRoles"
+                type="number" min="1" max="20"
+                class="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+              />
+            </div>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="radio" v-model="confRole" value="all" class="w-4 h-4 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+              <span class="text-sm text-gray-700">Todos los roles posibles</span>
+            </label>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <p class="text-sm font-medium text-gray-700">Restricciones adicionales</p>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" v-model="onlyOneProject" class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+              <span class="text-sm text-gray-700">Cada trabajador en un solo proyecto</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" v-model="confAllGroup" class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+              <span class="text-sm text-gray-700">Usar toda la plantilla de grupos</span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Modo de Formación -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800">Modo de Formación</h3>
+        </div>
+        <div class="p-6">
+          <p class="text-sm text-gray-500 mb-4">Define el orden y estrategia con que el algoritmo construye los equipos.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label
+              v-for="opt in formModeOptions"
+              :key="opt.value"
+              class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-brand-300 hover:bg-brand-50/30 transition-colors"
+              :class="confFormMode === opt.value ? 'border-brand-400 bg-brand-50' : ''"
+            >
+              <input type="radio" v-model="confFormMode" :value="opt.value" class="w-4 h-4 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+              <span class="text-sm text-gray-700">{{ opt.label }}</span>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- ============================== -->
-    <!-- PASO 1: Selección y config     -->
-    <!-- ============================== -->
-    <div v-show="currentStep === 1">
-      <Panel header="Selección de Proyectos y Grupos">
-        <div class="two-col-grid gap-6 mb-4">
-          <div>
-            <label class="block font-semibold mb-2 text-gray-700">
-              Proyectos a formar equipo <span class="text-red-500">*</span>
-            </label>
-            <MultiSelect
-                v-model="selectedProjectIds"
-                :options="availableProjects"
-                optionLabel="label"
-                optionValue="id"
-                placeholder="Seleccione proyectos..."
-                :loading="loadingProjects"
-                filter
-                filterPlaceholder="Buscar proyecto..."
-                class="w-full"
-                display="chip"
-            />
-          </div>
-          <div>
-            <label class="block font-semibold mb-2 text-gray-700">
-              Grupos de búsqueda <span class="text-red-500">*</span>
-            </label>
-            <MultiSelect
-                v-model="selectedGroupIds"
-                :options="availableGroups"
-                optionLabel="label"
-                optionValue="id"
-                placeholder="Seleccione grupos..."
-                :loading="loadingGroups"
-                filter
-                filterPlaceholder="Buscar grupo..."
-                class="w-full"
-                display="chip"
-            />
-          </div>
-        </div>
-      </Panel>
+    <!-- ============================== PASO 2 ============================== -->
+    <div v-show="currentStep === 2" class="space-y-5">
 
-      <Panel header="Configuración de Roles" class="mt-4">
-        <div class="two-col-grid gap-6">
-          <div>
-            <p class="font-semibold mb-3 text-gray-700">Cantidad máxima de roles por persona</p>
-            <div class="flex-col gap-3">
-              <div class="flex align-items-center gap-2 mb-2">
-                <RadioButton v-model="confRole" inputId="confCustom" value="custom"/>
-                <label for="confCustom" class="cursor-pointer">Limitar cantidad máxima de roles</label>
-              </div>
-              <div v-if="confRole === 'custom'" class="ml-6 mb-3">
-                <InputNumber
-                    v-model="maximumRoles"
-                    :min="1"
-                    :max="20"
-                    showButtons
-                    inputClass="w-20"
-                />
-              </div>
-              <div class="flex align-items-center gap-2">
-                <RadioButton v-model="confRole" inputId="confAll" value="all"/>
-                <label for="confAll" class="cursor-pointer">Todos los roles posibles</label>
-              </div>
-            </div>
-          </div>
-          <div>
-            <p class="font-semibold mb-3 text-gray-700">Restricciones adicionales</p>
-            <div class="flex-col gap-3">
-              <div class="flex align-items-center gap-2 mb-3">
-                <Checkbox v-model="onlyOneProject" :binary="true" inputId="onlyOne"/>
-                <label for="onlyOne" class="cursor-pointer">Cada trabajador en un solo proyecto</label>
-              </div>
-              <div class="flex align-items-center gap-2">
-                <Checkbox v-model="confAllGroup" :binary="true" inputId="allGroup"/>
-                <label for="allGroup" class="cursor-pointer">Usar toda la plantilla de grupos</label>
-              </div>
-            </div>
-          </div>
+      <!-- Funciones Objetivo -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800">Funciones Objetivo</h3>
         </div>
-      </Panel>
-
-      <Panel header="Modo de Formación" class="mt-4">
-        <p class="text-gray-500 mb-4 text-sm">Define el orden y estrategia con que el algoritmo construye los equipos.</p>
-        <div class="two-col-grid gap-3">
-          <div v-for="opt in formModeOptions" :key="opt.value" class="flex align-items-center gap-2">
-            <RadioButton v-model="confFormMode" :inputId="'fm' + opt.value" :value="opt.value"/>
-            <label :for="'fm' + opt.value" class="cursor-pointer">{{ opt.label }}</label>
-          </div>
-        </div>
-      </Panel>
-    </div>
-
-    <!-- ================================= -->
-    <!-- PASO 2: Parámetros del algoritmo  -->
-    <!-- ================================= -->
-    <div v-show="currentStep === 2">
-      <Panel header="Funciones Objetivo">
-        <p class="text-gray-500 mb-4 text-sm">
-          Seleccione las funciones a optimizar y asigne sus pesos. La suma de los pesos activos debe ser ≤ 1.0.
-        </p>
-        <div class="two-col-grid gap-4">
-          <div :class="['obj-card', maxCompetences ? 'obj-card--active' : '']">
-            <div class="flex align-items-center gap-2 mb-2">
-              <Checkbox v-model="maxCompetences" :binary="true" inputId="chkComp"/>
-              <label for="chkComp" class="font-semibold cursor-pointer">Maximizar Competencias</label>
-            </div>
-            <div v-if="maxCompetences" class="ml-6">
-              <label class="text-sm text-gray-600 block mb-1">Peso</label>
-              <InputNumber v-model="maxCompetencesWeight" :min="0" :max="1" :step="0.05"
-                           :minFractionDigits="2" :maxFractionDigits="2" showButtons mode="decimal"/>
-            </div>
-          </div>
-          <div :class="['obj-card', maxInterests ? 'obj-card--active' : '']">
-            <div class="flex align-items-center gap-2 mb-2">
-              <Checkbox v-model="maxInterests" :binary="true" inputId="chkInt"/>
-              <label for="chkInt" class="font-semibold cursor-pointer">Maximizar Intereses</label>
-            </div>
-            <div v-if="maxInterests" class="ml-6">
-              <label class="text-sm text-gray-600 block mb-1">Peso</label>
-              <InputNumber v-model="maxInterestsWeight" :min="0" :max="1" :step="0.05"
-                           :minFractionDigits="2" :maxFractionDigits="2" showButtons mode="decimal"/>
-            </div>
-          </div>
-          <div :class="['obj-card', minIncomp ? 'obj-card--active' : '']">
-            <div class="flex align-items-center gap-2 mb-2">
-              <Checkbox v-model="minIncomp" :binary="true" inputId="chkInc"/>
-              <label for="chkInc" class="font-semibold cursor-pointer">Minimizar Incompatibilidades</label>
-            </div>
-            <div v-if="minIncomp" class="ml-6">
-              <label class="text-sm text-gray-600 block mb-1">Peso</label>
-              <InputNumber v-model="minIncompWeight" :min="0" :max="1" :step="0.05"
-                           :minFractionDigits="2" :maxFractionDigits="2" showButtons mode="decimal"/>
-            </div>
-          </div>
-          <div :class="['obj-card', takeWorkLoad ? 'obj-card--active' : '']">
-            <div class="flex align-items-center gap-2 mb-2">
-              <Checkbox v-model="takeWorkLoad" :binary="true" inputId="chkWork"/>
-              <label for="chkWork" class="font-semibold cursor-pointer">Considerar Carga de Trabajo</label>
-            </div>
-            <div v-if="takeWorkLoad" class="ml-6">
-              <label class="text-sm text-gray-600 block mb-1">Peso</label>
-              <InputNumber v-model="workLoadWeight" :min="0" :max="1" :step="0.05"
-                           :minFractionDigits="2" :maxFractionDigits="2" showButtons mode="decimal"/>
-            </div>
-          </div>
-        </div>
-        <div class="flex align-items-center gap-3 mt-4">
-          <span class="font-semibold text-gray-700">Suma de pesos:</span>
-          <Tag :value="totalWeights.toString()" :severity="weightsOk ? 'success' : 'danger'"/>
-          <span v-if="!weightsOk" class="text-red-500 text-sm">La suma no debe superar 1.0</span>
-        </div>
-      </Panel>
-
-      <Panel header="Configuración del Algoritmo" class="mt-4">
-        <div class="three-col-grid gap-6">
-          <div>
-            <label class="block font-semibold mb-2 text-gray-700">Tipo de algoritmo</label>
-            <div class="flex-col gap-2">
-              <div v-for="opt in algorithmOptions" :key="opt.value" class="flex align-items-center gap-2 mb-2">
-                <RadioButton v-model="solutionAlgorithm" :inputId="'alg' + opt.value" :value="opt.value"/>
-                <label :for="'alg' + opt.value" class="cursor-pointer">{{ opt.label }}</label>
-              </div>
-            </div>
-          </div>
-          <div>
-            <label class="block font-semibold mb-2 text-gray-700">Iteraciones</label>
-            <InputNumber v-model="iterations" :min="1" :max="10000" showButtons class="w-full"/>
-            <p class="text-gray-400 text-xs mt-1">A mayor número, mejor calidad pero más tiempo de cómputo.</p>
-          </div>
-          <div>
-            <label class="block font-semibold mb-2 text-gray-700">Carga máxima de rol (h)</label>
-            <InputNumber v-model="maxRoleLoad" :min="1" :max="200" :step="0.5"
-                         :minFractionDigits="1" showButtons class="w-full"/>
-            <div class="flex align-items-center gap-2 mt-3">
-              <Checkbox v-model="anyIncompatibility" :binary="true" inputId="chkAnyInc"/>
-              <label for="chkAnyInc" class="cursor-pointer text-sm">No permitir ninguna incompatibilidad</label>
-            </div>
-          </div>
-        </div>
-      </Panel>
-    </div>
-
-    <!-- ================================= -->
-    <!-- PASO 3: Generar y Guardar         -->
-    <!-- ================================= -->
-    <div v-show="currentStep === 3">
-      <Panel header="Generar Propuesta de Equipo">
-
-        <!-- Estado inicial: sin propuesta y sin cargar -->
-        <div class="initial-state" v-if="!proposal && !generating">
-          <i class="pi pi-users" style="font-size: 3rem; color: #1094b9"/>
-          <p class="text-gray-600 text-center desc-text">
-            Todo está configurado. Haz clic en <strong>Generar</strong> para que el algoritmo calcule la mejor propuesta de equipos.
+        <div class="p-6 flex flex-col gap-5">
+          <p class="text-sm text-gray-500">
+            Seleccione las funciones a optimizar y asigne sus pesos. La suma de los pesos activos debe ser ≤ 1.0.
           </p>
-          <Button label="Generar Propuesta" icon="pi pi-cog" @click="generateTeams"/>
-        </div>
 
-        <!-- Spinner de carga -->
-        <div class="initial-state" v-if="generating">
-          <ProgressSpinner style="width: 60px; height: 60px;" strokeWidth="4"/>
-          <p class="text-gray-600">Ejecutando algoritmo, por favor espere...</p>
-        </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-        <!-- Resultados de la propuesta -->
-        <div v-if="proposal && !generating">
-          <div class="eval-banner mb-4">
-            <i class="pi pi-chart-bar mr-2"/>
-            <span class="font-semibold">Evaluación global: </span>
-            <span class="text-blue-700">{{ proposal.formattedEval }}</span>
+            <!-- Maximizar Competencias -->
+            <div class="rounded-xl border-2 p-4 transition-colors"
+              :class="maxCompetences ? 'border-brand-400 bg-brand-50' : 'border-gray-200 bg-white hover:border-gray-300'"
+            >
+              <label class="flex items-center gap-3 cursor-pointer mb-3">
+                <input type="checkbox" v-model="maxCompetences" class="w-4 h-4 rounded border-gray-300 text-brand-500 cursor-pointer" />
+                <span class="text-sm font-semibold text-gray-800">Maximizar Competencias</span>
+              </label>
+              <div v-if="maxCompetences" class="ml-7 flex flex-col gap-1">
+                <label class="text-xs text-gray-500">Peso</label>
+                <input v-model.number="maxCompetencesWeight" type="number" min="0" max="1" step="0.05"
+                  class="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+
+            <!-- Maximizar Intereses -->
+            <div class="rounded-xl border-2 p-4 transition-colors"
+              :class="maxInterests ? 'border-brand-400 bg-brand-50' : 'border-gray-200 bg-white hover:border-gray-300'"
+            >
+              <label class="flex items-center gap-3 cursor-pointer mb-3">
+                <input type="checkbox" v-model="maxInterests" class="w-4 h-4 rounded border-gray-300 text-brand-500 cursor-pointer" />
+                <span class="text-sm font-semibold text-gray-800">Maximizar Intereses</span>
+              </label>
+              <div v-if="maxInterests" class="ml-7 flex flex-col gap-1">
+                <label class="text-xs text-gray-500">Peso</label>
+                <input v-model.number="maxInterestsWeight" type="number" min="0" max="1" step="0.05"
+                  class="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+
+            <!-- Minimizar Incompatibilidades -->
+            <div class="rounded-xl border-2 p-4 transition-colors"
+              :class="minIncomp ? 'border-brand-400 bg-brand-50' : 'border-gray-200 bg-white hover:border-gray-300'"
+            >
+              <label class="flex items-center gap-3 cursor-pointer mb-3">
+                <input type="checkbox" v-model="minIncomp" class="w-4 h-4 rounded border-gray-300 text-brand-500 cursor-pointer" />
+                <span class="text-sm font-semibold text-gray-800">Minimizar Incompatibilidades</span>
+              </label>
+              <div v-if="minIncomp" class="ml-7 flex flex-col gap-1">
+                <label class="text-xs text-gray-500">Peso</label>
+                <input v-model.number="minIncompWeight" type="number" min="0" max="1" step="0.05"
+                  class="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+
+            <!-- Carga de Trabajo -->
+            <div class="rounded-xl border-2 p-4 transition-colors"
+              :class="takeWorkLoad ? 'border-brand-400 bg-brand-50' : 'border-gray-200 bg-white hover:border-gray-300'"
+            >
+              <label class="flex items-center gap-3 cursor-pointer mb-3">
+                <input type="checkbox" v-model="takeWorkLoad" class="w-4 h-4 rounded border-gray-300 text-brand-500 cursor-pointer" />
+                <span class="text-sm font-semibold text-gray-800">Considerar Carga de Trabajo</span>
+              </label>
+              <div v-if="takeWorkLoad" class="ml-7 flex flex-col gap-1">
+                <label class="text-xs text-gray-500">Peso</label>
+                <input v-model.number="workLoadWeight" type="number" min="0" max="1" step="0.05"
+                  class="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+
           </div>
 
-          <Accordion :value="['0']" multiple>
-            <AccordionPanel
+          <!-- Suma de pesos -->
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-gray-700">Suma de pesos:</span>
+            <span
+              class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold"
+              :class="weightsOk ? 'bg-success-50 text-success-700' : 'bg-error-50 text-error-600'"
+            >
+              {{ totalWeights }}
+            </span>
+            <span v-if="!weightsOk" class="text-xs text-error-600">La suma no debe superar 1.0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuración del Algoritmo -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800">Configuración del Algoritmo</h3>
+        </div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+
+          <!-- Tipo de algoritmo -->
+          <div class="flex flex-col gap-3">
+            <p class="text-sm font-medium text-gray-700">Tipo de algoritmo</p>
+            <div class="flex flex-col gap-2">
+              <label
+                v-for="opt in algorithmOptions"
+                :key="opt.value"
+                class="flex items-center gap-3 cursor-pointer"
+              >
+                <input type="radio" v-model="solutionAlgorithm" :value="opt.value" class="w-4 h-4 text-brand-500 cursor-pointer" />
+                <span class="text-sm text-gray-700">{{ opt.label }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Parámetros numéricos -->
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-gray-700">Iteraciones</label>
+              <input v-model.number="iterations" type="number" min="1" max="10000"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              <p class="text-xs text-gray-400">A mayor número, mejor calidad pero más tiempo de cómputo.</p>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-gray-700">Carga máxima de rol (h)</label>
+              <input v-model.number="maxRoleLoad" type="number" min="1" max="200" step="0.5"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            </div>
+
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" v-model="anyIncompatibility" class="w-4 h-4 rounded border-gray-300 text-brand-500 cursor-pointer" />
+              <span class="text-sm text-gray-700">No permitir ninguna incompatibilidad</span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================== PASO 3 ============================== -->
+    <div v-show="currentStep === 3">
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800">Generar Propuesta de Equipo</h3>
+        </div>
+        <div class="p-6">
+
+          <!-- Estado inicial: sin propuesta -->
+          <div v-if="!proposal && !generating" class="flex flex-col items-center gap-5 py-12">
+            <div class="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center">
+              <Users class="w-8 h-8 text-brand-500" />
+            </div>
+            <p class="text-sm text-gray-500 text-center max-w-md">
+              Todo está configurado. Haz clic en <strong>Generar</strong> para que el algoritmo calcule la mejor propuesta de equipos.
+            </p>
+            <button
+              @click="generateTeams"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
+            >
+              <Cog class="w-4 h-4" />
+              Generar Propuesta
+            </button>
+          </div>
+
+          <!-- Cargando -->
+          <div v-if="generating" class="flex flex-col items-center gap-4 py-12">
+            <Loader2 class="w-10 h-10 text-brand-500 animate-spin" />
+            <p class="text-sm text-gray-500">Ejecutando algoritmo, por favor espere...</p>
+          </div>
+
+          <!-- Resultados -->
+          <div v-if="proposal && !generating" class="flex flex-col gap-5">
+
+            <!-- Eval banner -->
+            <div class="flex items-center gap-3 px-5 py-3 rounded-xl bg-brand-50 border-l-4 border-brand-500">
+              <span class="text-sm text-gray-600">Evaluación global:</span>
+              <span class="text-sm font-semibold text-brand-700">{{ proposal.formattedEval }}</span>
+            </div>
+
+            <!-- Acordeones por proyecto -->
+            <div class="flex flex-col gap-3">
+              <details
                 v-for="(item, pIdx) in (proposal.projectsProposal || [])"
                 :key="pIdx"
-                :value="String(pIdx)"
-            >
-              <AccordionHeader>
-                <div class="flex align-items-center gap-3 w-full">
-                  <i class="pi pi-briefcase text-blue-600"/>
-                  <span class="font-semibold">{{ item.project?.projectName || 'Proyecto ' + (pIdx + 1) }}</span>
-                  <Tag :value="(item.assignedRoles?.length || 0) + ' roles'" severity="info" class="ml-auto"/>
-                </div>
-              </AccordionHeader>
-              <AccordionContent>
-                <div v-for="(roleItem, rIdx) in (item.assignedRoles || [])" :key="rIdx" class="role-section mb-3">
-                  <div class="role-header flex align-items-center gap-2 mb-2">
-                    <i class="pi pi-id-card text-gray-500"/>
-                    <span class="font-semibold text-gray-700">{{ roleItem.role?.roleName }}</span>
-                    <Tag :value="(roleItem.persons?.length || 0) + ' persona(s)'" severity="secondary"/>
-                  </div>
-                  <DataTable :value="roleItem.persons || []" size="small" stripedRows>
-                    <Column field="personName" header="Nombre"/>
-                    <Column field="surName"    header="Apellidos"/>
-                    <Column field="card"       header="C.I."/>
-                  </DataTable>
-                </div>
-              </AccordionContent>
-            </AccordionPanel>
-          </Accordion>
+                class="overflow-hidden rounded-xl border border-gray-200"
+                open
+              >
+                <summary class="flex items-center gap-3 px-5 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors list-none">
+                  <Briefcase class="w-4 h-4 text-brand-500 flex-shrink-0" />
+                  <span class="text-sm font-semibold text-gray-800 flex-1">
+                    {{ item.project?.projectName || 'Proyecto ' + (pIdx + 1) }}
+                  </span>
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-brand-50 text-brand-600">
+                    {{ (item.assignedRoles?.length || 0) }} roles
+                  </span>
+                </summary>
 
-          <Divider/>
-          <div class="flex gap-3 justify-end mt-2">
-            <Button label="Regenerar" icon="pi pi-refresh" class="p-button-secondary"
-                    @click="generateTeams" :loading="generating"/>
-            <Button label="Guardar Equipos" icon="pi pi-save" class="p-button-success"
-                    @click="saveTeams" :loading="saving"/>
+                <div class="p-4 flex flex-col gap-4">
+                  <div v-for="(roleItem, rIdx) in (item.assignedRoles || [])" :key="rIdx" class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-medium text-gray-700">{{ roleItem.role?.roleName }}</span>
+                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                        {{ (roleItem.persons?.length || 0) }} persona(s)
+                      </span>
+                    </div>
+                    <div class="overflow-hidden rounded-lg border border-gray-200">
+                      <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                          <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellidos</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">C.I.</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                          <tr v-for="(person, i) in (roleItem.persons || [])" :key="i" class="hover:bg-gray-50">
+                            <td class="px-4 py-2.5 text-sm text-gray-700">{{ person.personName }}</td>
+                            <td class="px-4 py-2.5 text-sm text-gray-700">{{ person.surName }}</td>
+                            <td class="px-4 py-2.5 text-sm text-gray-700">{{ person.card }}</td>
+                          </tr>
+                          <tr v-if="!roleItem.persons?.length">
+                            <td colspan="3" class="px-4 py-4 text-center text-sm text-gray-400">Sin personas asignadas</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
+              <button
+                @click="generateTeams"
+                :disabled="generating"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw class="w-4 h-4" />
+                Regenerar
+              </button>
+              <button
+                @click="saveTeams"
+                :disabled="saving"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
+                <Save v-else class="w-4 h-4" />
+                Guardar Equipos
+              </button>
+            </div>
+
           </div>
         </div>
-      </Panel>
+      </div>
     </div>
 
-    <!-- ======================== -->
-    <!-- Navegación entre pasos   -->
-    <!-- ======================== -->
-    <div class="flex gap-3 mt-5">
-      <Button v-if="currentStep > 1" label="Anterior" icon="pi pi-arrow-left"
-              class="p-button-secondary" @click="prevStep"/>
-      <Button v-if="currentStep < 3" label="Siguiente" icon="pi pi-arrow-right"
-              iconPos="right" @click="nextStep"/>
+    <!-- Navegación entre pasos -->
+    <div class="flex gap-3">
+      <button
+        v-if="currentStep > 1"
+        @click="prevStep"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        <ArrowLeft class="w-4 h-4" />
+        Anterior
+      </button>
+      <button
+        v-if="currentStep < 3"
+        @click="nextStep"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
+      >
+        Siguiente
+        <ArrowRight class="w-4 h-4" />
+      </button>
     </div>
+
   </div>
 </template>
-
-<style scoped>
-.titulo {
-  font-size: 2rem;
-  margin: 0 0 1.25rem 0;
-  font-weight: 600;
-  color: var(--ts-text-primary);
-}
-
-/* Step bar */
-.steps-bar { flex-wrap: wrap; }
-.step-btn  { cursor: default; }
-
-.step-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 0.95rem;
-  background: var(--ts-border);
-  color: var(--ts-text-secondary);
-  transition: background var(--ts-transition-normal), color var(--ts-transition-normal);
-  flex-shrink: 0;
-}
-.step-circle.active { background: var(--ts-primary); color: var(--ts-text-on-dark); }
-.step-circle.done   { background: var(--ts-success-darker); color: var(--ts-text-on-dark); cursor: pointer; }
-
-.step-label             { font-size: 0.88rem; color: var(--ts-text-muted); white-space: nowrap; }
-.step-label.active-label { color: var(--ts-primary); font-weight: 600; }
-
-.step-line { height: 2px; width: 60px; background: var(--ts-border); margin: 0 8px; }
-
-/* Grids */
-.two-col-grid   { display: grid; grid-template-columns: repeat(2, 1fr); }
-.three-col-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
-
-/* Objective function cards */
-.obj-card {
-  border: 1px solid var(--ts-border);
-  border-radius: 8px;
-  padding: 1rem;
-  transition: border-color var(--ts-transition-fast), box-shadow var(--ts-transition-fast);
-}
-.obj-card--active {
-  border-color: var(--ts-primary);
-  box-shadow: 0 0 0 2px var(--ts-primary-light);
-}
-
-/* Initial / loading state */
-.initial-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 3rem 1rem;
-}
-.desc-text { max-width: 28rem; }
-
-/* Eval banner */
-.eval-banner {
-  background: #e3f2fd;
-  border-left: 4px solid var(--ts-primary);
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  color: #0d47a1;
-  font-size: 0.95rem;
-}
-
-/* Role section */
-.role-section {
-  padding: 0.75rem;
-  background: var(--ts-bg-surface-alt);
-  border-radius: 6px;
-}
-.role-header {
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--ts-bg-hover);
-}
-
-/* Layout helpers (Tailwind handles the rest) */
-.flex-col { display: flex; flex-direction: column; }
-
-@media (max-width: 768px) {
-  .two-col-grid, .three-col-grid { grid-template-columns: 1fr; }
-}
-</style>

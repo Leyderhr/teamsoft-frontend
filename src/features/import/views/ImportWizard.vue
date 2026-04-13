@@ -2,21 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useRouter } from 'vue-router'
-import FileUpload from 'primevue/fileupload'
-import Select from 'primevue/select'
-import MultiSelect from 'primevue/multiselect'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Panel from 'primevue/panel'
-import Tag from 'primevue/tag'
-import InputNumber from 'primevue/inputnumber'
-import Divider from 'primevue/divider'
-import ProgressSpinner from 'primevue/progressspinner'
+import { Upload, FileText, ChevronRight, Trash2, Plus, Check, Loader2, ArrowLeft, ArrowRight } from 'lucide-vue-next'
 import importService from '@/features/import/services/importService.js'
 import personGroupService from '@/features/nomenclatives/services/personGroupService.js'
 import competenceService from '@/features/competences/services/competenceService.js'
 import roleService from '@/features/roles/services/roleService.js'
+import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 
 const toast = useToast()
 const router = useRouter()
@@ -176,6 +167,11 @@ const handleFileSelect = async (event) => {
     }
 }
 
+const handleFileChange = async (event) => {
+    const file = event.target.files[0]
+    if (file) await handleFileSelect({ files: [file] })
+}
+
 const handleImport = async () => {
     importing.value = true
     try {
@@ -212,329 +208,531 @@ onMounted(loadOptions)
 </script>
 
 <template>
-  <div class="p-4 pl-15">
-    <h1 class="titulo text-black font-bold">Importar Personas</h1>
+  <div class="space-y-6">
+    <PageBreadcrumb page-title="Importar Personas" />
 
-    <!-- Stepper visual -->
-    <div class="flex items-center gap-1 mb-6 overflow-x-auto pb-2">
+    <!-- Stepper -->
+    <div class="flex items-center gap-1 overflow-x-auto pb-1">
       <template v-for="(title, idx) in stepTitles" :key="idx">
-        <div
-          class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all"
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all"
           :class="currentStep === idx + 1
-            ? 'bg-[var(--ts-primary)] text-white font-semibold shadow'
+            ? 'bg-brand-500 text-white font-semibold'
             : currentStep > idx + 1
-              ? 'bg-[var(--ts-primary-light,#e8f0fe)] text-[var(--ts-primary)] font-medium'
-              : 'bg-[var(--ts-bg-surface)] text-[var(--ts-text-muted)] border border-[var(--ts-border)]'"
+              ? 'bg-brand-50 text-brand-600 font-medium'
+              : 'bg-gray-100 text-gray-500 border border-gray-200'"
         >
-          <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-            :class="currentStep > idx + 1 ? 'bg-[var(--ts-primary)] text-white' : ''">
-            <span v-if="currentStep > idx + 1">✓</span>
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+            :class="currentStep === idx + 1
+              ? 'bg-white/20'
+              : currentStep > idx + 1
+                ? 'bg-brand-100 text-brand-600'
+                : 'bg-gray-200 text-gray-500'"
+          >
+            <Check v-if="currentStep > idx + 1" class="w-3 h-3" />
             <span v-else>{{ idx + 1 }}</span>
           </span>
           {{ title }}
         </div>
-        <div v-if="idx < stepTitles.length - 1" class="h-px w-4 bg-[var(--ts-border)] shrink-0" />
+        <div v-if="idx < stepTitles.length - 1" class="h-px w-4 bg-gray-200 shrink-0" />
       </template>
     </div>
 
-    <!-- ======================== STEP 1: Seleccionar Archivo ======================== -->
-    <div v-if="currentStep === 1">
-      <Panel header="Seleccionar archivo CSV y grupo">
-        <div class="flex flex-col gap-5">
-          <div>
-            <FileUpload
-              mode="basic"
-              accept=".csv"
-              :maxFileSize="10000000"
-              :auto="false"
-              chooseLabel="Seleccionar CSV"
-              class="mb-3"
-              @select="handleFileSelect"
-            />
-            <p v-if="uploadedFile" class="text-sm text-[var(--ts-text-muted)] mt-2">
-              <i class="pi pi-file text-green-500 mr-1"></i>
-              {{ uploadedFile.name }} — {{ Math.round(uploadedFile.size / 1024) }} KB
-            </p>
-            <ProgressSpinner v-if="uploadingFile" style="width:30px;height:30px" class="mt-2" />
+    <!-- Step content card -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-base font-semibold text-gray-800">{{ stepTitles[currentStep - 1] }}</h3>
+      </div>
+      <div class="p-6">
+
+        <!-- ======================== STEP 1: Seleccionar Archivo ======================== -->
+        <div v-if="currentStep === 1" class="flex flex-col gap-6">
+
+          <!-- File upload zone -->
+          <div class="flex flex-col gap-3">
+            <label class="text-sm font-medium text-gray-700">Archivo CSV</label>
+            <label
+              class="flex flex-col items-center justify-center gap-3 w-full rounded-xl border-2 border-dashed border-gray-300 px-6 py-10 cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition-colors"
+              :class="uploadedFile ? 'border-brand-400 bg-brand-50/20' : ''"
+            >
+              <input
+                type="file"
+                accept=".csv"
+                class="hidden"
+                @change="handleFileChange"
+              />
+              <div v-if="uploadingFile" class="flex flex-col items-center gap-2 text-brand-500">
+                <Loader2 class="w-8 h-8 animate-spin" />
+                <span class="text-sm font-medium">Procesando archivo...</span>
+              </div>
+              <div v-else-if="uploadedFile" class="flex flex-col items-center gap-2">
+                <FileText class="w-8 h-8 text-brand-500" />
+                <span class="text-sm font-semibold text-gray-800">{{ uploadedFile.name }}</span>
+                <span class="text-xs text-gray-500">{{ Math.round(uploadedFile.size / 1024) }} KB — Haga clic para cambiar</span>
+              </div>
+              <div v-else class="flex flex-col items-center gap-2 text-gray-400">
+                <Upload class="w-8 h-8" />
+                <span class="text-sm font-medium text-gray-600">Haga clic para seleccionar un archivo CSV</span>
+                <span class="text-xs text-gray-400">Máximo 10 MB</span>
+              </div>
+            </label>
           </div>
 
+          <!-- Detected columns -->
           <div v-if="fileColumns.length" class="flex flex-col gap-2">
-            <label class="text-sm font-semibold">Columnas detectadas en el archivo:</label>
+            <label class="text-sm font-medium text-gray-700">Columnas detectadas en el archivo:</label>
             <div class="flex flex-wrap gap-2">
-              <Tag v-for="col in fileColumns" :key="col" :value="col" severity="secondary" />
+              <span
+                v-for="col in fileColumns"
+                :key="col"
+                class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
+              >
+                {{ col }}
+              </span>
             </div>
           </div>
 
+          <!-- Group select -->
           <div class="flex flex-col gap-2 max-w-sm">
-            <label class="text-sm font-semibold">Grupo destino (opcional)</label>
-            <Select
+            <label class="text-sm font-medium text-gray-700">Grupo destino <span class="text-gray-400 font-normal">(opcional)</span></label>
+            <select
               v-model="selectedGroup"
-              :options="groupOptions"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Seleccione un grupo"
-              filter
-              class="w-full"
-            />
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
+            >
+              <option :value="null">Seleccione un grupo</option>
+              <option v-for="g in groupOptions" :key="g.id" :value="g.id">{{ g.name }}</option>
+            </select>
           </div>
         </div>
-      </Panel>
-    </div>
 
-    <!-- ======================== STEP 2: Mapeo de Persona ======================== -->
-    <div v-else-if="currentStep === 2">
-      <Panel header="Mapear columnas del CSV a campos de Persona">
-        <div class="flex flex-col gap-3">
-          <p class="text-sm text-[var(--ts-text-muted)]">
+        <!-- ======================== STEP 2: Mapeo de Persona ======================== -->
+        <div v-else-if="currentStep === 2" class="flex flex-col gap-4">
+          <p class="text-sm text-gray-500">
             Asocie cada columna del archivo con el campo correspondiente en la entidad Persona.
           </p>
-          <DataTable :value="personMappings" class="p-datatable-sm" editMode="cell">
-            <Column header="Columna del CSV" :style="{ width: '45%' }">
-              <template #body="{ data }">
-                <Select v-model="data.csvColumn" :options="fileColumns" placeholder="Columna CSV" class="w-full" />
-              </template>
-            </Column>
-            <Column header="Campo de Persona" :style="{ width: '45%' }">
-              <template #body="{ data }">
-                <Select
-                  v-model="data.personField"
-                  :options="personFieldOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Campo destino"
-                  class="w-full"
-                />
-              </template>
-            </Column>
-            <Column header="" :style="{ width: '10%' }">
-              <template #body="{ index }">
-                <Button icon="pi pi-trash" text severity="danger" size="small" @click="removePersonMapping(index)" />
-              </template>
-            </Column>
-          </DataTable>
-          <Button label="Agregar mapeo" icon="pi pi-plus" size="small" outlined @click="addPersonMapping" />
-        </div>
-      </Panel>
-    </div>
 
-    <!-- ======================== STEP 3: Mapeo de Competencias ======================== -->
-    <div v-else-if="currentStep === 3">
-      <Panel header="Mapear columnas a Competencias">
-        <div class="flex flex-col gap-3">
-          <p class="text-sm text-[var(--ts-text-muted)]">
-            Asocie cada columna del CSV con una o más competencias que representa.
-          </p>
-          <DataTable :value="competenceMappings" class="p-datatable-sm">
-            <Column header="Columna del CSV" :style="{ width: '40%' }">
-              <template #body="{ data }">
-                <Select v-model="data.csvColumn" :options="fileColumns" placeholder="Columna CSV" class="w-full" />
-              </template>
-            </Column>
-            <Column header="Competencias" :style="{ width: '50%' }">
-              <template #body="{ data }">
-                <MultiSelect
-                  v-model="data.competenceIds"
-                  :options="competenceOptions"
-                  optionLabel="competitionName"
-                  optionValue="id"
-                  placeholder="Seleccione competencias"
-                  filter
-                  class="w-full"
-                />
-              </template>
-            </Column>
-            <Column header="" :style="{ width: '10%' }">
-              <template #body="{ index }">
-                <Button icon="pi pi-trash" text severity="danger" size="small" @click="removeCompetenceMapping(index)" />
-              </template>
-            </Column>
-          </DataTable>
-          <Button label="Agregar mapeo" icon="pi pi-plus" size="small" outlined @click="addCompetenceMapping" />
-        </div>
-      </Panel>
-    </div>
+          <div class="space-y-3">
+            <div
+              v-for="(mapping, idx) in personMappings"
+              :key="idx"
+              class="flex items-center gap-3"
+            >
+              <select
+                v-model="mapping.csvColumn"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
+              >
+                <option :value="null">Columna CSV</option>
+                <option v-for="col in fileColumns" :key="col" :value="col">{{ col }}</option>
+              </select>
 
-    <!-- ======================== STEP 4: Configurar Competencias ======================== -->
-    <div v-else-if="currentStep === 4">
-      <div class="grid grid-cols-2 gap-4">
-        <Panel header="Pesos de Competencias">
-          <DataTable :value="competenceWeights" class="p-datatable-sm" editMode="cell">
-            <Column field="competenceName" header="Competencia" />
-            <Column header="Peso (0–1)">
-              <template #body="{ data }">
-                <InputNumber v-model="data.weight" :min="0" :max="1" :step="0.05"
-                  :minFractionDigits="2" :maxFractionDigits="2" mode="decimal"
-                  class="w-28" />
-              </template>
-            </Column>
-          </DataTable>
-          <div v-if="competenceWeights.length" class="mt-2 text-sm text-right font-semibold">
-            Total: {{ competenceWeights.reduce((s, c) => s + (c.weight || 0), 0).toFixed(2) }}
-          </div>
-        </Panel>
+              <ChevronRight class="w-4 h-4 text-gray-300 flex-shrink-0" />
 
-        <Panel header="Valores Máximos para Atributos Numéricos">
-          <DataTable :value="numericMaxValues" class="p-datatable-sm" editMode="cell">
-            <Column field="csvColumn" header="Columna" />
-            <Column header="Valor Máximo">
-              <template #body="{ data }">
-                <InputNumber v-model="data.maxValue" :min="1" :max="10000" class="w-28" />
-              </template>
-            </Column>
-          </DataTable>
-          <p v-if="!numericMaxValues.length" class="text-sm text-[var(--ts-text-muted)] mt-2">
-            No se detectaron columnas numéricas.
-          </p>
-        </Panel>
-      </div>
-    </div>
+              <select
+                v-model="mapping.personField"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
+              >
+                <option :value="null">Campo destino</option>
+                <option v-for="opt in personFieldOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              </select>
 
-    <!-- ======================== STEP 5: Mapeo de Roles ======================== -->
-    <div v-else-if="currentStep === 5">
-      <Panel header="Mapear columnas a Roles">
-        <div class="flex flex-col gap-3">
-          <p class="text-sm text-[var(--ts-text-muted)]">
-            Asocie columnas del CSV con el rol que representan.
-          </p>
-          <DataTable :value="roleMappings" class="p-datatable-sm">
-            <Column header="Columna del CSV" :style="{ width: '45%' }">
-              <template #body="{ data }">
-                <Select v-model="data.csvColumn" :options="fileColumns" placeholder="Columna CSV" class="w-full" />
-              </template>
-            </Column>
-            <Column header="Rol" :style="{ width: '45%' }">
-              <template #body="{ data }">
-                <Select
-                  v-model="data.roleId"
-                  :options="roleOptions"
-                  optionLabel="roleName"
-                  optionValue="id"
-                  placeholder="Seleccione rol"
-                  filter
-                  class="w-full"
-                />
-              </template>
-            </Column>
-            <Column header="" :style="{ width: '10%' }">
-              <template #body="{ index }">
-                <Button icon="pi pi-trash" text severity="danger" size="small" @click="removeRoleMapping(index)" />
-              </template>
-            </Column>
-          </DataTable>
-          <Button label="Agregar mapeo" icon="pi pi-plus" size="small" outlined @click="addRoleMapping" />
-        </div>
-      </Panel>
-    </div>
-
-    <!-- ======================== STEP 6: Verificar e Importar ======================== -->
-    <div v-else-if="currentStep === 6">
-      <div class="flex flex-col gap-4">
-        <!-- Resumen archivo -->
-        <Panel header="Archivo y Grupo">
-          <div class="flex gap-6 text-sm">
-            <div><span class="font-semibold">Archivo:</span> {{ uploadedFile?.name }}</div>
-            <div>
-              <span class="font-semibold">Grupo:</span>
-              {{ groupOptions.find(g => g.id === selectedGroup)?.name || 'Sin grupo' }}
+              <button
+                type="button"
+                class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors flex-shrink-0"
+                @click="removePersonMapping(idx)"
+              >
+                <Trash2 class="w-4 h-4" />
+              </button>
             </div>
           </div>
-        </Panel>
 
-        <!-- Resumen mapeo persona -->
-        <Panel header="Mapeo de Atributos de Persona">
-          <DataTable :value="personMappings.filter(m => m.csvColumn && m.personField)" class="p-datatable-sm">
-            <Column field="csvColumn" header="Columna CSV" />
-            <Column header="Campo de Persona">
-              <template #body="{ data }">
-                {{ personFieldOptions.find(f => f.value === data.personField)?.label || data.personField }}
-              </template>
-            </Column>
-          </DataTable>
-        </Panel>
+          <div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-500 transition-colors"
+              @click="addPersonMapping"
+            >
+              <Plus class="w-4 h-4" />
+              Agregar mapeo
+            </button>
+          </div>
+        </div>
 
-        <!-- Resumen mapeo competencias -->
-        <Panel v-if="competenceMappings.some(m => m.csvColumn)" header="Mapeo de Competencias">
-          <DataTable :value="competenceMappings.filter(m => m.csvColumn && m.competenceIds.length)" class="p-datatable-sm">
-            <Column field="csvColumn" header="Columna CSV" />
-            <Column header="Competencias">
-              <template #body="{ data }">
-                <div class="flex flex-wrap gap-1">
-                  <Tag
-                    v-for="cId in data.competenceIds" :key="cId"
-                    :value="competenceOptions.find(c => c.id === cId)?.competitionName || String(cId)"
-                    severity="info"
+        <!-- ======================== STEP 3: Mapeo de Competencias ======================== -->
+        <div v-else-if="currentStep === 3" class="flex flex-col gap-4">
+          <p class="text-sm text-gray-500">
+            Asocie cada columna del CSV con una o más competencias que representa.
+          </p>
+
+          <div class="space-y-3">
+            <div
+              v-for="(mapping, idx) in competenceMappings"
+              :key="idx"
+              class="flex items-start gap-3"
+            >
+              <select
+                v-model="mapping.csvColumn"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
+              >
+                <option :value="null">Columna CSV</option>
+                <option v-for="col in fileColumns" :key="col" :value="col">{{ col }}</option>
+              </select>
+
+              <ChevronRight class="w-4 h-4 text-gray-300 flex-shrink-0 mt-2.5" />
+
+              <div class="w-full flex flex-col gap-1">
+                <select
+                  v-model="mapping.competenceIds"
+                  multiple
+                  class="w-full h-28 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
+                >
+                  <option v-for="comp in competenceOptions" :key="comp.id" :value="comp.id">
+                    {{ comp.competitionName }}
+                  </option>
+                </select>
+                <span
+                  v-if="mapping.competenceIds.length"
+                  class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 self-start"
+                >
+                  {{ mapping.competenceIds.length }} seleccionada{{ mapping.competenceIds.length !== 1 ? 's' : '' }}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors flex-shrink-0 mt-1"
+                @click="removeCompetenceMapping(idx)"
+              >
+                <Trash2 class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-500 transition-colors"
+              @click="addCompetenceMapping"
+            >
+              <Plus class="w-4 h-4" />
+              Agregar mapeo
+            </button>
+          </div>
+        </div>
+
+        <!-- ======================== STEP 4: Configurar Competencias ======================== -->
+        <div v-else-if="currentStep === 4" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          <!-- Pesos de Competencias -->
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-base font-semibold text-gray-800">Pesos de Competencias</h3>
+            </div>
+            <div class="p-6">
+              <div v-if="competenceWeights.length" class="flex flex-col gap-3">
+                <div
+                  v-for="(item, idx) in competenceWeights"
+                  :key="idx"
+                  class="flex items-center justify-between gap-4"
+                >
+                  <span class="text-sm text-gray-700 flex-1 truncate">{{ item.competenceName }}</span>
+                  <input
+                    v-model.number="item.weight"
+                    type="number"
+                    :min="0"
+                    :max="1"
+                    :step="0.05"
+                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors w-24 text-right"
                   />
                 </div>
-              </template>
-            </Column>
-          </DataTable>
-        </Panel>
+                <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
+                  <span class="text-sm text-gray-500">Total</span>
+                  <span class="text-sm font-semibold text-gray-800">
+                    {{ competenceWeights.reduce((s, c) => s + (c.weight || 0), 0).toFixed(2) }}
+                  </span>
+                </div>
+              </div>
+              <p v-else class="text-sm text-gray-400">No hay competencias mapeadas.</p>
+            </div>
+          </div>
 
-        <!-- Resumen mapeo roles -->
-        <Panel v-if="roleMappings.some(m => m.csvColumn && m.roleId)" header="Mapeo de Roles">
-          <DataTable :value="roleMappings.filter(m => m.csvColumn && m.roleId)" class="p-datatable-sm">
-            <Column field="csvColumn" header="Columna CSV" />
-            <Column header="Rol">
-              <template #body="{ data }">
-                {{ roleOptions.find(r => r.id === data.roleId)?.roleName || String(data.roleId) }}
-              </template>
-            </Column>
-          </DataTable>
-        </Panel>
-
-        <!-- Resultado -->
-        <div v-if="importResult" class="p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">
-          <i class="pi pi-check-circle mr-2 text-green-600"></i>
-          Importación completada exitosamente.
-          <span v-if="importResult.imported"> {{ importResult.imported }} registros importados.</span>
+          <!-- Valores Máximos Numéricos -->
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-base font-semibold text-gray-800">Valores Máximos Numéricos</h3>
+            </div>
+            <div class="p-6">
+              <div v-if="numericMaxValues.length" class="flex flex-col gap-3">
+                <div
+                  v-for="(item, idx) in numericMaxValues"
+                  :key="idx"
+                  class="flex items-center justify-between gap-4"
+                >
+                  <span class="text-sm text-gray-700 flex-1 truncate">{{ item.csvColumn }}</span>
+                  <input
+                    v-model.number="item.maxValue"
+                    type="number"
+                    :min="1"
+                    :max="10000"
+                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors w-24 text-right"
+                  />
+                </div>
+              </div>
+              <p v-else class="text-sm text-gray-400">No se detectaron columnas numéricas.</p>
+            </div>
+          </div>
         </div>
+
+        <!-- ======================== STEP 5: Mapeo de Roles ======================== -->
+        <div v-else-if="currentStep === 5" class="flex flex-col gap-4">
+          <p class="text-sm text-gray-500">
+            Asocie columnas del CSV con el rol que representan.
+          </p>
+
+          <div class="space-y-3">
+            <div
+              v-for="(mapping, idx) in roleMappings"
+              :key="idx"
+              class="flex items-center gap-3"
+            >
+              <select
+                v-model="mapping.csvColumn"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
+              >
+                <option :value="null">Columna CSV</option>
+                <option v-for="col in fileColumns" :key="col" :value="col">{{ col }}</option>
+              </select>
+
+              <ChevronRight class="w-4 h-4 text-gray-300 flex-shrink-0" />
+
+              <select
+                v-model="mapping.roleId"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
+              >
+                <option :value="null">Seleccione rol</option>
+                <option v-for="role in roleOptions" :key="role.id" :value="role.id">{{ role.roleName }}</option>
+              </select>
+
+              <button
+                type="button"
+                class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors flex-shrink-0"
+                @click="removeRoleMapping(idx)"
+              >
+                <Trash2 class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-500 transition-colors"
+              @click="addRoleMapping"
+            >
+              <Plus class="w-4 h-4" />
+              Agregar mapeo
+            </button>
+          </div>
+        </div>
+
+        <!-- ======================== STEP 6: Verificar e Importar ======================== -->
+        <div v-else-if="currentStep === 6" class="flex flex-col gap-4">
+
+          <!-- Archivo y Grupo -->
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-base font-semibold text-gray-800">Archivo y Grupo</h3>
+            </div>
+            <div class="p-6">
+              <div class="flex flex-wrap gap-6 text-sm">
+                <div class="flex flex-col gap-1">
+                  <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">Archivo</span>
+                  <div class="flex items-center gap-2 text-gray-800 font-medium">
+                    <FileText class="w-4 h-4 text-brand-500" />
+                    {{ uploadedFile?.name }}
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">Grupo</span>
+                  <span class="text-gray-800 font-medium">
+                    {{ groupOptions.find(g => g.id === selectedGroup)?.name || 'Sin grupo' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mapeo de Persona -->
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-base font-semibold text-gray-800">Mapeo de Atributos de Persona</h3>
+            </div>
+            <div class="p-6">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-100">
+                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">Columna CSV</th>
+                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Campo de Persona</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(m, idx) in personMappings.filter(m => m.csvColumn && m.personField)"
+                    :key="idx"
+                    class="border-b border-gray-50 last:border-0"
+                  >
+                    <td class="py-2.5 pr-4 text-gray-700">
+                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ m.csvColumn }}</span>
+                    </td>
+                    <td class="py-2.5 text-gray-700">
+                      {{ personFieldOptions.find(f => f.value === m.personField)?.label || m.personField }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Mapeo de Competencias -->
+          <div
+            v-if="competenceMappings.some(m => m.csvColumn)"
+            class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden"
+          >
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-base font-semibold text-gray-800">Mapeo de Competencias</h3>
+            </div>
+            <div class="p-6">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-100">
+                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">Columna CSV</th>
+                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Competencias</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(m, idx) in competenceMappings.filter(m => m.csvColumn && m.competenceIds.length)"
+                    :key="idx"
+                    class="border-b border-gray-50 last:border-0"
+                  >
+                    <td class="py-2.5 pr-4 text-gray-700 align-top">
+                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ m.csvColumn }}</span>
+                    </td>
+                    <td class="py-2.5">
+                      <div class="flex flex-wrap gap-1">
+                        <span
+                          v-for="cId in m.competenceIds"
+                          :key="cId"
+                          class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-brand-50 text-brand-600"
+                        >
+                          {{ competenceOptions.find(c => c.id === cId)?.competitionName || String(cId) }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Mapeo de Roles -->
+          <div
+            v-if="roleMappings.some(m => m.csvColumn && m.roleId)"
+            class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden"
+          >
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-base font-semibold text-gray-800">Mapeo de Roles</h3>
+            </div>
+            <div class="p-6">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-100">
+                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">Columna CSV</th>
+                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Rol</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(m, idx) in roleMappings.filter(m => m.csvColumn && m.roleId)"
+                    :key="idx"
+                    class="border-b border-gray-50 last:border-0"
+                  >
+                    <td class="py-2.5 pr-4 text-gray-700">
+                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ m.csvColumn }}</span>
+                    </td>
+                    <td class="py-2.5 text-gray-700">
+                      {{ roleOptions.find(r => r.id === m.roleId)?.roleName || String(m.roleId) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Success result banner -->
+          <div
+            v-if="importResult"
+            class="flex items-center gap-3 px-5 py-4 rounded-xl bg-success-50 border border-success-200 text-success-700"
+          >
+            <Check class="w-5 h-5 text-success-500 flex-shrink-0" />
+            <div class="text-sm font-medium">
+              Importación completada exitosamente.
+              <span v-if="importResult.imported"> {{ importResult.imported }} registros importados.</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- ======================== Footer de Navegación ======================== -->
-    <Divider />
-    <div class="flex justify-between items-center mt-4">
-      <Button
-        label="Anterior"
-        icon="pi pi-chevron-left"
-        severity="secondary"
-        outlined
+    <!-- Navigation footer -->
+    <div class="flex items-center justify-between pt-2">
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         :disabled="currentStep === 1"
         @click="goPrev"
-      />
-      <span class="text-sm text-[var(--ts-text-muted)]">Paso {{ currentStep }} de {{ totalSteps }}</span>
-      <div class="flex gap-2">
-        <Button
+      >
+        <ArrowLeft class="w-4 h-4" />
+        Anterior
+      </button>
+
+      <span class="text-sm text-gray-400">Paso {{ currentStep }} de {{ totalSteps }}</span>
+
+      <div class="flex items-center gap-2">
+        <!-- Next -->
+        <button
           v-if="currentStep < totalSteps"
-          label="Siguiente"
-          icon="pi pi-chevron-right"
-          iconPos="right"
+          type="button"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           :disabled="!canNext"
           @click="goNext"
-        />
-        <Button
+        >
+          Siguiente
+          <ArrowRight class="w-4 h-4" />
+        </button>
+
+        <!-- Import -->
+        <button
           v-else-if="!importResult"
-          label="Importar"
-          icon="pi pi-upload"
-          :loading="importing"
+          type="button"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          :disabled="importing"
           @click="handleImport"
-        />
-        <Button
+        >
+          <Loader2 v-if="importing" class="w-4 h-4 animate-spin" />
+          <Upload v-else class="w-4 h-4" />
+          {{ importing ? 'Importando...' : 'Importar' }}
+        </button>
+
+        <!-- Nueva Importación -->
+        <button
           v-else
-          label="Nueva Importación"
-          icon="pi pi-refresh"
-          severity="secondary"
+          type="button"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           @click="currentStep = 1; uploadedFile = null; importResult = null"
-        />
+        >
+          Nueva Importación
+        </button>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.titulo {
-  font-size: 2.5rem;
-  margin: 20px 0;
-  font-family: Arial, "Arial CE", "Lucida Grande CE", lucida, "Helvetica CE", sans-serif;
-}
-</style>
