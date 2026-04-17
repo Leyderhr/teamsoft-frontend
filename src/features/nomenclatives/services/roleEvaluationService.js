@@ -1,57 +1,9 @@
-import apiClient from '../../../core/api/axios.js'
-
-const ENDPOINT = '/roleEvaluation'
-
+import { api } from '@/lib/api'
 const roleEvaluationService = {
-    async getAll() {
-        try {
-            const response = await apiClient.get(ENDPOINT)
-            return response.data
-        } catch (error) {
-            console.error('Error al obtener evaluaciones de rol:', error)
-            throw error
-        }
-    },
-
-    async getById(id) {
-        try {
-            const response = await apiClient.get(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al obtener evaluación de rol con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async create(roleEvaluation) {
-        try {
-            const response = await apiClient.post(ENDPOINT, roleEvaluation)
-            return response.data
-        } catch (error) {
-            console.error('Error al crear evaluación de rol:', error)
-            throw error
-        }
-    },
-
-    async update(id, roleEvaluation) {
-        try {
-            const response = await apiClient.put(`${ENDPOINT}/${id}`, roleEvaluation)
-            return response.data
-        } catch (error) {
-            console.error(`Error al actualizar evaluación de rol con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async delete(id) {
-        try {
-            const response = await apiClient.delete(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al eliminar evaluación de rol con ID ${id}:`, error)
-            throw error
-        }
-    }
+  async getAll() { return api.get('roleEvaluation').json() },
+  async getById(id) { return api.get(`roleEvaluation/${id}`).json() },
+  async create(data) { return api.post('roleEvaluation', { json: data }).json() },
+  async update(id, data) { return api.put(`roleEvaluation/${id}`, { json: data }).json() },
+  async delete(id) { return api.delete(`roleEvaluation/${id}`).text() }
 }
-
 export default roleEvaluationService
