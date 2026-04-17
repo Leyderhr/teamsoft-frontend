@@ -9,7 +9,8 @@ export async function fetchGetProjectById(id) {
 }
 
 export async function fetchCreateProjects(payload) {
-  return api.post('project', { json: payload }).json()
+  const data = Array.isArray(payload) ? payload : [payload]
+  return api.post('project', { json: data }).json()
 }
 
 export async function fetchUpdateProject(id, payload) {
@@ -21,5 +22,5 @@ export async function fetchCloseProject(id) {
 }
 
 export async function fetchDeleteProject(id) {
-  return api.delete(`project/${id}`).json()
+  return api.delete(`project/${id}`).text()
 }

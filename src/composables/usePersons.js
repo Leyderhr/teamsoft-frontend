@@ -9,16 +9,9 @@ import {
 } from '@/services/persons'
 
 export function usePersons() {
-  console.log('usePersons() called')
-  
   const { data: persons, isLoading, error, refetch } = useQuery({
     queryKey: ['persons'],
-    queryFn: async () => {
-      console.log('queryFn executing for persons')
-      const result = await fetchGetPersons()
-      console.log('fetchGetPersons result:', result)
-      return result
-    }
+    queryFn: fetchGetPersons
   })
 
   const createMutation = useMutation({
@@ -56,6 +49,5 @@ export function usePerson(personId) {
     queryFn: () => fetchGetPersonById(personId.value),
     enabled: () => !!personId.value
   })
-
   return { person, isLoading, error }
 }
