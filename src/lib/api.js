@@ -41,14 +41,14 @@ function isPublicEndpoint(url) {
   return PUBLIC_ENDPOINTS.some(endpoint => url.includes(endpoint))
 }
 
-// Base ky instance — sin hooks de beforeRequest para evitar el bug de request.headers en ky 2.x
+// Base ky instance
 const _baseApi = ky.create({
-  prefixUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
+  prefix: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
   timeout: 100000,
   hooks: {
     afterResponse: [
-      // En ky 2.x el hook recibe solo (response: Response)
-      async (response) => {
+      // ky v2: el hook recibe { request, options, response, retryCount }
+      async ({ response }) => {
         const url = response.url || ''
 
         if (response.status === 401 && !isPublicEndpoint(url)) {
