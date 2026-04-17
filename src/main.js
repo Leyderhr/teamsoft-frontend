@@ -2,6 +2,9 @@ import {createApp} from 'vue'
 import App from './App.vue'
 import router from './core/router'
 import {createPinia} from "pinia";
+import { VueQueryPlugin } from '@tanstack/vue-query'
+import { queryClient } from './lib/query-client'
+import { useAuthStore } from './lib/auth-store'
 
 // PrimeVue
 import PrimeVue from 'primevue/config'
@@ -35,4 +38,10 @@ app.use(PrimeVue, {
 app.use(ToastService)
 app.use(router)
 app.use(pinia)
+app.use(VueQueryPlugin, { queryClient })
+
+// Inicializar auth store desde localStorage
+const authStore = useAuthStore()
+authStore.initFromStorage()
+
 app.mount('#app')

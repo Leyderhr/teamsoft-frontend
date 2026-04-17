@@ -4,10 +4,10 @@ import { useToast } from 'primevue/usetoast'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
-import changePasswordService from '@/features/users/services/changePasswordService.js'
+import { useAuth } from '@/composables/useAuth'
 
 const toast = useToast()
-const loading = ref(false)
+const { changePassword, isChangingPassword } = useAuth()
 
 const currentPassword = ref('')
 const newPassword = ref('')
@@ -31,11 +31,11 @@ const handleSubmit = async () => {
     return
   }
 
-  loading.value = true
   try {
-    await changePasswordService.changePassword({
-      oldPassword: currentPassword.value.trim(),
-      newPassword: newPassword.value.trim()
+    await changePassword({
+      currentPassword: currentPassword.value.trim(),
+      newPassword: newPassword.value.trim(),
+      confirmPassword: confirmPassword.value.trim()
     })
     toast.add({
       severity: 'success',
@@ -54,8 +54,6 @@ const handleSubmit = async () => {
       detail: 'No se pudo cambiar la contraseña. Verifique su contraseña actual.',
       life: 4000
     })
-  } finally {
-    loading.value = false
   }
 }
 </script>
@@ -121,7 +119,7 @@ const handleSubmit = async () => {
               <Button
                 label="Actualizar Contraseña"
                 icon="pi pi-lock"
-                :loading="loading"
+                :loading="isChangingPassword"
                 @click="handleSubmit"
               />
             </div>

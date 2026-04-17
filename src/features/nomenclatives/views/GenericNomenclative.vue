@@ -1,7 +1,8 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import GenericListView from '@/shared/components/GenericListView.vue'
+import { useNomenclative } from '@/services/nomenclatives/queries'
 
 const props = defineProps({
   config: {
@@ -17,38 +18,17 @@ const props = defineProps({
 })
 
 const toast = useToast()
-const items = ref([])
-const loading = ref(false)
 const selectedItem = ref(null)
 
-const loadData = async () => {
-  loading.value = true
-  try {
-    const data = await props.config.service.getAll()
-    items.value = data
-  } catch (error) {
-    console.error(`Error cargando ${props.config.entityName.plural}:`, error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: `No se pudieron cargar ${props.config.entityName.plural}`,
-      life: 3000
-    })
-  } finally {
-    loading.value = false
-  }
-}
+// Extraer endpoint del config
+const endpoint = computed(() => props.config.endpoint || props.config.entityName.singular)
 
-watch(() => props.config, (newConfig, oldConfig) => {
-  // Limpiar selección al cambiar de nomenclador
+const { data: items, isLoading: loading, refetch: loadData } = useNomenclative(endpoint.value)
+
+watch(() => props.config, () => {
   selectedItem.value = null
-  // Recargar datos
   loadData()
 }, { immediate: false })
-
-onMounted(() => {
-  loadData()
-})
 </script>
 
 <template>

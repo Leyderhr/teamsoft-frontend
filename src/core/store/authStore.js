@@ -6,6 +6,8 @@ export const useAuthStore = defineStore('auth', () => {
     const user = ref(authService.getCurrentUser());
 
     const isAuthenticated = computed(() => !!user.value);
+    
+    // Getters directos en lugar de computed
     const username = computed(() => user.value?.username || '');
     const roles = computed(() => user.value?.authorities || []);
     const token = computed(() => user.value?.token || '');
@@ -18,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
             username: response.username,
             token: response.token || response.accessToken,
             type: response.type,
-            authorities: response.authorities,
+            authorities: response.authorities || [],
             expiresAt,
             lastLogin: new Date().toISOString()
         };
@@ -33,23 +35,39 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const logout = async () => {
-        await authService.logout();
-        user.value = null;
+        try {
+            await authService.logout();
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            user.value = null;
+            localStorage.removeItem('user');
+            localStorage.removeItem('refreshToken');
+        }
     };
 
     const refreshUser = () => {
-        user.value = authService.getCurrentUser();
+        const currentUser = authService.getCurrentUser();
+        if (currentUser) {
+            user.value = currentUser;
+        }
+    };
+
+    const clearAuth = () => {
+        user.value = null;
+        localStorage.removeItem('user');
+        localStorage.removeItem('refreshToken');
     };
 
     const hasRole = (role) => {
-        return user.value?.authorities?.includes(role) || false;
-    };
+        return user.value?.authorities?.includes(role) || false
+    }
 
-    const hasAnyRole = (roles) => {
-        if (!user.value?.authorities) return false;
-        const roleArray = Array.isArray(roles) ? roles : roles.split(',').map(r => r.trim());
-        return roleArray.some(role => user.value.authorities.includes(role));
-    };
+    const hasAnyRole = (rolesParam) => {
+        if (!user.value?.authorities) return false
+        const roleArray = Array.isArray(rolesParam) ? rolesParam : rolesParam.split(',').map(r => r.trim())
+        return roleArray.some(role => user.value.authorities.includes(role))
+    }
 
     return {
         user,
@@ -60,7 +78,8 @@ export const useAuthStore = defineStore('auth', () => {
         login,
         logout,
         refreshUser,
+        clearAuth,
         hasRole,
         hasAnyRole
-    };
-});
+    }
+})

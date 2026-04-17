@@ -5,17 +5,28 @@ import { useAuthStore } from './authStore.js'
 export const useSecurityStore = defineStore('security', () => {
     const authStore = useAuthStore()
 
-    const ifAnyGranteds = (rolesString) => {
-        return authStore.hasAnyRole(rolesString)
+    // Helper function para verificar roles directamente desde user.value
+    const checkRole = (role) => {
+        return authStore.user?.authorities?.includes(role) ?? false
     }
 
-    // Roles específicos como computed properties que leen directamente de authStore
-    const isGestor = computed(() => authStore.hasAnyRole('ROLE_GESTOR_RRHH'))
-    const isAdmin = computed(() => authStore.hasAnyRole('ROLE_ADMIN'))
-    const isDirectivoTecnico = computed(() => authStore.hasAnyRole('ROLE_DIRECTIVO_TECNICO'))
-    const isExperimentador = computed(() => authStore.hasAnyRole('ROLE_EXPERIMENTADOR'))
-    const isJefeEquipo = computed(() => authStore.hasAnyRole('ROLE_JEFE_DE_EQUIPO'))
-    const isWorker = computed(() => authStore.hasAnyRole('ROLE_WORKER'))
+    const checkAnyRole = (rolesParam) => {
+        if (!authStore.user?.authorities) return false
+        const roleArray = Array.isArray(rolesParam) ? rolesParam : rolesParam.split(',').map(r => r.trim())
+        return roleArray.some(role => authStore.user.authorities.includes(role))
+    }
+
+    const ifAnyGranteds = (rolesString) => {
+        return checkAnyRole(rolesString)
+    }
+
+    // Roles específicos como computed properties que leen DIRECTAMENTE de authStore.user
+    const isGestor = computed(() => checkRole('ROLE_GESTOR_RRHH'))
+    const isAdmin = computed(() => checkRole('ROLE_ADMIN'))
+    const isDirectivoTecnico = computed(() => checkRole('ROLE_DIRECTIVO_TECNICO'))
+    const isExperimentador = computed(() => checkRole('ROLE_EXPERIMENTADOR'))
+    const isJefeEquipo = computed(() => checkRole('ROLE_JEFE_DE_EQUIPO'))
+    const isWorker = computed(() => checkRole('ROLE_WORKER'))
 
     return {
         ifAnyGranteds,

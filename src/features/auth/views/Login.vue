@@ -1,91 +1,76 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import { Card, InputGroup, InputGroupAddon, InputText } from 'primevue';
-import { useAuthStore } from '@/core/store/authStore.js';
 import FloatLabel from 'primevue/floatlabel';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
-import { useRouter } from 'vue-router';
+import { useAuth } from '@/composables/useAuth';
 
 const toast = useToast();
-const router = useRouter();
-const authStore = useAuthStore();
+const { login, isLoggingIn, currentUser } = useAuth();
 
 const form = reactive({
   username: '',
   password: ''
 });
 
-const isLoading = ref(false);
 const submitted = ref(false);
 
 const handleLogin = async () => {
-      submitted.value = true;
-      // Validación básica
-      if (!form.username || !form.password) {
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Por favor complete todos los campos requeridos',
-          life: 3000,
-          icon: 'pi pi-times-circle'
-        });
-        return;
-      }
+  submitted.value = true;
+  
+  if (!form.username || !form.password) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Por favor complete todos los campos requeridos',
+      life: 3000,
+      icon: 'pi pi-times-circle'
+    });
+    return;
+  }
 
-      isLoading.value = true;
+  try {
+    await login({
+      username: form.username,
+      password: form.password
+    });
 
-      try {
-        await authStore.login({
-          username: form.username,
-          password: form.password
-        });
+    toast.add({
+      severity: 'success',
+      summary: 'Login Exitoso',
+      detail: `Bienvenido ${form.username}!`,
+      life: 2000,
+      icon: 'pi pi-check-circle'
+    });
+  } catch (error) {
+    console.error('Error de autenticación', error);
 
-        // Muestra toast de éxito
-        toast.add({
-          severity: 'success',
-          summary: 'Login Exitoso',
-          detail: `Bienvenido ${authStore.username}!`,
-          life: 2000,
-          icon: 'pi pi-check-circle'
-        });
+    let errorDetail = 'Ocurrió un error inesperado';
+    let errorSummary = 'Error de autenticación';
 
-        // Espera un momento y redirige al Dashboard
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
+    if (error.message?.includes('Network Error') || error.message?.includes('ECONNREFUSED')) {
+      errorDetail = 'No se puede conectar con el servidor. Verifica que la API esté corriendo en http://localhost:8081.';
+      errorSummary = 'Error de Conexión';
+    } else if (error.status === 401 || error.message?.toLowerCase().includes('credencial')) {
+      errorDetail = 'Usuario o contraseña incorrectos';
+      errorSummary = 'Credenciales Inválidas';
+    } else if (error.status === 400) {
+      errorDetail = error.message || 'Solicitud incorrecta';
+    } else if (error.status === 500) {
+      errorDetail = 'Error interno del servidor. Por favor, intente más tarde.';
+    }
 
-
-      } catch (error){
-        console.error('Error de autenticación', error);
-
-        let errorDetail = 'Ocurrió un error inesperado';
-        let errorSummary = 'Error de autenticación';
-
-        if (error.message?.includes('Network Error') || error.message?.includes('ECONNREFUSED')) {
-          errorDetail = 'No se puede conectar con el servidor. Verifica que la API esté corriendo en http://localhost:8081.';
-          errorSummary = 'Error de Conexión';
-        } else if (error.status === 401 || error.message?.toLowerCase().includes('credencial')) {
-          errorDetail = 'Usuario o contraseña incorrectos';
-          errorSummary = 'Credenciales Inválidas';
-        } else if (error.status === 400) {
-          errorDetail = error.message || 'Solicitud incorrecta';
-        } else if (error.status === 500) {
-          errorDetail = 'Error interno del servidor. Por favor, intente más tarde.';
-        }
-
-        toast.add({
-          severity: 'error',
-          summary: errorSummary,
-          detail: errorDetail,
-          life: 4000,
-          icon: 'pi pi-exclamation-triangle'
-        });
-      } finally {
-        isLoading.value = false;
-      }
+    toast.add({
+      severity: 'error',
+      summary: errorSummary,
+      detail: errorDetail,
+      life: 4000,
+      icon: 'pi pi-exclamation-triangle'
+    });
+  }
 };
 </script>
 

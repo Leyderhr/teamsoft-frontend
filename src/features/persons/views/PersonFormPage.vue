@@ -318,17 +318,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
-import countyService from '@/features/nomenclatives/services/countyService.js'
-import raceService from '@/features/nomenclatives/services/raceService.js'
-import personGroupService from '@/features/nomenclatives/services/personGroupService.js'
-import nacionalityService from '@/features/nomenclatives/services/nacionalityService.js'
-import religionService from '@/features/nomenclatives/services/religionService.js'
-import competenceService from '@/features/competences/services/competenceService.js'
-import levelsService from '@/features/nomenclatives/services/levelsService.js'
-import roleService from '@/features/roles/services/roleService.js'
-import projectService from '@/features/projects/services/projectService.js'
-import conflictIndexService from '@/features/nomenclatives/services/conflictIndexService.js'
-import personService from '@/features/persons/services/personService.js'
+import { api } from '@/lib/api'
 
 // Inline mini-table component for sub-collections
 const MiniTable = defineComponent({
@@ -522,17 +512,17 @@ onMounted(async () => {
   try {
     const [counties, races, groups, nats, rels, competences, levels, roles, projects, conflicts, persons] =
       await Promise.all([
-        countyService.getAll(),
-        raceService.getAll(),
-        personGroupService.getAll(),
-        nacionalityService.getAll(),
-        religionService.getAll(),
-        competenceService.getAll(),
-        levelsService.getAll(),
-        roleService.getAll(),
-        projectService.getAll(),
-        conflictIndexService.getAll(),
-        personService.getAll(),
+        api.get('county').json(),
+        api.get('race').json(),
+        api.get('personGroups').json(),
+        api.get('nacionality').json(),
+        api.get('religion').json(),
+        api.get('competence').json(),
+        api.get('levels').json(),
+        api.get('role').json(),
+        api.get('project').json(),
+        api.get('conflictIndex').json(),
+        api.get('person').json(),
       ])
 
     countyOptions.value = counties.map(c => ({ label: c.countyName, value: c.id }))
@@ -552,7 +542,7 @@ onMounted(async () => {
 
   if (isEditMode.value && route.params.id) {
     try {
-      const res = await personService.getById(route.params.id)
+      const res = await api.get(`person/${route.params.id}`).json()
       const p = res?.data ?? res
       personName.value = p.personName ?? ''
       card.value = p.card ?? ''
@@ -746,10 +736,10 @@ async function handleSave() {
     }
 
     if (isEditMode.value) {
-      await personService.update(route.params.id, payload)
+      await api.put(`person/${route.params.id}`, { json: payload }).json()
       toast.add({ severity: 'success', summary: 'Éxito', detail: 'Persona actualizada correctamente', life: 3000 })
     } else {
-      await personService.create(payload)
+      await api.post('person', { json: payload }).json()
       toast.add({ severity: 'success', summary: 'Éxito', detail: 'Persona creada correctamente', life: 3000 })
     }
     router.push('/person')
