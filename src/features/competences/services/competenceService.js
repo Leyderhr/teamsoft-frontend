@@ -1,57 +1,30 @@
-import apiClient from '../../../core/api/axios.js'
-
-const ENDPOINT = '/competence'
+import { api } from '@/lib/api'
 
 const competenceService = {
-    async getAll() {
-        try {
-            const response = await apiClient.get(ENDPOINT)
-            return response.data
-        } catch (error) {
-            console.error('Error al obtener competencias:', error)
-            throw error
-        }
-    },
-
-    async getById(id) {
-        try {
-            const response = await apiClient.get(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al obtener competencia con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async create(competence) {
-        try {
-            const response = await apiClient.post(ENDPOINT, competence)
-            return response.data
-        } catch (error) {
-            console.error('Error al crear competencia:', error)
-            throw error
-        }
-    },
-
-    async update(id, competence) {
-        try {
-            const response = await apiClient.put(`${ENDPOINT}/${id}`, competence)
-            return response.data
-        } catch (error) {
-            console.error(`Error al actualizar competencia con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async delete(id) {
-        try {
-            const response = await apiClient.delete(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al eliminar competencia con ID ${id}:`, error)
-            throw error
-        }
-    }
+  async getAll() {
+    return api.get('competence').json()
+  },
+  async getById(id) {
+    return api.get(`competence/${id}`).json()
+  },
+  async create(competence) {
+    return api.post('competence', { json: competence }).json()
+  },
+  async update(id, competence) {
+    return api.put(`competence/${id}`, { json: competence }).json()
+  },
+  async delete(id) {
+    return api.delete(`competence/${id}`).text()
+  },
+  async importFile(file, updateIfExist = false) {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('updateIfExist', updateIfExist)
+    return api.post('competence/import', { body: formData }).json()
+  },
+  async exportFile() {
+    return api.get('competence/export').blob()
+  }
 }
 
 export default competenceService

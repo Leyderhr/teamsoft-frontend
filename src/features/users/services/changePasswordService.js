@@ -1,15 +1,9 @@
-import apiClient from '@/core/api/axios.js'
+import { api } from '@/lib/api'
 
 const changePasswordService = {
-    async changePassword(payload) {
-        try {
-            const response = await apiClient.put('/auth/change-password', payload)
-            return response.data
-        } catch (error) {
-            console.error('Error al cambiar contraseña:', error)
-            throw error
-        }
-    }
+  async changePassword(payload) {
+    return api.post('auth/change-password', { json: payload }).json()
+  }
 }
 
 export default changePasswordService
