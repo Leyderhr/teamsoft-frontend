@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import { useAuthStore } from './authStore.js'
+import { useAuthStore } from '@/lib/auth-store'
 
 export const useSecurityStore = defineStore('security', () => {
     const authStore = useAuthStore()

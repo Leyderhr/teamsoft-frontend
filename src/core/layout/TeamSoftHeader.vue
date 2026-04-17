@@ -146,7 +146,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/core/store/authStore.js'
+import { useAuthStore } from '@/lib/auth-store'
 import { useLocaleStore } from '@/core/store/locale.store.js'
 import { useSidebar } from '@/core/composables/useSidebar.js'
 import { Globe, User, ChevronDown, Key, LogOut, Check } from 'lucide-vue-next'

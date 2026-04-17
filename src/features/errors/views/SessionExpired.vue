@@ -1,6 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/core/store/authStore.js'
+import { useAuthStore } from '@/lib/auth-store'
 import Button from 'primevue/button'
 
 const router = useRouter()

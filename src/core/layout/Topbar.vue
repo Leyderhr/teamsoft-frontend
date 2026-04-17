@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/core/store/authStore.js'
+import { useAuthStore } from '@/lib/auth-store'
 import { useLocaleStore } from '@/core/store/locale.store.js'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSecurityStore } from '@/core/store/security.store.js'
-import { useAuthStore } from '@/core/store/authStore.js'
+import { useAuthStore } from '@/lib/auth-store'
 import PanelMenu from 'primevue/panelmenu'
 import Avatar from 'primevue/avatar'
 
