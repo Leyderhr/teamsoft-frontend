@@ -1,48 +1,21 @@
-import apiClient from '@/core/api/axios.js'
-
-const ENDPOINT = '/worker-conflict'
+import { api } from '@/lib/api'
 
 const workerConflictService = {
-    async getAll() {
-        try {
-            return (await apiClient.get(ENDPOINT)).data
-        } catch (error) {
-            console.error('Error al obtener registros:', error)
-            throw error
-        }
-    },
-    async getById(id) {
-        try {
-            return (await apiClient.get(`${ENDPOINT}/${id}`)).data
-        } catch (error) {
-            console.error(`Error al obtener registro con ID ${id}:`, error)
-            throw error
-        }
-    },
-    async create(data) {
-        try {
-            return (await apiClient.post(ENDPOINT, data)).data
-        } catch (error) {
-            console.error('Error al crear registro:', error)
-            throw error
-        }
-    },
-    async update(id, data) {
-        try {
-            return (await apiClient.put(`${ENDPOINT}/${id}`, data)).data
-        } catch (error) {
-            console.error(`Error al actualizar registro con ID ${id}:`, error)
-            throw error
-        }
-    },
-    async delete(id) {
-        try {
-            return (await apiClient.delete(`${ENDPOINT}/${id}`)).data
-        } catch (error) {
-            console.error(`Error al eliminar registro con ID ${id}:`, error)
-            throw error
-        }
-    }
+  async getAll() {
+    return api.get('worker-conflict').json()
+  },
+  async getById(id) {
+    return api.get(`worker-conflict/${id}`).json()
+  },
+  async create(data) {
+    return api.post('worker-conflict', { json: data }).json()
+  },
+  async update(id, data) {
+    return api.put(`worker-conflict/${id}`, { json: data }).json()
+  },
+  async delete(id) {
+    return api.delete(`worker-conflict/${id}`).text()
+  }
 }
 
 export default workerConflictService

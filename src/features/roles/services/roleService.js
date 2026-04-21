@@ -1,57 +1,30 @@
-import apiClient from '../../../core/api/axios.js'
-
-const ENDPOINT = '/role'
+import { api } from '@/lib/api'
 
 const roleService = {
-    async getAll() {
-        try {
-            const response = await apiClient.get(ENDPOINT)
-            return response.data
-        } catch (error) {
-            console.error('Error al obtener roles:', error)
-            throw error
-        }
-    },
-
-    async getById(id) {
-        try {
-            const response = await apiClient.get(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al obtener rol con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async create(role) {
-        try {
-            const response = await apiClient.post(ENDPOINT, role)
-            return response.data
-        } catch (error) {
-            console.error('Error al crear rol:', error)
-            throw error
-        }
-    },
-
-    async update(id, role) {
-        try {
-            const response = await apiClient.put(`${ENDPOINT}/${id}`, role)
-            return response.data
-        } catch (error) {
-            console.error(`Error al actualizar rol con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async delete(id) {
-        try {
-            const response = await apiClient.delete(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al eliminar rol con ID ${id}:`, error)
-            throw error
-        }
-    }
+  async getAll() {
+    return api.get('role').json()
+  },
+  async getById(id) {
+    return api.get(`role/${id}`).json()
+  },
+  async create(role) {
+    return api.post('role', { json: role }).json()
+  },
+  async update(id, role) {
+    return api.put(`role/${id}`, { json: role }).json()
+  },
+  async delete(id) {
+    return api.delete(`role/${id}`).text()
+  },
+  async importFile(file, updateIfExist = false) {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('updateIfExist', updateIfExist)
+    return api.post('role/import', { body: formData }).json()
+  },
+  async exportFile() {
+    return api.get('role/export').blob()
+  }
 }
 
 export default roleService

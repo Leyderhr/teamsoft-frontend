@@ -1,57 +1,9 @@
-import apiClient from '../../../core/api/axios.js'
-
-const ENDPOINT = '/ageGroups'
-
+import { api } from '@/lib/api'
 const ageGroupService = {
-    async getAll() {
-        try {
-            const response = await apiClient.get(ENDPOINT)
-            return response.data
-        } catch (error) {
-            console.error('Error al obtener grupos de edad:', error)
-            throw error
-        }
-    },
-
-    async getById(id) {
-        try {
-            const response = await apiClient.get(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al obtener grupo de edad con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async create(ageGroup) {
-        try {
-            const response = await apiClient.post(ENDPOINT, ageGroup)
-            return response.data
-        } catch (error) {
-            console.error('Error al crear grupo de edad:', error)
-            throw error
-        }
-    },
-
-    async update(id, ageGroup) {
-        try {
-            const response = await apiClient.put(`${ENDPOINT}/${id}`, ageGroup)
-            return response.data
-        } catch (error) {
-            console.error(`Error al actualizar grupo de edad con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async delete(id) {
-        try {
-            const response = await apiClient.delete(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al eliminar grupo de edad con ID ${id}:`, error)
-            throw error
-        }
-    }
+  async getAll() { return api.get('ageGroups').json() },
+  async getById(id) { return api.get(`ageGroups/${id}`).json() },
+  async create(data) { return api.post('ageGroups', { json: data }).json() },
+  async update(id, data) { return api.put(`ageGroups/${id}`, { json: data }).json() },
+  async delete(id) { return api.delete(`ageGroups/${id}`).text() }
 }
-
 export default ageGroupService

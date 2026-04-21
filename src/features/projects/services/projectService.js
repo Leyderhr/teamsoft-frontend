@@ -1,39 +1,25 @@
-import apiClient from '../../../core/api/axios.js'
-
-const ENDPOINT = '/project'
+import { api } from '@/lib/api'
 
 const projectService = {
-    async getAll() {
-        const response = await apiClient.get(ENDPOINT)
-        return response.data
-    },
-
-    async getById(id) {
-        const response = await apiClient.get(`${ENDPOINT}/${id}`)
-        return response.data
-    },
-
-    async create(project) {
-        // Si ya es un array, enviarlo directamente; si no, envolverlo
-        const data = Array.isArray(project) ? project : [project]
-        const response = await apiClient.post(ENDPOINT, data)
-        return response.data
-    },
-
-    async update(id, project) {
-        const response = await apiClient.put(`${ENDPOINT}/${id}`, project)
-        return response.data
-    },
-
-    async delete(id) {
-        const response = await apiClient.delete(`${ENDPOINT}/${id}`)
-        return response.data
-    },
-
-    async close(id) {
-        const response = await apiClient.put(`${ENDPOINT}/close/${id}`)
-        return response.data
-    }
+  async getAll() {
+    return api.get('project').json()
+  },
+  async getById(id) {
+    return api.get(`project/${id}`).json()
+  },
+  async create(project) {
+    const data = Array.isArray(project) ? project : [project]
+    return api.post('project', { json: data }).json()
+  },
+  async update(id, project) {
+    return api.put(`project/${id}`, { json: project }).json()
+  },
+  async delete(id) {
+    return api.delete(`project/${id}`).text()
+  },
+  async close(id) {
+    return api.put(`project/close/${id}`).json()
+  }
 }
 
 export default projectService

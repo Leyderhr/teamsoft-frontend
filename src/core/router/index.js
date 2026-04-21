@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import TeamSoftLayout from '@/core/layout/TeamSoftLayout.vue'
 import Login from '@/features/auth/views/Login.vue'
-import {useAuthStore} from "@/core/store/authStore.js";
+import { useAuthStore } from '@/lib/auth-store'
 import nomenclativesRoutes from './nomenclatives.routes.js'
 import subEntitiesRoutes from './subEntities.routes.js'
 
@@ -280,7 +280,7 @@ router.beforeEach((to, from, next) => {
 
     // Verificar roles requeridos si la ruta los especifica
     if (requiredRoles && requiredRoles.length > 0 && authStore.isAuthenticated) {
-        const userRoles = authStore.roles || []
+        const userRoles = authStore.user?.authorities || []
         const hasRole = requiredRoles.some(role => userRoles.includes(role))
         if (!hasRole) {
             next('/403')

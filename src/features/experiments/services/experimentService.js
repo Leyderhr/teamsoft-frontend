@@ -1,46 +1,21 @@
-import apiClient from '@/core/api/axios.js'
+import { api } from '@/lib/api'
 
 const experimentService = {
-    async getConfig() {
-        try {
-            return (await apiClient.get('/experiment/config')).data
-        } catch (error) {
-            console.error('Error al obtener configuración del experimento:', error)
-            throw error
-        }
-    },
-    async saveConfig(config) {
-        try {
-            return (await apiClient.put('/experiment/config', config)).data
-        } catch (error) {
-            console.error('Error al guardar configuración del experimento:', error)
-            throw error
-        }
-    },
-    async getMembersToEvaluate(projectId) {
-        try {
-            return (await apiClient.get(`/close-project/${projectId}/members`)).data
-        } catch (error) {
-            console.error('Error al obtener miembros del proyecto:', error)
-            throw error
-        }
-    },
-    async saveMemberEvaluation(projectId, memberId, evaluationData) {
-        try {
-            return (await apiClient.post(`/close-project/${projectId}/member/${memberId}/evaluate`, evaluationData)).data
-        } catch (error) {
-            console.error('Error al guardar evaluación del miembro:', error)
-            throw error
-        }
-    },
-    async finalizeProjectEvaluation(projectId) {
-        try {
-            return (await apiClient.post(`/close-project/${projectId}/finalize`)).data
-        } catch (error) {
-            console.error('Error al finalizar evaluación del proyecto:', error)
-            throw error
-        }
-    }
+  async getConfig() {
+    return api.get('experiment/config').json()
+  },
+  async saveConfig(config) {
+    return api.put('experiment/config', { json: config }).json()
+  },
+  async getMembersToEvaluate(projectId) {
+    return api.get(`close-project/${projectId}/members`).json()
+  },
+  async saveMemberEvaluation(projectId, memberId, evaluationData) {
+    return api.post(`close-project/${projectId}/member/${memberId}/evaluate`, { json: evaluationData }).json()
+  },
+  async finalizeProjectEvaluation(projectId) {
+    return api.post(`close-project/${projectId}/finalize`).json()
+  }
 }
 
 export default experimentService

@@ -1,35 +1,14 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import GenericListView from '@/shared/components/GenericListView.vue'
 import { projectConfig } from '@/features/projects/config/project.config.js'
+import { useProjects } from '@/services/projects/queries'
 
 const toast = useToast()
-const items = ref([])
-const loading = ref(false)
 const selectedItem = ref(null)
 
-const loadData = async () => {
-  loading.value = true
-  try {
-    const data = await projectConfig.service.getAll()
-    items.value = data
-  } catch (error) {
-    console.error('Error cargando proyectos:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'No se pudieron cargar los proyectos',
-      life: 3000
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  loadData()
-})
+const { data: items, isLoading: loading, refetch: loadData } = useProjects()
 </script>
 
 <template>

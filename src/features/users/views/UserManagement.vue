@@ -1,34 +1,19 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import GenericListView from '@/shared/components/GenericListView.vue'
 import Button from 'primevue/button'
 import { userConfig } from '@/features/users/config/user.config.js'
+import { useUsers } from '@/services/users/queries'
+import { useResetPassword } from '@/services/users/mutations'
 
 const toast = useToast()
 const confirm = useConfirm()
-const items = ref([])
-const loading = ref(false)
 const selectedItem = ref(null)
 
-const loadData = async () => {
-  loading.value = true
-  try {
-    const data = await userConfig.service.getAll()
-    items.value = data
-  } catch (error) {
-    console.error('Error cargando usuarios:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'No se pudieron cargar los usuarios',
-      life: 3000
-    })
-  } finally {
-    loading.value = false
-  }
-}
+const { data: items, isLoading: loading, refetch: loadData } = useUsers()
+const resetPasswordMutation = useResetPassword()
 
 const handleResetPassword = () => {
   if (!selectedItem.value) {
@@ -47,7 +32,7 @@ const handleResetPassword = () => {
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
       try {
-        await userConfig.service.resetPassword(selectedItem.value.id)
+        await resetPasswordMutation.mutateAsync(selectedItem.value.id)
         toast.add({
           severity: 'success',
           summary: 'Éxito',
@@ -65,10 +50,6 @@ const handleResetPassword = () => {
     }
   })
 }
-
-onMounted(() => {
-  loadData()
-})
 </script>
 
 <template>

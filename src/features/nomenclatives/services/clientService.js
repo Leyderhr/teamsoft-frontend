@@ -1,57 +1,9 @@
-import apiClient from '../../../core/api/axios.js'
-
-const ENDPOINT = '/clients'
-
+import { api } from '@/lib/api'
 const clientService = {
-    async getAll() {
-        try {
-            const response = await apiClient.get(ENDPOINT)
-            return response.data
-        } catch (error) {
-            console.error('Error al obtener clientes:', error)
-            throw error
-        }
-    },
-
-    async getById(id) {
-        try {
-            const response = await apiClient.get(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al obtener cliente con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async create(client) {
-        try {
-            const response = await apiClient.post(ENDPOINT, client)
-            return response.data
-        } catch (error) {
-            console.error('Error al crear cliente:', error)
-            throw error
-        }
-    },
-
-    async update(id, client) {
-        try {
-            const response = await apiClient.put(`${ENDPOINT}/${id}`, client)
-            return response.data
-        } catch (error) {
-            console.error(`Error al actualizar cliente con ID ${id}:`, error)
-            throw error
-        }
-    },
-
-    async delete(id) {
-        try {
-            const response = await apiClient.delete(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error(`Error al eliminar cliente con ID ${id}:`, error)
-            throw error
-        }
-    }
+  async getAll() { return api.get('clients').json() },
+  async getById(id) { return api.get(`clients/${id}`).json() },
+  async create(data) { return api.post('clients', { json: data }).json() },
+  async update(id, data) { return api.put(`clients/${id}`, { json: data }).json() },
+  async delete(id) { return api.delete(`clients/${id}`).text() }
 }
-
 export default clientService

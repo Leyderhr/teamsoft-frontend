@@ -197,13 +197,13 @@
         <!-- Controls -->
         <div class="flex items-center gap-3">
           <!-- Rows per page -->
-          <select
-            v-model="rowsPerPage"
-            @change="currentPage = 1"
-            class="rounded-lg border border-gray-200 text-sm py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-gray-700"
-          >
-            <option v-for="n in rowsPerPageOptions" :key="n" :value="n">{{ n }} / pág</option>
-          </select>
+          <div class="w-32">
+            <AppSelect
+              v-model="rowsPerPage"
+              :options="rowsPerPageOptions.map(n => ({ label: `${n} / pág`, value: n }))"
+              size="sm"
+            />
+          </div>
 
           <!-- Page buttons -->
           <div class="flex items-center gap-1">
@@ -286,6 +286,7 @@ import {
   ChevronLeft, ChevronRight,
   CheckCircle2, XCircle, Inbox, AlertTriangle,
 } from 'lucide-vue-next'
+import AppSelect from '@/components/ui/AppSelect.vue'
 
 const props = defineProps({
   columns: { type: Array, required: true },
@@ -309,8 +310,9 @@ const sortField = ref(null)
 const sortOrder = ref(1)
 const confirmVisible = ref(false)
 
-// Reset page when items change
+// Reset page when items or rows-per-page change
 watch(() => props.items, () => { currentPage.value = 1 })
+watch(rowsPerPage, () => { currentPage.value = 1 })
 
 // Helpers
 function getNestedValue(obj, field) {

@@ -1,16 +1,30 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useToast } from 'primevue/usetoast'
-import reportService from '@/features/reports/services/reportService.js'
-import personService from '@/features/persons/services/personService.js'
+import { ref, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import GenericListView from '@/shared/components/GenericListView.vue'
+import { usePersons } from '@/composables/usePersons'
+import { fetchDeletePerson } from '@/services/persons'
 
-const toast = useToast()
-const items = ref([])
-const loading = ref(false)
+const router = useRouter()
 const selectedItem = ref(null)
 
-// Columnas con los field names correctos del endpoint /person/report
+const { persons: items, isLoading: loading, error, refetch: loadData } = usePersons()
+
+// Debug logs
+onMounted(() => {
+  console.log('Person.vue mounted')
+  console.log('Items:', items.value)
+  console.log('Loading:', loading.value)
+  console.log('Error:', error.value)
+})
+
+watch([items, loading, error], ([newItems, newLoading, newError]) => {
+  console.log('Watch triggered:')
+  console.log('  Items:', newItems)
+  console.log('  Loading:', newLoading)
+  console.log('  Error:', newError)
+})
+
 const columns = ref([
   { field: 'personName', header: 'Nombre', sortable: true },
   { field: 'surName', header: 'Apellidos', sortable: true },
@@ -19,47 +33,33 @@ const columns = ref([
   { field: 'phone', header: 'Teléfono' },
   { field: 'sex', header: 'Sexo' },
   { field: 'status', header: 'Estado', type: 'badge', sortable: true },
-  { field: 'countyFk.countyName', header: 'Provincia', sortable: true },
-  { field: 'raceFk.raceName', header: 'Raza', sortable: true },
-  { field: 'groupFk.name', header: 'Grupo', sortable: true },
 ])
 
-const loadData = async () => {
-  loading.value = true
-  try {
-    // Usar el endpoint enriquecido que devuelve relaciones (countyFk, raceFk, groupFk, etc.)
-    items.value = await reportService.getPersonReport()
-  } catch (error) {
-    console.error('Error cargando personas (report):', error)
-    // Fallback al endpoint básico
-    try {
-      items.value = await personService.getAll()
-    } catch (e) {
-      console.error('Error en fallback personService.getAll():', e)
-      toast.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudieron cargar las personas',
-        life: 3000
-      })
-    }
-  } finally {
-    loading.value = false
-  }
+const personService = {
+  delete: fetchDeletePerson
 }
 
-onMounted(loadData)
+const personConfig = {
+  createRoute: '/person/create',
+  editRoute: (id) => `/person/edit/${id}`
+}
+
+const handleCreate = () => {
+  router.push('/person/create')
+}
 </script>
 
 <template>
   <div>
     <GenericListView
-      :items="items"
+      :items="items || []"
       :columns="columns"
       :selected-item="selectedItem"
       :service="personService"
+      :config="personConfig"
       title="Personas"
       :loading="loading"
+      :on-create-click="handleCreate"
       @update:selectedItem="selectedItem = $event"
       @refresh="loadData"
     />
