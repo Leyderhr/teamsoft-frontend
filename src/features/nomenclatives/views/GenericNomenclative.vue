@@ -20,14 +20,13 @@ const props = defineProps({
 const toast = useToast()
 const selectedItem = ref(null)
 
-// Extraer endpoint del config
-const endpoint = computed(() => props.config.endpoint || props.config.entityName.singular)
+// Extraer endpoint del config — debe ser camelCase o kebab-case sin espacios
+const endpoint = computed(() => props.config.endpoint)
 
-const { data: items, isLoading: loading, refetch: loadData } = useNomenclative(endpoint.value)
+const { data: items, isLoading: loading, refetch: loadData } = useNomenclative(endpoint)
 
 watch(() => props.config, () => {
   selectedItem.value = null
-  loadData()
 }, { immediate: false })
 </script>
 

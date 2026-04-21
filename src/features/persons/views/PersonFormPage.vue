@@ -1,323 +1,10 @@
-<template>
-  <div>
-    <PageBreadcrumb
-      :page-title="pageTitle"
-      :items="[{ label: 'Personas', path: '/person' }]"
-    />
-
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
-      <!-- Header -->
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-base font-semibold text-gray-800">{{ pageTitle }}</h2>
-      </div>
-
-      <!-- Tabs Navigation -->
-      <div class="border-b border-gray-200 px-6">
-        <nav class="-mb-px flex gap-0 overflow-x-auto no-scrollbar">
-          <button
-            v-for="tab in tabs"
-            :key="tab.key"
-            @click="activeTab = tab.key"
-            class="flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
-            :class="activeTab === tab.key
-              ? 'border-brand-500 text-brand-500'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-          >
-            {{ tab.label }}
-          </button>
-        </nav>
-      </div>
-
-      <!-- Tab Content -->
-      <div class="p-6">
-
-        <!-- Tab: Datos Básicos -->
-        <div v-show="activeTab === 'basic'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Nombre <span class="text-error-500">*</span></label>
-            <input v-model="personName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Nombre" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Apellidos <span class="text-error-500">*</span></label>
-            <input v-model="surName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Apellidos" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">CI <span class="text-error-500">*</span></label>
-            <input v-model="card" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Carnet de identidad" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Dirección</label>
-            <input v-model="address" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Dirección" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-            <input v-model="phone" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Teléfono" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Correo</label>
-            <input v-model="email" type="email" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Correo electrónico" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Sexo</label>
-            <select v-model="sex" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option value="M">Masculino</option>
-              <option value="F">Femenino</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Estado</label>
-            <select v-model="status" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha de ingreso</label>
-            <input v-model="inDate" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
-            <input v-model="birthDate" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Carga de trabajo</label>
-            <input v-model.number="workload" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Experiencia (años)</label>
-            <input v-model.number="experience" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
-          </div>
-
-          <!-- Atributos -->
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Provincia</label>
-            <select v-model="selectedCounty" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in countyOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Raza</label>
-            <select v-model="selectedRace" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in raceOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Grupo</label>
-            <select v-model="selectedGroup" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in groupOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Nacionalidad</label>
-            <select v-model="selectedNacionality" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in nacionalityOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Religión</label>
-            <select v-model="selectedReligion" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in religionOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Tab: Competencias -->
-        <div v-show="activeTab === 'competences'" class="space-y-4">
-          <div class="flex gap-3 flex-wrap">
-            <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Competencia</label>
-              <select v-model="selectedCompetence" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in competenceOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-            <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Nivel</label>
-              <select v-model="selectedLevel" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in levelOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-            <div class="flex items-end">
-              <button @click="addCompetence" :disabled="!selectedCompetence || !selectedLevel"
-                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                <Plus class="w-4 h-4" /> Agregar
-              </button>
-            </div>
-          </div>
-          <MiniTable
-            :rows="competenceValues"
-            :columns="[{ field: 'competenceName', header: 'Competencia' }, { field: 'levelName', header: 'Nivel' }]"
-            v-model:selected="selectedCompetences"
-            @remove="removeCompetences"
-          />
-        </div>
-
-        <!-- Tab: Intereses -->
-        <div v-show="activeTab === 'interests'" class="space-y-6">
-          <!-- Roles -->
-          <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Roles</h3>
-            <div class="flex gap-3 flex-wrap mb-3">
-              <div class="flex-1 min-w-48 space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Rol</label>
-                <select v-model="selectedRole" class="form-input bg-white">
-                  <option value="">Seleccione...</option>
-                  <option v-for="o in roleOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-                </select>
-              </div>
-              <div class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
-                <label class="flex items-center gap-2 h-10 cursor-pointer">
-                  <input type="checkbox" v-model="rolePreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
-                  <span class="text-sm text-gray-600">Preferido</span>
-                </label>
-              </div>
-              <div class="flex items-end">
-                <button @click="addRoleInterest" :disabled="!selectedRole"
-                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                  <Plus class="w-4 h-4" /> Agregar
-                </button>
-              </div>
-            </div>
-            <MiniTable
-              :rows="personalInterests"
-              :columns="[{ field: 'roleName', header: 'Rol' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
-              v-model:selected="selectedRoleInterests"
-              @remove="removeRoleInterests"
-            />
-          </div>
-
-          <!-- Proyectos -->
-          <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Proyectos</h3>
-            <div class="flex gap-3 flex-wrap mb-3">
-              <div class="flex-1 min-w-48 space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Proyecto</label>
-                <select v-model="selectedProject" class="form-input bg-white">
-                  <option value="">Seleccione...</option>
-                  <option v-for="o in projectOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-                </select>
-              </div>
-              <div class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
-                <label class="flex items-center gap-2 h-10 cursor-pointer">
-                  <input type="checkbox" v-model="projectPreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
-                  <span class="text-sm text-gray-600">Preferido</span>
-                </label>
-              </div>
-              <div class="flex items-end">
-                <button @click="addProjectInterest" :disabled="!selectedProject"
-                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                  <Plus class="w-4 h-4" /> Agregar
-                </button>
-              </div>
-            </div>
-            <MiniTable
-              :rows="personalProjectInterests"
-              :columns="[{ field: 'projectName', header: 'Proyecto' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
-              v-model:selected="selectedProjectInterests"
-              @remove="removeProjectInterests"
-            />
-          </div>
-        </div>
-
-        <!-- Tab: Test Psicológico -->
-        <div v-show="activeTab === 'test'" class="space-y-6">
-          <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Tipo MBTI</h3>
-            <div class="w-64 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Tipo</label>
-              <select v-model="mbtiType" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in mbtiOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Roles Belbin</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <div v-for="(key, label) in belbinRoleLabels" :key="key" class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">{{ label }}</label>
-                <select v-model="belbinRoles[key]" class="form-input bg-white">
-                  <option v-for="o in belbinOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tab: Incompatibilidades -->
-        <div v-show="activeTab === 'conflicts'" class="space-y-4">
-          <div class="flex gap-3 flex-wrap">
-            <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Índice de conflicto</label>
-              <select v-model="selectedConflictIndex" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in conflictIndexOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-            <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Persona</label>
-              <select v-model="selectedConflictPerson" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in personOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-            <div class="flex items-end">
-              <button @click="addConflict" :disabled="!selectedConflictIndex || !selectedConflictPerson"
-                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                <Plus class="w-4 h-4" /> Agregar
-              </button>
-            </div>
-          </div>
-          <MiniTable
-            :rows="personConflicts"
-            :columns="[{ field: 'conflictName', header: 'Índice conflicto' }, { field: 'personConflictName', header: 'Persona' }]"
-            v-model:selected="selectedConflicts"
-            @remove="removeConflicts"
-          />
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-        <button
-          type="button"
-          @click="router.push('/person')"
-          class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          @click="handleSave"
-          :disabled="saving"
-          class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 transition-colors flex items-center gap-2"
-        >
-          <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
-          <Save v-else class="w-4 h-4" />
-          {{ saving ? 'Guardando...' : 'Guardar' }}
-        </button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { ref, computed, onMounted, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle } from 'lucide-vue-next'
+import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle, ChevronRight } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
+import AppSelect from '@/components/ui/AppSelect.vue'
 import { api } from '@/lib/api'
 
 // Inline mini-table component for sub-collections
@@ -408,6 +95,26 @@ const tabs = [
   { key: 'conflicts', label: 'Incompatibilidades' },
 ]
 
+// Static options
+const sexOptions = [
+  { label: 'Masculino', value: 'M' },
+  { label: 'Femenino', value: 'F' },
+]
+const statusOptions = [
+  { label: 'Activo', value: 'Activo' },
+  { label: 'Inactivo', value: 'Inactivo' },
+]
+const mbtiValues = [
+  'ESTJ','ENTJ','ESFJ','ENFJ','ESTP','ENTP','ESFP','ENFP',
+  'ISTJ','INTJ','ISFJ','INFJ','ISTP','INTP','ISFP','INFP',
+]
+const mbtiOptions = mbtiValues.map(v => ({ label: v, value: v }))
+const belbinOptions = [
+  { label: 'Preferido', value: 'Preferido' },
+  { label: 'Evitado', value: 'Evitado' },
+  { label: 'Indiferente', value: 'Indiferente' },
+]
+
 // Basic data
 const personName = ref('')
 const card = ref('')
@@ -429,7 +136,7 @@ const selectedGroup = ref('')
 const selectedNacionality = ref('')
 const selectedReligion = ref('')
 
-// Options
+// Dynamic options
 const countyOptions = ref([])
 const raceOptions = ref([])
 const groupOptions = ref([])
@@ -460,10 +167,6 @@ const selectedProjectInterests = ref([])
 
 // MBTI
 const mbtiType = ref('')
-const mbtiOptions = [
-  'ESTJ','ENTJ','ESFJ','ENFJ','ESTP','ENTP','ESFP','ENFP',
-  'ISTJ','INTJ','ISFJ','INFJ','ISTP','INTP','ISFP','INFP'
-].map(v => ({ label: v, value: v }))
 
 // Belbin
 const belbinRoles = ref({
@@ -490,12 +193,6 @@ const belbinRoleLabels = {
   'Especialista': 'especialista',
 }
 
-const belbinOptions = [
-  { label: 'Preferido', value: 'Preferido' },
-  { label: 'Evitado', value: 'Evitado' },
-  { label: 'Indiferente', value: 'Indiferente' },
-]
-
 // Conflicts
 const conflictIndexOptions = ref([])
 const selectedConflictIndex = ref('')
@@ -507,6 +204,13 @@ const selectedConflicts = ref([])
 const saving = ref(false)
 const isEditMode = computed(() => props.mode === 'edit')
 const pageTitle = computed(() => isEditMode.value ? 'Editar Persona' : 'Crear Persona')
+
+const activeTabIndex = computed(() => tabs.findIndex(t => t.key === activeTab.value))
+const isLastTab = computed(() => activeTabIndex.value === tabs.length - 1)
+
+function goToNextTab() {
+  if (!isLastTab.value) activeTab.value = tabs[activeTabIndex.value + 1].key
+}
 
 onMounted(async () => {
   try {
@@ -582,7 +286,7 @@ onMounted(async () => {
       })) ?? []
 
       if (p.personTest) {
-        mbtiType.value = p.personTest.tipoMB ?? ''
+        mbtiType.value = p.personTest.mbtiType ?? ''
         const belbinMap = {
           implementador: p.personTest.e_S,
           coordinador: p.personTest.i_D,
@@ -722,7 +426,7 @@ async function handleSave() {
       nacionality: selectedNacionality.value || null,
       religion: selectedReligion.value || null,
       personTest: {
-        tipoMB: mbtiType.value || '',
+        mbtiType: mbtiType.value || '',
         e_S: belbinRoles.value.implementador.charAt(0),
         i_D: belbinRoles.value.coordinador.charAt(0),
         c_O: belbinRoles.value.cerebro.charAt(0),
@@ -756,3 +460,279 @@ async function handleSave() {
 }
 </script>
 
+<template>
+  <div>
+    <PageBreadcrumb
+      :page-title="pageTitle"
+      :items="[{ label: 'Personas', path: '/person' }]"
+    />
+
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-base font-semibold text-gray-800">{{ pageTitle }}</h2>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="border-b border-gray-200 px-6">
+        <nav class="-mb-px flex gap-0 overflow-x-auto no-scrollbar">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            @click="activeTab = tab.key"
+            class="flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
+            :class="activeTab === tab.key
+              ? 'border-brand-500 text-brand-500'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          >
+            {{ tab.label }}
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="p-6">
+
+        <!-- Tab: Datos Básicos -->
+        <div v-show="activeTab === 'basic'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Nombre <span class="text-error-500">*</span></label>
+            <input v-model="personName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Nombre" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Apellidos <span class="text-error-500">*</span></label>
+            <input v-model="surName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Apellidos" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">CI <span class="text-error-500">*</span></label>
+            <input v-model="card" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Carnet de identidad" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Dirección</label>
+            <input v-model="address" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Dirección" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+            <input v-model="phone" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Teléfono" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Correo</label>
+            <input v-model="email" type="email" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Correo electrónico" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Sexo</label>
+            <AppSelect v-model="sex" :options="sexOptions" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Estado</label>
+            <AppSelect v-model="status" :options="statusOptions" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Fecha de ingreso</label>
+            <input v-model="inDate" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
+            <input v-model="birthDate" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Carga de trabajo</label>
+            <input v-model.number="workload" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Experiencia (años)</label>
+            <input v-model.number="experience" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Provincia</label>
+            <AppSelect v-model="selectedCounty" :options="countyOptions" searchable />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Raza</label>
+            <AppSelect v-model="selectedRace" :options="raceOptions" searchable />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Grupo</label>
+            <AppSelect v-model="selectedGroup" :options="groupOptions" searchable />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Nacionalidad</label>
+            <AppSelect v-model="selectedNacionality" :options="nacionalityOptions" searchable />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Religión</label>
+            <AppSelect v-model="selectedReligion" :options="religionOptions" searchable />
+          </div>
+        </div>
+
+        <!-- Tab: Competencias -->
+        <div v-show="activeTab === 'competences'" class="space-y-4">
+          <div class="flex gap-3 flex-wrap">
+            <div class="flex-1 min-w-48 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Competencia</label>
+              <AppSelect v-model="selectedCompetence" :options="competenceOptions" searchable />
+            </div>
+            <div class="flex-1 min-w-48 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Nivel</label>
+              <AppSelect v-model="selectedLevel" :options="levelOptions" searchable />
+            </div>
+            <div class="flex items-end">
+              <button @click="addCompetence" :disabled="!selectedCompetence || !selectedLevel"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
+                <Plus class="w-4 h-4" /> Agregar
+              </button>
+            </div>
+          </div>
+          <MiniTable
+            :rows="competenceValues"
+            :columns="[{ field: 'competenceName', header: 'Competencia' }, { field: 'levelName', header: 'Nivel' }]"
+            v-model:selected="selectedCompetences"
+            @remove="removeCompetences"
+          />
+        </div>
+
+        <!-- Tab: Intereses -->
+        <div v-show="activeTab === 'interests'" class="space-y-6">
+          <!-- Roles -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Roles</h3>
+            <div class="flex gap-3 flex-wrap mb-3">
+              <div class="flex-1 min-w-48 space-y-1">
+                <label class="block text-sm font-medium text-gray-700">Rol</label>
+                <AppSelect v-model="selectedRole" :options="roleOptions" searchable />
+              </div>
+              <div class="space-y-1">
+                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
+                <label class="flex items-center gap-2 h-10 cursor-pointer">
+                  <input type="checkbox" v-model="rolePreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
+                  <span class="text-sm text-gray-600">Preferido</span>
+                </label>
+              </div>
+              <div class="flex items-end">
+                <button @click="addRoleInterest" :disabled="!selectedRole"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
+                  <Plus class="w-4 h-4" /> Agregar
+                </button>
+              </div>
+            </div>
+            <MiniTable
+              :rows="personalInterests"
+              :columns="[{ field: 'roleName', header: 'Rol' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
+              v-model:selected="selectedRoleInterests"
+              @remove="removeRoleInterests"
+            />
+          </div>
+
+          <!-- Proyectos -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Proyectos</h3>
+            <div class="flex gap-3 flex-wrap mb-3">
+              <div class="flex-1 min-w-48 space-y-1">
+                <label class="block text-sm font-medium text-gray-700">Proyecto</label>
+                <AppSelect v-model="selectedProject" :options="projectOptions" searchable />
+              </div>
+              <div class="space-y-1">
+                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
+                <label class="flex items-center gap-2 h-10 cursor-pointer">
+                  <input type="checkbox" v-model="projectPreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
+                  <span class="text-sm text-gray-600">Preferido</span>
+                </label>
+              </div>
+              <div class="flex items-end">
+                <button @click="addProjectInterest" :disabled="!selectedProject"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
+                  <Plus class="w-4 h-4" /> Agregar
+                </button>
+              </div>
+            </div>
+            <MiniTable
+              :rows="personalProjectInterests"
+              :columns="[{ field: 'projectName', header: 'Proyecto' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
+              v-model:selected="selectedProjectInterests"
+              @remove="removeProjectInterests"
+            />
+          </div>
+        </div>
+
+        <!-- Tab: Test Psicológico -->
+        <div v-show="activeTab === 'test'" class="space-y-6">
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Tipo MBTI</h3>
+            <div class="w-64 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Tipo</label>
+              <AppSelect v-model="mbtiType" :options="mbtiOptions" />
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Roles Belbin</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div v-for="(key, label) in belbinRoleLabels" :key="key" class="space-y-1">
+                <label class="block text-sm font-medium text-gray-700">{{ label }}</label>
+                <AppSelect v-model="belbinRoles[key]" :options="belbinOptions" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Incompatibilidades -->
+        <div v-show="activeTab === 'conflicts'" class="space-y-4">
+          <div class="flex gap-3 flex-wrap">
+            <div class="flex-1 min-w-48 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Índice de conflicto</label>
+              <AppSelect v-model="selectedConflictIndex" :options="conflictIndexOptions" searchable />
+            </div>
+            <div class="flex-1 min-w-48 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Persona</label>
+              <AppSelect v-model="selectedConflictPerson" :options="personOptions" searchable search-placeholder="Buscar persona..." />
+            </div>
+            <div class="flex items-end">
+              <button @click="addConflict" :disabled="!selectedConflictIndex || !selectedConflictPerson"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
+                <Plus class="w-4 h-4" /> Agregar
+              </button>
+            </div>
+          </div>
+          <MiniTable
+            :rows="personConflicts"
+            :columns="[{ field: 'conflictName', header: 'Índice conflicto' }, { field: 'personConflictName', header: 'Persona' }]"
+            v-model:selected="selectedConflicts"
+            @remove="removeConflicts"
+          />
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+        <button
+          type="button"
+          @click="router.push('/person')"
+          class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Cancelar
+        </button>
+        <!-- En modo crear: avanza tabs hasta el último, luego guarda -->
+        <button
+          v-if="!isEditMode && !isLastTab"
+          type="button"
+          @click="goToNextTab"
+          class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors flex items-center gap-2"
+        >
+          Siguiente
+          <ChevronRight class="w-4 h-4" />
+        </button>
+        <button
+          v-else
+          type="button"
+          @click="handleSave"
+          :disabled="saving"
+          class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 transition-colors flex items-center gap-2"
+        >
+          <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
+          <Save v-else class="w-4 h-4" />
+          {{ saving ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</template>

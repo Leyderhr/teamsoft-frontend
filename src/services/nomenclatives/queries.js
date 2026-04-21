@@ -1,25 +1,21 @@
 import { useQuery } from '@tanstack/vue-query'
+import { isRef } from 'vue'
 import { api } from '@/lib/api'
 
-/**
- * Hook genérico para obtener nomenclativos
- * @param {string} endpoint - Endpoint del nomenclativo (ej: 'county', 'race', etc.)
- */
+const resolve = (val) => (isRef(val) ? val.value : val)
+
 export function useNomenclative(endpoint) {
   return useQuery({
     queryKey: [endpoint],
-    queryFn: () => api.get(endpoint).json(),
+    queryFn: () => api.get(resolve(endpoint)).json(),
   })
 }
 
-/**
- * Hook genérico para obtener un nomenclativo por ID
- */
 export function useNomenclativeItem(endpoint, id) {
   return useQuery({
     queryKey: [endpoint, id],
-    queryFn: () => api.get(`${endpoint}/${id}`).json(),
-    enabled: !!id,
+    queryFn: () => api.get(`${resolve(endpoint)}/${resolve(id)}`).json(),
+    enabled: () => !!resolve(id),
   })
 }
 
