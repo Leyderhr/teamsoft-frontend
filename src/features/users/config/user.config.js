@@ -16,7 +16,7 @@ export const userConfig = {
         { field: 'idCard', header: 'Cédula', width: '120px', sortable: true, filterable: true },
         { field: 'mail', header: 'Correo', width: '200px', sortable: true, filterable: true },
         { field: 'username', header: 'Usuario', width: '200px', sortable: true, filterable: true },
-        { field: 'roles', header: 'Roles', width: '200px', sortable: false, type: 'roles' },
+        { field: 'roles', header: 'Roles', width: '200px', sortable: false, type: 'badge' },
         { field: 'enabled', header: 'Habilitado', width: '100px', sortable: true, type: 'boolean' }
     ],
     fields: [],

@@ -44,6 +44,8 @@
             <Upload class="w-4 h-4" />
             Importar
           </button>
+          <!-- Slot para botones adicionales -->
+          <slot name="extraButtons"></slot>
         </div>
         <!-- Spacer when no actions shown -->
         <div v-else></div>
@@ -163,16 +165,32 @@
                   </template>
 
                   <!-- Badge type -->
-                  <span
-                    v-else-if="col.type === 'badge'"
-                    class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
-                    :class="getBadgeClass(getNestedValue(item, col.field))"
-                  >
-                    {{ getNestedValue(item, col.field) }}
-                  </span>
+                  <template v-else-if="col.type === 'badge'">
+                    <template v-if="Array.isArray(getNestedValue(item, col.field))">
+                      <span
+                        v-for="(elem, idx) in getNestedValue(item, col.field)"
+                        :key="idx"
+                        class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
+                        style="margin-right:4px;"
+                        :class="col.field === 'roles' ? 'bg-success-50 text-success-700' : getBadgeClass(resolveBadgeValue(elem))"
+                      >
+                        {{ resolveBadgeValue(elem) }}
+                      </span>
+                    </template>
+                    <template v-else>
+                      <span
+                        class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
+                        :class="col.field === 'roles' ? 'bg-success-50 text-success-700' : getBadgeClass(resolveBadgeValue(getNestedValue(item, col.field)))"
+                      >
+                        {{ resolveBadgeValue(getNestedValue(item, col.field)) }}
+                      </span>
+                    </template>
+                  </template>
 
                   <!-- Default text -->
-                  <span v-else>{{ getNestedValue(item, col.field) ?? '—' }}</span>
+                  <template v-else>
+                    <span>{{ getNestedValue(item, col.field) ?? '—' }}</span>
+                  </template>
                 </td>
               </tr>
             </template>
@@ -309,6 +327,16 @@ const selectedRow = ref(null)
 const sortField = ref(null)
 const sortOrder = ref(1)
 const confirmVisible = ref(false)
+
+// Normalize badge values
+function resolveBadgeValue(value) {
+  if (value == null) return ''
+  if (typeof value === 'object') {
+    // Try common label fields
+    return value.name ?? value.label ?? value.role ?? JSON.stringify(value)
+  }
+  return String(value)
+}
 
 // Reset page when items or rows-per-page change
 watch(() => props.items, () => { currentPage.value = 1 })

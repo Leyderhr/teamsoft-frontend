@@ -5,6 +5,7 @@ import { useToast } from 'primevue/usetoast'
 import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle, ChevronRight } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
+import AppDatePicker from '@/components/ui/AppDatePicker.vue'
 import { api } from '@/lib/api'
 
 // Inline mini-table component for sub-collections
@@ -124,7 +125,6 @@ const phone = ref('')
 const sex = ref('')
 const email = ref('')
 const inDate = ref('')
-const workload = ref(0)
 const experience = ref(0)
 const status = ref('')
 const birthDate = ref('')
@@ -257,7 +257,6 @@ onMounted(async () => {
       email.value = p.email ?? ''
       inDate.value = p.inDate ? p.inDate.split('T')[0] : ''
       birthDate.value = p.birthDate ? p.birthDate.split('T')[0] : ''
-      workload.value = p.workload ?? 0
       experience.value = p.experience ?? 0
       status.value = p.status ?? ''
       selectedCounty.value = p.county?.id ?? p.county ?? ''
@@ -266,37 +265,48 @@ onMounted(async () => {
       selectedNacionality.value = p.nacionality?.id ?? p.nacionality ?? ''
       selectedReligion.value = p.religion?.id ?? p.religion ?? ''
 
-      competenceValues.value = p.competenceValues?.map(cv => ({
-        competenceId: cv.competenceId ?? cv.competence?.id,
-        competenceName: competenceOptions.value.find(c => c.value === (cv.competenceId ?? cv.competence?.id))?.label ?? '',
-        levelsId: cv.levelsId ?? cv.levels?.id,
-        levelName: levelOptions.value.find(l => l.value === (cv.levelsId ?? cv.levels?.id))?.label ?? '',
-      })) ?? []
+      competenceValues.value = p.competenceValues?.map(cv => {
+        const compId = cv.competenceId ?? cv.competence?.id
+        const lvlId  = cv.levelsId ?? cv.levelId ?? cv.levels?.id ?? cv.level?.id
+        return {
+          competenceId: compId,
+          competenceName: competenceOptions.value.find(c => c.value === compId)?.label ?? cv.competence?.competitionName ?? '',
+          levelsId: lvlId,
+          levelName: levelOptions.value.find(l => l.value === lvlId)?.label ?? cv.levels?.significance ?? cv.level?.significance ?? '',
+        }
+      }) ?? []
 
-      personalInterests.value = p.personalInterests?.map(pi => ({
-        roleId: pi.roleId ?? pi.role?.id,
-        roleName: roleOptions.value.find(r => r.value === (pi.roleId ?? pi.role?.id))?.label ?? '',
-        preference: pi.preference,
-      })) ?? []
+      personalInterests.value = p.personalInterests?.map(pi => {
+        const roleId = pi.roleId ?? pi.role?.id
+        return {
+          roleId,
+          roleName: roleOptions.value.find(r => r.value === roleId)?.label ?? pi.role?.roleName ?? '',
+          preference: pi.preference ?? false,
+        }
+      }) ?? []
 
-      personalProjectInterests.value = p.personalProjectInterests?.map(ppi => ({
-        projectId: ppi.projectId ?? ppi.project?.id,
-        projectName: projectOptions.value.find(pr => pr.value === (ppi.projectId ?? ppi.project?.id))?.label ?? '',
-        preference: ppi.preference,
-      })) ?? []
+      personalProjectInterests.value = p.personalProjectInterests?.map(ppi => {
+        const projectId = ppi.projectId ?? ppi.project?.id
+        return {
+          projectId,
+          projectName: projectOptions.value.find(pr => pr.value === projectId)?.label ?? ppi.project?.projectName ?? '',
+          preference: ppi.preference ?? false,
+        }
+      }) ?? []
 
       if (p.personTest) {
         mbtiType.value = p.personTest.mbtiType ?? ''
+        // Mapeo correcto API → rol Belbin
         const belbinMap = {
-          implementador: p.personTest.e_S,
-          coordinador: p.personTest.i_D,
-          cerebro: p.personTest.c_O,
-          investigador: p.personTest.i_S,
-          monitor: p.personTest.c_E,
-          cohesionador: p.personTest.i_R,
-          impulsor: p.personTest.m_E,
-          finalizador: p.personTest.c_H,
-          especialista: p.personTest.i_F,
+          implementador: p.personTest.i_M,
+          coordinador:   p.personTest.c_O,
+          cerebro:       p.personTest.c_E,
+          investigador:  p.personTest.i_R,
+          monitor:       p.personTest.m_E,
+          cohesionador:  p.personTest.c_H,
+          impulsor:      p.personTest.i_S,
+          finalizador:   p.personTest.i_F,
+          especialista:  p.personTest.e_S,
         }
         const charToOption = { 'P': 'Preferido', 'E': 'Evitado', 'I': 'Indiferente' }
         Object.keys(belbinRoles.value).forEach(k => {
@@ -304,12 +314,16 @@ onMounted(async () => {
         })
       }
 
-      personConflicts.value = p.personConflicts?.map(pc => ({
-        conflictIndexId: pc.conflictIndexId ?? pc.conflictIndex?.id,
-        conflictName: conflictIndexOptions.value.find(c => c.value === (pc.conflictIndexId ?? pc.conflictIndex?.id))?.label ?? '',
-        personConflictId: pc.personConflictId,
-        personConflictName: personOptions.value.find(per => per.value === pc.personConflictId)?.label ?? '',
-      })) ?? []
+      personConflicts.value = p.personConflicts?.map(pc => {
+        const ciId     = pc.conflictIndexId ?? pc.conflictIndex?.id
+        const pcId     = pc.personConflictId ?? pc.conflictPersonId ?? pc.conflictPerson?.id
+        return {
+          conflictIndexId: ciId,
+          conflictName: conflictIndexOptions.value.find(c => c.value === ciId)?.label ?? pc.conflictIndex?.description ?? '',
+          personConflictId: pcId,
+          personConflictName: personOptions.value.find(per => per.value === pcId)?.label ?? pc.conflictPerson?.personName ?? '',
+        }
+      }) ?? []
     } catch {
       toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la persona', life: 3000 })
     }
@@ -416,7 +430,6 @@ async function handleSave() {
       sex: sex.value || null,
       email: email.value,
       inDate: inDate.value || null,
-      workload: workload.value,
       experience: experience.value,
       status: status.value,
       birthDate: birthDate.value || null,
@@ -427,16 +440,32 @@ async function handleSave() {
       religion: selectedReligion.value || null,
       personTest: {
         mbtiType: mbtiType.value || '',
-        e_S: belbinRoles.value.implementador.charAt(0),
-        i_D: belbinRoles.value.coordinador.charAt(0),
-        c_O: belbinRoles.value.cerebro.charAt(0),
-        i_S: belbinRoles.value.investigador.charAt(0),
-        c_E: belbinRoles.value.monitor.charAt(0),
-        i_R: belbinRoles.value.cohesionador.charAt(0),
-        m_E: belbinRoles.value.impulsor.charAt(0),
-        c_H: belbinRoles.value.finalizador.charAt(0),
-        i_F: belbinRoles.value.especialista.charAt(0),
+        i_M: belbinRoles.value.implementador.charAt(0),
+        c_O: belbinRoles.value.coordinador.charAt(0),
+        c_E: belbinRoles.value.cerebro.charAt(0),
+        i_R: belbinRoles.value.investigador.charAt(0),
+        m_E: belbinRoles.value.monitor.charAt(0),
+        c_H: belbinRoles.value.cohesionador.charAt(0),
+        i_S: belbinRoles.value.impulsor.charAt(0),
+        i_F: belbinRoles.value.finalizador.charAt(0),
+        e_S: belbinRoles.value.especialista.charAt(0),
       },
+      competenceValues: competenceValues.value.map(cv => ({
+        competenceId: cv.competenceId,
+        levelsId: cv.levelsId,
+      })),
+      personalInterests: personalInterests.value.map(pi => ({
+        roleId: pi.roleId,
+        preference: pi.preference,
+      })),
+      personalProjectInterests: personalProjectInterests.value.map(ppi => ({
+        projectId: ppi.projectId,
+        preference: ppi.preference,
+      })),
+      personConflicts: personConflicts.value.map(pc => ({
+        conflictIndexId: pc.conflictIndexId,
+        personConflictId: pc.personConflictId,
+      })),
     }
 
     if (isEditMode.value) {
@@ -529,15 +558,11 @@ async function handleSave() {
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Fecha de ingreso</label>
-            <input v-model="inDate" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            <AppDatePicker v-model="inDate" placeholder="dd/mm/aaaa" />
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
-            <input v-model="birthDate" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Carga de trabajo</label>
-            <input v-model.number="workload" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
+            <AppDatePicker v-model="birthDate" placeholder="dd/mm/aaaa" />
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Experiencia (años)</label>

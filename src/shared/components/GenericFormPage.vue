@@ -151,6 +151,14 @@ onMounted(async () => {
       const res = await props.service.getById(route.params.id)
       const data = res?.data ?? res
       Object.assign(formData, data)
+      // Sobrescribir campos select que usen editKey para extraer IDs de objetos anidados
+      props.fields.forEach(f => {
+        if (f.editKey) {
+          const fk = fieldKey(f)
+          const val = f.editKey.split('.').reduce((obj, k) => obj?.[k], data)
+          if (val !== undefined) formData[fk] = val
+        }
+      })
     } catch {
       toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el registro', life: 3000 })
     }

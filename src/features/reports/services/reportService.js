@@ -11,7 +11,7 @@ const reportService = {
     return api.get(`assigned-role/project/${projectId}`).json()
   },
   async getFilteredWorkers(filters) {
-    return api.post('person/filter', { json: filters }).json()
+    return api.post('api/filter', { json: filters }).json()
   },
   async getPersonProjects(personId) {
     return api.get(`assigned-role/person/${personId}/projects`).json()

@@ -190,7 +190,7 @@ export const nomenclativeConfigs = {
         ],
         fields: [
             { name: 'name', label: 'Nombre del Grupo', type: 'text', required: true },
-            { name: 'parentGroupId', label: 'Grupo Padre', type: 'select', required: false, optionsService: personGroupService, optionLabel: 'name', optionValue: 'id' }
+            { name: 'parentGroupId', label: 'Grupo Padre', type: 'select', required: false, optionsService: personGroupService, optionLabel: 'name', optionValue: 'id', editKey: 'father.id' }
         ],
         breadcrumb: [{ name: 'Grupos de Personas', disable: true }],
         showImportButton: false
@@ -214,8 +214,8 @@ export const nomenclativeConfigs = {
         ],
         fields: [
             { name: 'costDistance', label: 'Costo', type: 'number', required: true, min: 0 },
-            { name: 'countyAId', label: 'Provincia A', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id' },
-            { name: 'countyBId', label: 'Provincia B', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id' }
+            { name: 'countyAId', label: 'Provincia A', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id', editKey: 'countyA.id' },
+            { name: 'countyBId', label: 'Provincia B', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id', editKey: 'countyB.id' }
         ],
         breadcrumb: [{ name: 'Costo de Trabajar a Distancia', disable: true }],
         showImportButton: false
