@@ -18,9 +18,6 @@ const userService = {
   },
   async resetPassword(id) {
     return api.post(`users/${id}/reset-password`).json()
-  },
-  async getRoles() {
-    return api.get('role').json()
   }
 }
 

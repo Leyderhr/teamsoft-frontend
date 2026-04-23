@@ -75,6 +75,34 @@ const anyIncompatibility = ref(false)
 const maxRoleLoad        = ref(40.0)
 
 // ===========================
+// Construcción del payload
+// ===========================
+const buildPayload = () => ({
+  teamFormationParameters: {
+    groupList:            selectedGroupIds.value,
+    confRole:             confRole.value === 'all',
+    maximunRoles:         maximumRoles.value,
+    confAllGroup:         confAllGroup.value,
+    onlyOneProject:       onlyOneProject.value,
+    confFormMode:         confFormMode.value,
+    maxCompetences:       maxCompetences.value,
+    maxInterests:         maxInterests.value,
+    minIncomp:            minIncomp.value,
+    takeWorkLoad:         takeWorkLoad.value,
+    maxCompetencesWeight: maxCompetences.value ? (maxCompetencesWeight.value ?? 0) : 0,
+    maxInterestsWeight:   maxInterests.value   ? (maxInterestsWeight.value   ?? 0) : 0,
+    minIncompWeight:      minIncomp.value      ? (minIncompWeight.value      ?? 0) : 0,
+    workLoadWeight:       takeWorkLoad.value   ? (workLoadWeight.value       ?? 0) : 0,
+    solutionAlgorithm:    solutionAlgorithm.value,
+    iterations:           iterations.value,
+    anyIncompatibility:   anyIncompatibility.value,
+    maxRoleLoad:          { value: maxRoleLoad.value }
+  },
+  projectsIDs: selectedProjectIds.value,
+  groupIDs:    selectedGroupIds.value
+})
+
+// ===========================
 // Paso 3 — Propuesta generada
 // ===========================
 const teamFormationParams = computed(() => buildPayload())
@@ -107,34 +135,6 @@ const totalWeights = computed(() => {
 })
 
 const weightsOk = computed(() => totalWeights.value > 0 && totalWeights.value <= 1.01)
-
-// ===========================
-// Construcción del payload
-// ===========================
-const buildPayload = () => ({
-  teamFormationParameters: {
-    groupList:            selectedGroupIds.value,
-    confRole:             confRole.value === 'all',
-    maximunRoles:         maximumRoles.value,
-    confAllGroup:         confAllGroup.value,
-    onlyOneProject:       onlyOneProject.value,
-    confFormMode:         confFormMode.value,
-    maxCompetences:       maxCompetences.value,
-    maxInterests:         maxInterests.value,
-    minIncomp:            minIncomp.value,
-    takeWorkLoad:         takeWorkLoad.value,
-    maxCompetencesWeight: maxCompetences.value ? (maxCompetencesWeight.value ?? 0) : 0,
-    maxInterestsWeight:   maxInterests.value   ? (maxInterestsWeight.value   ?? 0) : 0,
-    minIncompWeight:      minIncomp.value      ? (minIncompWeight.value      ?? 0) : 0,
-    workLoadWeight:       takeWorkLoad.value   ? (workLoadWeight.value       ?? 0) : 0,
-    solutionAlgorithm:    solutionAlgorithm.value,
-    iterations:           iterations.value,
-    anyIncompatibility:   anyIncompatibility.value,
-    maxRoleLoad:          { value: maxRoleLoad.value }
-  },
-  projectsIDs: selectedProjectIds.value,
-  groupIDs:    selectedGroupIds.value
-})
 
 // ===========================
 // Guardar equipos

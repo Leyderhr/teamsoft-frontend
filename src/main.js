@@ -10,6 +10,7 @@ import { useAuthStore } from './lib/auth-store'
 import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
 import Tooltip from 'primevue/tooltip'
+import ConfirmationService from 'primevue/confirmationservice'
 
 // Tema de PrimeVue
 import Material from '@primeuix/themes/material';
@@ -36,6 +37,7 @@ app.use(PrimeVue, {
     }
 })
 app.use(ToastService)
+app.use(ConfirmationService)
 app.use(router)
 app.use(pinia)
 app.use(VueQueryPlugin, { queryClient })

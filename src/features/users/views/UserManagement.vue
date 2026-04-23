@@ -2,8 +2,8 @@
 import { ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { KeyRound } from 'lucide-vue-next'
 import GenericListView from '@/shared/components/GenericListView.vue'
-import Button from 'primevue/button'
 import { userConfig } from '@/features/users/config/user.config.js'
 import { useUsers } from '@/services/users/queries'
 import { useResetPassword } from '@/services/users/mutations'
@@ -30,20 +30,22 @@ const handleResetPassword = () => {
     message: `¿Está seguro de resetear la contraseña del usuario ${selectedItem.value.username}?`,
     header: 'Confirmación',
     icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Sí, resetear',
+    rejectLabel: 'Cancelar',
     accept: async () => {
       try {
-        await resetPasswordMutation.mutateAsync(selectedItem.value.id)
+        const result = await resetPasswordMutation.mutateAsync(selectedItem.value.id)
         toast.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: 'Contraseña reseteada correctamente',
+          detail: result?.message || 'Contraseña reseteada correctamente',
           life: 3000
         })
       } catch (error) {
         toast.add({
           severity: 'error',
           summary: 'Error',
-          detail: error.message || 'Error al resetear contraseña',
+          detail: error?.response?.data?.message || error?.message || 'Error al resetear contraseña',
           life: 3000
         })
       }
@@ -53,9 +55,7 @@ const handleResetPassword = () => {
 </script>
 
 <template>
-  <div class="p-4 pl-15">
-    <h1 class="text-black titulo text-left font-bold py-0 my-0">{{ userConfig.title }}</h1>
-
+  <div>
     <GenericListView
         :items="items"
         :columns="userConfig.columns"
@@ -70,13 +70,17 @@ const handleResetPassword = () => {
         @update:selectedItem="selectedItem = $event"
     >
       <template #extraButtons>
-        <Button
-          icon="pi pi-key"
-          label="Resetear Contraseña"
+        <button
           @click="handleResetPassword"
-          class="p-button-info"
           :disabled="!selectedItem"
-        />
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium transition-colors"
+          :class="selectedItem
+            ? 'text-blue-600 hover:bg-blue-50 hover:border-blue-200'
+            : 'text-gray-300 cursor-not-allowed bg-gray-50'"
+        >
+          <KeyRound class="w-4 h-4" />
+          Resetear Contraseña
+        </button>
       </template>
     </GenericListView>
   </div>

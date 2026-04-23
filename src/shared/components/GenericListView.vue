@@ -98,7 +98,11 @@ const handleImport = () => {
       @delete="handleDelete"
       @import="handleImport"
       @row-select="handleRowSelect"
-    />
+    >
+      <template #extraButtons>
+        <slot name="extraButtons"></slot>
+      </template>
+    </DataTable>
 
     <slot name="extra" />
   </div>
