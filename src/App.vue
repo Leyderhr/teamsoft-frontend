@@ -27,7 +27,7 @@ provide('toast', toast)
 </style>
 
 <style>
-/* Estilos personalizados para ConfirmDialog - TeamSoft Design */
+/* Estilos personalizados para ConfirmDialog*/
 .p-confirmdialog {
   border-radius: 0.75rem !important;
   box-shadow: var(--shadow-theme-lg) !important;
