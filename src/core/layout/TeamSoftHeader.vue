@@ -96,7 +96,7 @@
             <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center">
               <User class="w-4 h-4 text-white" />
             </div>
-            <span class="font-medium hidden md:block text-sm">{{ userStore.username || 'Usuario' }}</span>
+            <span class="font-medium hidden md:block text-sm">{{ authStore.user?.username || 'Usuario' }}</span>
             <ChevronDown
               class="w-4 h-4 transition-transform duration-200"
               :class="{ 'rotate-180': profileMenuOpen }"
@@ -109,10 +109,10 @@
           >
             <div class="pb-3 border-b border-gray-200">
               <span class="block font-semibold text-gray-800 text-sm">
-                {{ userStore.username || 'Usuario' }}
+                {{ authStore.user?.username || 'Usuario' }}
               </span>
-              <span class="block text-xs text-gray-500 mt-0.5" v-if="userStore.roles?.length">
-                {{ userStore.roles[0]?.replace('ROLE_', '').replace(/_/g, ' ') }}
+              <span class="block text-xs text-gray-500 mt-0.5" v-if="authStore.user?.authorities && authStore.user.authorities.length > 0">
+                {{ authStore.user.authorities[0].replace('ROLE_', '').replace(/_/g, ' ') }}
               </span>
             </div>
             <ul class="flex flex-col gap-1 pt-3">
@@ -146,13 +146,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/core/store/authStore.js'
+import { useAuthStore } from '@/lib/auth-store'
 import { useLocaleStore } from '@/core/store/locale.store.js'
 import { useSidebar } from '@/core/composables/useSidebar.js'
 import { Globe, User, ChevronDown, Key, LogOut, Check } from 'lucide-vue-next'
 
 const router = useRouter()
-const userStore = useAuthStore()
+const authStore = useAuthStore()
 const localeStore = useLocaleStore()
 const { toggleSidebar, toggleMobileSidebar, isMobileOpen, isMobile } = useSidebar()
 
@@ -183,7 +183,7 @@ const toggleLanguageMenu = () => {
 
 const handleLogout = async () => {
   profileMenuOpen.value = false
-  await userStore.logout()
+  authStore.clearAuth()
   router.push('/login')
 }
 

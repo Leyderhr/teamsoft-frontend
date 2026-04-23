@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/core/store/authStore.js'
+import { useAuthStore } from '@/lib/auth-store'
 import { useSecurityStore } from '@/core/store/security.store.js'
 import projectService from '@/features/projects/services/projectService.js'
 import personGroupService from '@/features/nomenclatives/services/personGroupService.js'

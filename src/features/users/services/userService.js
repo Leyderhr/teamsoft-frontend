@@ -1,37 +1,24 @@
-import apiClient from '@/core/api/axios.js'
-
-const ENDPOINT = '/users'
+import { api } from '@/lib/api'
 
 const userService = {
-    async getAll() {
-        const response = await apiClient.get(ENDPOINT)
-        return response.data
-    },
-
-    async getById(id) {
-        const response = await apiClient.get(`${ENDPOINT}/${id}`)
-        return response.data
-    },
-
-    async create(user) {
-        const response = await apiClient.post(ENDPOINT, user)
-        return response.data
-    },
-
-    async delete(id) {
-        const response = await apiClient.delete(`${ENDPOINT}/${id}`)
-        return response.data
-    },
-
-    async resetPassword(id) {
-        const response = await apiClient.post(`${ENDPOINT}/${id}/reset-password`)
-        return response.data
-    },
-
-    async getRoles() {
-        const response = await apiClient.get('/role')
-        return response.data
-    }
+  async getAll() {
+    return api.get('users').json()
+  },
+  async getById(id) {
+    return api.get(`users/${id}`).json()
+  },
+  async create(user) {
+    return api.post('users', { json: user }).json()
+  },
+  async update(id, user) {
+    return api.put(`users/${id}`, { json: user }).json()
+  },
+  async delete(id) {
+    return api.delete(`users/${id}`).json()
+  },
+  async resetPassword(id) {
+    return api.post(`users/${id}/reset-password`).json()
+  }
 }
 
 export default userService

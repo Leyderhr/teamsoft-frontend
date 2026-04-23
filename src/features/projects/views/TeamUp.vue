@@ -3,9 +3,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { Check, Briefcase, Users, Loader2, Cog, RefreshCw, Save, ArrowLeft, ArrowRight } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
-import projectService from '@/features/projects/services/projectService.js'
-import personGroupService from '@/features/nomenclatives/services/personGroupService.js'
-import teamFormationService from '@/features/projects/services/teamFormationService.js'
+import { useProjects } from '@/services/projects/queries'
+import { usePersonGroups } from '@/services/nomenclatives/queries'
+import { useTeamFormation } from '@/services/team-formation/queries'
+import { useSaveTeams } from '@/services/team-formation/mutations'
 
 const toast = useToast()
 
@@ -17,10 +18,18 @@ const currentStep = ref(1)
 // ===========================
 // Paso 1 — Selección y config básica
 // ===========================
-const availableProjects = ref([])
-const availableGroups   = ref([])
-const loadingProjects   = ref(false)
-const loadingGroups     = ref(false)
+const { data: projectsData, isLoading: loadingProjects } = useProjects()
+const { data: groupsData, isLoading: loadingGroups } = usePersonGroups()
+
+const availableProjects = computed(() => 
+  projectsData.value
+    ?.filter(p => !p.close)
+    .map(p => ({ id: p.id, label: p.projectName })) || []
+)
+
+const availableGroups = computed(() => 
+  groupsData.value?.map(g => ({ id: g.id, label: g.name })) || []
+)
 
 const selectedProjectIds = ref([])
 const selectedGroupIds   = ref([])
@@ -66,89 +75,6 @@ const anyIncompatibility = ref(false)
 const maxRoleLoad        = ref(40.0)
 
 // ===========================
-// Paso 3 — Propuesta generada
-// ===========================
-const generating = ref(false)
-const saving     = ref(false)
-const proposal   = ref(null)
-
-// ===========================
-// Validaciones computadas
-// ===========================
-const step1Valid = computed(() =>
-  selectedProjectIds.value.length > 0 && selectedGroupIds.value.length > 0
-)
-
-const atLeastOneFuncSelected = computed(() =>
-  maxCompetences.value || maxInterests.value || minIncomp.value || takeWorkLoad.value
-)
-
-const totalWeights = computed(() => {
-  let t = 0
-  if (maxCompetences.value) t += maxCompetencesWeight.value ?? 0
-  if (maxInterests.value)   t += maxInterestsWeight.value   ?? 0
-  if (minIncomp.value)      t += minIncompWeight.value      ?? 0
-  if (takeWorkLoad.value)   t += workLoadWeight.value       ?? 0
-  return parseFloat(t.toFixed(2))
-})
-
-const weightsOk = computed(() => totalWeights.value > 0 && totalWeights.value <= 1.01)
-
-// ===========================
-// Carga de datos iniciales
-// ===========================
-const loadProjects = async () => {
-  loadingProjects.value = true
-  try {
-    const data = await projectService.getAll()
-    availableProjects.value = data
-      .filter(p => !p.close)
-      .map(p => ({ id: p.id, label: p.projectName }))
-  } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los proyectos', life: 3000 })
-  } finally {
-    loadingProjects.value = false
-  }
-}
-
-const loadGroups = async () => {
-  loadingGroups.value = true
-  try {
-    const data = await personGroupService.getAll()
-    availableGroups.value = data.map(g => ({ id: g.id, label: g.name }))
-  } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los grupos', life: 3000 })
-  } finally {
-    loadingGroups.value = false
-  }
-}
-
-// ===========================
-// Navegación entre pasos
-// ===========================
-const nextStep = () => {
-  if (currentStep.value === 1 && !step1Valid.value) {
-    toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'Seleccione al menos un proyecto y un grupo', life: 3000 })
-    return
-  }
-  if (currentStep.value === 2) {
-    if (!atLeastOneFuncSelected.value) {
-      toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'Seleccione al menos una función objetivo', life: 3000 })
-      return
-    }
-    if (!weightsOk.value) {
-      toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'La suma de los pesos no puede superar 1.0', life: 3000 })
-      return
-    }
-  }
-  if (currentStep.value < 3) currentStep.value++
-}
-
-const prevStep = () => {
-  if (currentStep.value > 1) currentStep.value--
-}
-
-// ===========================
 // Construcción del payload
 // ===========================
 const buildPayload = () => ({
@@ -177,48 +103,84 @@ const buildPayload = () => ({
 })
 
 // ===========================
-// Generar propuesta
+// Paso 3 — Propuesta generada
 // ===========================
-const generateTeams = async () => {
-  generating.value = true
-  proposal.value   = null
-  try {
-    const result = await teamFormationService.generateTeams(buildPayload())
-    proposal.value = result
-    toast.add({ severity: 'success', summary: 'Propuesta generada', detail: 'Revise los equipos propuestos', life: 4000 })
-  } catch (e) {
-    toast.add({ severity: 'error', summary: 'Error al generar', detail: e?.message || 'Error en el servidor', life: 5000 })
-  } finally {
-    generating.value = false
-  }
-}
+const teamFormationParams = computed(() => buildPayload())
+const { data: proposal, refetch: generateTeams, isFetching: generating } = useTeamFormation(
+  teamFormationParams,
+  { enabled: false }
+)
+
+const saveTeamsMutation = useSaveTeams()
+const saving = computed(() => saveTeamsMutation.isPending.value)
+
+// ===========================
+// Validaciones computadas
+// ===========================
+const step1Valid = computed(() =>
+  selectedProjectIds.value.length > 0 && selectedGroupIds.value.length > 0
+)
+
+const atLeastOneFuncSelected = computed(() =>
+  maxCompetences.value || maxInterests.value || minIncomp.value || takeWorkLoad.value
+)
+
+const totalWeights = computed(() => {
+  let t = 0
+  if (maxCompetences.value) t += maxCompetencesWeight.value ?? 0
+  if (maxInterests.value)   t += maxInterestsWeight.value   ?? 0
+  if (minIncomp.value)      t += minIncompWeight.value      ?? 0
+  if (takeWorkLoad.value)   t += workLoadWeight.value       ?? 0
+  return parseFloat(t.toFixed(2))
+})
+
+const weightsOk = computed(() => totalWeights.value > 0 && totalWeights.value <= 1.01)
 
 // ===========================
 // Guardar equipos
 // ===========================
-const saveTeams = async () => {
+const saveTeams = () => {
   if (!proposal.value) return
-  saving.value = true
-  try {
-    await teamFormationService.saveTeams(proposal.value)
-    toast.add({ severity: 'success', summary: 'Equipos guardados', detail: 'Los equipos han sido persistidos correctamente', life: 4000 })
-    currentStep.value        = 1
-    proposal.value           = null
-    selectedProjectIds.value = []
-    selectedGroupIds.value   = []
-  } catch (e) {
-    toast.add({ severity: 'error', summary: 'Error al guardar', detail: e?.message || 'Error en el servidor', life: 5000 })
-  } finally {
-    saving.value = false
-  }
+  
+  saveTeamsMutation.mutate(proposal.value, {
+    onSuccess: () => {
+      toast.add({ severity: 'success', summary: 'Equipos guardados', detail: 'Los equipos han sido persistidos correctamente', life: 4000 })
+      currentStep.value        = 1
+      selectedProjectIds.value = []
+      selectedGroupIds.value   = []
+    },
+    onError: (e) => {
+      toast.add({ severity: 'error', summary: 'Error al guardar', detail: e?.message || 'Error en el servidor', life: 5000 })
+    }
+  })
 }
 
 const stepLabels = ['Selección y Configuración', 'Parámetros del Algoritmo', 'Generar y Guardar']
 
-onMounted(() => {
-  loadProjects()
-  loadGroups()
-})
+// ===========================
+// Navegación entre pasos
+// ===========================
+const nextStep = () => {
+  if (currentStep.value === 1 && !step1Valid.value) {
+    toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'Seleccione al menos un proyecto y un grupo', life: 3000 })
+    return
+  }
+  if (currentStep.value === 2) {
+    if (!atLeastOneFuncSelected.value) {
+      toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'Seleccione al menos una función objetivo', life: 3000 })
+      return
+    }
+    if (!weightsOk.value) {
+      toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'La suma de los pesos no puede superar 1.0', life: 3000 })
+      return
+    }
+  }
+  if (currentStep.value < 3) currentStep.value++
+}
+
+const prevStep = () => {
+  if (currentStep.value > 1) currentStep.value--
+}
 </script>
 
 <template>

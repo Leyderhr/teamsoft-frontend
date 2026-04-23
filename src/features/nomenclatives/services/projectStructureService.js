@@ -1,57 +1,9 @@
-import apiClient from '../../../core/api/axios.js'
-
-const ENDPOINT = '/project-structure'
-
+import { api } from '@/lib/api'
 const projectStructureService = {
-    async getAll() {
-        try {
-            const response = await apiClient.get(ENDPOINT)
-            return response.data
-        } catch (error) {
-            console.error('Error al obtener estructuras de proyecto:', error)
-            throw error
-        }
-    },
-
-    async getById(id) {
-        try {
-            const response = await apiClient.get(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error('Error al obtener estructura de proyecto con ID ${id}:', error)
-            throw error
-        }
-    },
-
-    async create(projectStructure) {
-        try {
-            const response = await apiClient.post(ENDPOINT, projectStructure)
-            return response.data
-        } catch (error) {
-            console.error('Error al crear estructura de proyecto:', error)
-            throw error
-        }
-    },
-
-    async update(id, projectStructure) {
-        try {
-            const response = await apiClient.put(`${ENDPOINT}/${id}`, projectStructure)
-            return response.data
-        } catch (error) {
-            console.error('Error al actualizar estructura de proyecto con ID ${id}:', error)
-            throw error
-        }
-    },
-
-    async delete(id) {
-        try {
-            const response = await apiClient.delete(`${ENDPOINT}/${id}`)
-            return response.data
-        } catch (error) {
-            console.error('Error al eliminar estructura de proyecto con ID ${id}:', error)
-            throw error
-        }
-    }
+  async getAll() { return api.get('project-structure').json() },
+  async getById(id) { return api.get(`project-structure/${id}`).json() },
+  async create(data) { return api.post('project-structure', { json: data }).json() },
+  async update(id, data) { return api.put(`project-structure/${id}`, { json: data }).json() },
+  async delete(id) { return api.delete(`project-structure/${id}`).text() }
 }
-
 export default projectStructureService

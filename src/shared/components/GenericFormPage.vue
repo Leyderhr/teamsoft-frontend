@@ -22,20 +22,12 @@
             </label>
 
             <!-- Select -->
-            <select
+            <AppSelect
               v-if="field.type === 'select'"
               v-model="formData[fieldKey(field)]"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-            >
-              <option value="" disabled>Seleccione...</option>
-              <option
-                v-for="opt in fieldOptions[fieldKey(field)]"
-                :key="opt.value ?? opt.id"
-                :value="opt.value ?? opt.id"
-              >
-                {{ opt.label ?? opt.name }}
-              </option>
-            </select>
+              :options="fieldOptions[fieldKey(field)] || []"
+              :placeholder="field.placeholder || 'Seleccione...'"
+            />
 
             <!-- Boolean / Checkbox -->
             <label
@@ -115,6 +107,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { AlertCircle, Save, Loader2 } from 'lucide-vue-next'
 import PageBreadcrumb from './PageBreadcrumb.vue'
+import AppSelect from '@/components/ui/AppSelect.vue'
 
 const props = defineProps({
   mode: { type: String, default: 'create' },
@@ -158,6 +151,14 @@ onMounted(async () => {
       const res = await props.service.getById(route.params.id)
       const data = res?.data ?? res
       Object.assign(formData, data)
+      // Sobrescribir campos select que usen editKey para extraer IDs de objetos anidados
+      props.fields.forEach(f => {
+        if (f.editKey) {
+          const fk = fieldKey(f)
+          const val = f.editKey.split('.').reduce((obj, k) => obj?.[k], data)
+          if (val !== undefined) formData[fk] = val
+        }
+      })
     } catch {
       toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el registro', life: 3000 })
     }
@@ -180,7 +181,10 @@ onMounted(async () => {
           if (field.optionLabel && field.optionValue) {
             fieldOptions.value[fk] = items.map(i => ({ label: i[field.optionLabel], value: i[field.optionValue] }))
           } else {
-            fieldOptions.value[fk] = items
+            fieldOptions.value[fk] = items.map(i => ({
+              label: String(i.label ?? i.name ?? i),
+              value: i.value ?? i.id ?? i,
+            }))
           }
         } catch {}
       } else if (field.options) {

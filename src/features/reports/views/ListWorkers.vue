@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { Search, RefreshCw, Plus, Trash2, Loader2 } from 'lucide-vue-next'
-import MultiSelect from 'primevue/multiselect'
+import AppSelect from '@/components/ui/AppSelect.vue'
 import DataTable from '@/shared/components/DataTable.vue'
 import reportService from '@/features/reports/services/reportService.js'
 import roleService from '@/features/roles/services/roleService.js'
@@ -30,12 +30,20 @@ const selectedMbtiTypes = ref([])
 const minAge = ref(null)
 const maxAge = ref(null)
 
+// Temporary selections for adding
+const tempRoleId = ref(null)
+const tempProjectId = ref(null)
+
+// Preference for roles and projects
+const rolePreferences = ref({}) // { roleId: true/false }
+const projectPreferences = ref({}) // { projectId: true/false }
+
 const belbinOptions = [
   { label: 'Favorito', value: 'F' },
   { label: 'Evitado', value: 'E' },
   { label: 'Indiferente', value: 'I' }
 ]
-const belbin = ref({ ES: null, ID: null, CO: null, IS: null, CE: null, IR: null, ME: null, CH: null, IF: null })
+const belbin = ref({ e_S: null, i_M: null, c_O: null, i_S: null, c_E: null, i_R: null, m_E: null, c_H: null, i_F: null })
 
 const filterCompetences = ref([])
 
@@ -48,15 +56,15 @@ const workers = ref([])
 const searched = ref(false)
 
 const belbinRoleLabels = [
-  { key: 'ES', label: 'Especialista (ES)' },
-  { key: 'ID', label: 'Implementador (ID)' },
-  { key: 'CO', label: 'Coordinador (CO)' },
-  { key: 'IS', label: 'Cohesionador (IS)' },
-  { key: 'CE', label: 'Cerebro (CE)' },
-  { key: 'IR', label: 'Investigador Rec. (IR)' },
-  { key: 'ME', label: 'Monitor Evaluador (ME)' },
-  { key: 'CH', label: 'Impulsor (CH)' },
-  { key: 'IF', label: 'Finalizador (IF)' }
+  { key: 'e_S', label: 'Especialista (ES)' },
+  { key: 'i_M', label: 'Implementador (ID)' },
+  { key: 'c_O', label: 'Coordinador (CO)' },
+  { key: 'i_S', label: 'Cohesionador (IS)' },
+  { key: 'c_E', label: 'Cerebro (CE)' },
+  { key: 'i_R', label: 'Investigador Rec. (IR)' },
+  { key: 'm_E', label: 'Monitor Evaluador (ME)' },
+  { key: 'c_H', label: 'Impulsor (CH)' },
+  { key: 'i_F', label: 'Finalizador (IF)' }
 ]
 
 const filterTabs = [
@@ -73,10 +81,34 @@ const workerColumns = [
   { field: 'surName', header: 'Apellidos', sortable: true },
   { field: 'sex', header: 'Sexo', sortable: false },
   { field: 'age', header: 'Edad', sortable: true },
-  { field: 'ageGroupFk.ageGroupName', header: 'Grupo de Edad', sortable: true },
-  { field: 'nacionalityFk.gentilicioNac', header: 'Nacionalidad', sortable: true },
-  { field: 'workerTest.tipoMB', header: 'MBTI', sortable: true },
+  { field: 'ageGroup.ageGroupName', header: 'Grupo de Edad', sortable: true },
+  { field: 'nacionality.gentilicioNac', header: 'Nacionalidad', sortable: true },
+  { field: 'personTest.mbtiType', header: 'MBTI', sortable: true },
 ]
+
+// Computed options for AppSelect
+const roleSelectOptions = computed(() => 
+  roleOptions.value.map(r => ({ value: r.id, label: r.roleName }))
+)
+
+const projectSelectOptions = computed(() => 
+  projectOptions.value.map(p => ({ value: p.id, label: p.projectName }))
+)
+
+const competenceSelectOptions = computed(() => [
+  { value: '', label: 'Seleccionar competencia' },
+  ...competenceOptions.value.map(c => ({ value: c.id, label: c.competitionName }))
+])
+
+const levelSelectOptions = computed(() => [
+  { value: '', label: 'Sin nivel' },
+  ...levelOptions.value.map(l => ({ value: l.id, label: l.significance }))
+])
+
+const belbinSelectOptions = computed(() => [
+  { value: null, label: 'Indiferente' },
+  ...belbinOptions.map(opt => ({ value: opt.value, label: opt.label }))
+])
 
 const loadFilterOptions = async () => {
   loadingFilters.value = true
@@ -98,15 +130,46 @@ const loadFilterOptions = async () => {
   }
 }
 
+const addRole = (roleId) => {
+  if (!roleId || selectedRoles.value.includes(roleId)) return
+  selectedRoles.value.push(roleId)
+  rolePreferences.value[roleId] = true // Default preference
+}
+
+const removeRole = (roleId) => {
+  selectedRoles.value = selectedRoles.value.filter(id => id !== roleId)
+  delete rolePreferences.value[roleId]
+}
+
+const addProject = (projectId) => {
+  if (!projectId || selectedProjects.value.includes(projectId)) return
+  selectedProjects.value.push(projectId)
+  projectPreferences.value[projectId] = true // Default preference
+}
+
+const removeProject = (projectId) => {
+  selectedProjects.value = selectedProjects.value.filter(id => id !== projectId)
+  delete projectPreferences.value[projectId]
+}
+
 const addCompetenceFilter = () => {
-  if (!selectedCompetence.value) return
+  if (!selectedCompetence.value || !selectedLevel.value) {
+    toast.add({ 
+      severity: 'warn', 
+      summary: 'Validación', 
+      detail: 'Debe seleccionar una competencia y un nivel', 
+      life: 3000 
+    })
+    return
+  }
   const comp = competenceOptions.value.find(c => c.id === selectedCompetence.value)
   const level = levelOptions.value.find(l => l.id === selectedLevel.value)
-  if (!comp) return
+  if (!comp || !level) return
+  
   filterCompetences.value.push({
     competenceId: selectedCompetence.value,
-    levelId: selectedLevel.value || null,
-    label: `${comp.competitionName}${level ? ' - ' + level.significance : ''}`
+    levelId: selectedLevel.value,
+    label: `${comp.competitionName} - ${level.significance}`
   })
   selectedCompetence.value = ''
   selectedLevel.value = ''
@@ -120,19 +183,68 @@ const handleSearch = async () => {
   loading.value = true
   searched.value = true
   try {
-    const filters_payload = {
-      roleIds: selectedRoles.value.map(r => r.id || r),
-      projectIds: selectedProjects.value.map(p => p.id || p),
-      competences: filterCompetences.value.map(c => ({ competenceId: c.competenceId, levelId: c.levelId })),
-      mbtiTypes: selectedMbtiTypes.value,
-      belbin: Object.fromEntries(Object.entries(belbin.value).filter(([, v]) => v !== null)),
-      minAge: minAge.value,
-      maxAge: maxAge.value
+    const payload = {}
+    
+    // Role interests
+    if (selectedRoles.value.length) {
+      payload.roleInterests = selectedRoles.value.map(roleId => ({
+        roleId,
+        preference: rolePreferences.value[roleId] ?? true
+      }))
     }
-    workers.value = await reportService.getFilteredWorkers(filters_payload)
+    
+    // Project interests
+    if (selectedProjects.value.length) {
+      payload.projectInterests = selectedProjects.value.map(projectId => ({
+        projectId,
+        preference: projectPreferences.value[projectId] ?? true
+      }))
+    }
+    
+    // Competence levels
+    if (filterCompetences.value.length) {
+      payload.competenceLevels = filterCompetences.value.map(c => ({
+        competenceId: c.competenceId,
+        levelId: c.levelId
+      }))
+    }
+    
+    // MBTI types
+    if (selectedMbtiTypes.value.length) {
+      payload.mbtiTypes = selectedMbtiTypes.value
+    }
+    
+    // Belbin (only send non-null values)
+    const belbinFilters = Object.fromEntries(
+      Object.entries(belbin.value).filter(([, v]) => v !== null)
+    )
+    if (Object.keys(belbinFilters).length) {
+      payload.belbin = belbinFilters
+    }
+    
+    // Age (only if both values are present)
+    if (minAge.value !== null && maxAge.value !== null) {
+      payload.age = {
+        minAge: minAge.value,
+        maxAge: maxAge.value
+      }
+    }
+    
+    workers.value = await reportService.getFilteredWorkers(payload)
+    toast.add({ 
+      severity: 'success', 
+      summary: 'Búsqueda completada', 
+      detail: `Se encontraron ${workers.value.length} persona(s)`, 
+      life: 3000 
+    })
   } catch (error) {
     console.error('Error filtrando trabajadores:', error)
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo realizar la búsqueda', life: 3000 })
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: error?.response?.data?.message || 'No se pudo realizar la búsqueda', 
+      life: 3000 
+    })
     workers.value = []
   } finally {
     loading.value = false
@@ -142,9 +254,11 @@ const handleSearch = async () => {
 const handleReset = () => {
   selectedRoles.value = []
   selectedProjects.value = []
+  rolePreferences.value = {}
+  projectPreferences.value = {}
   filterCompetences.value = []
   selectedMbtiTypes.value = []
-  belbin.value = { ES: null, ID: null, CO: null, IS: null, CE: null, IR: null, ME: null, CH: null, IF: null }
+  belbin.value = { e_S: null, i_M: null, c_O: null, i_S: null, c_E: null, i_R: null, m_E: null, c_H: null, i_F: null }
   minAge.value = null
   maxAge.value = null
   workers.value = []
@@ -155,9 +269,7 @@ onMounted(loadFilterOptions)
 </script>
 
 <template>
-  <div class="p-6">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Listar Personas</h1>
-
+  <div>
     <!-- Filters Card -->
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden mb-6">
       <div class="px-6 py-4 border-b border-gray-200">
@@ -181,79 +293,166 @@ onMounted(loadFilterOptions)
         </div>
 
         <!-- Tab: Roles -->
-        <div v-if="activeFilterTab === 'roles'" class="flex flex-col gap-3">
-          <label class="text-sm font-medium text-gray-700">Intereses en Roles</label>
-          <MultiSelect
-            v-model="selectedRoles"
-            :options="roleOptions"
-            optionLabel="roleName"
-            placeholder="Seleccione roles de interés"
-            filter
-            class="w-full max-w-lg"
-          />
-          <div v-if="selectedRoles.length" class="flex flex-wrap gap-2">
-            <span
-              v-for="r in selectedRoles"
-              :key="r.id"
-              class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-600"
+        <div v-if="activeFilterTab === 'roles'" class="flex flex-col gap-4">
+          <div class="flex flex-wrap gap-3 items-end">
+            <div class="flex flex-col gap-1.5 flex-1 min-w-[250px]">
+              <label class="text-sm font-medium text-gray-700">Seleccionar Rol</label>
+              <AppSelect
+                v-model="tempRoleId"
+                :options="roleSelectOptions.filter(r => !selectedRoles.includes(r.value))"
+                placeholder="Seleccione un rol"
+                searchable
+                search-placeholder="Buscar rol..."
+              />
+            </div>
+            <button
+              @click="() => { if (tempRoleId) { addRole(tempRoleId); tempRoleId = null } }"
+              :disabled="!tempRoleId"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {{ r.roleName }}
-            </span>
+              <Plus class="w-4 h-4" />
+              Agregar
+            </button>
           </div>
+
+          <div v-if="selectedRoles.length" class="overflow-hidden rounded-xl border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rol
+                  </th>
+                  <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Preferencia
+                  </th>
+                  <th class="w-14 px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr v-for="roleId in selectedRoles" :key="roleId" class="hover:bg-gray-50">
+                  <td class="px-5 py-3 text-sm text-gray-700">
+                    {{ roleOptions.find(r => r.id === roleId)?.roleName }}
+                  </td>
+                  <td class="px-5 py-3">
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        v-model="rolePreferences[roleId]"
+                        class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20"
+                      />
+                      <span class="text-sm text-gray-600">
+                        {{ rolePreferences[roleId] ? 'Interesado' : 'No interesado' }}
+                      </span>
+                    </label>
+                  </td>
+                  <td class="px-4 py-3">
+                    <button
+                      @click="removeRole(roleId)"
+                      class="text-error-500 hover:text-error-700 transition-colors"
+                    >
+                      <Trash2 class="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p v-else class="text-sm text-gray-400">Sin roles agregados</p>
         </div>
 
         <!-- Tab: Proyectos -->
-        <div v-if="activeFilterTab === 'proyectos'" class="flex flex-col gap-3">
-          <label class="text-sm font-medium text-gray-700">Intereses en Proyectos</label>
-          <MultiSelect
-            v-model="selectedProjects"
-            :options="projectOptions"
-            optionLabel="projectName"
-            placeholder="Seleccione proyectos de interés"
-            filter
-            class="w-full max-w-lg"
-          />
-          <div v-if="selectedProjects.length" class="flex flex-wrap gap-2">
-            <span
-              v-for="p in selectedProjects"
-              :key="p.id"
-              class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-600"
+        <div v-if="activeFilterTab === 'proyectos'" class="flex flex-col gap-4">
+          <div class="flex flex-wrap gap-3 items-end">
+            <div class="flex flex-col gap-1.5 flex-1 min-w-[250px]">
+              <label class="text-sm font-medium text-gray-700">Seleccionar Proyecto</label>
+              <AppSelect
+                v-model="tempProjectId"
+                :options="projectSelectOptions.filter(p => !selectedProjects.includes(p.value))"
+                placeholder="Seleccione un proyecto"
+                searchable
+                search-placeholder="Buscar proyecto..."
+              />
+            </div>
+            <button
+              @click="() => { if (tempProjectId) { addProject(tempProjectId); tempProjectId = null } }"
+              :disabled="!tempProjectId"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {{ p.projectName }}
-            </span>
+              <Plus class="w-4 h-4" />
+              Agregar
+            </button>
           </div>
+
+          <div v-if="selectedProjects.length" class="overflow-hidden rounded-xl border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Proyecto
+                  </th>
+                  <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Preferencia
+                  </th>
+                  <th class="w-14 px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr v-for="projectId in selectedProjects" :key="projectId" class="hover:bg-gray-50">
+                  <td class="px-5 py-3 text-sm text-gray-700">
+                    {{ projectOptions.find(p => p.id === projectId)?.projectName }}
+                  </td>
+                  <td class="px-5 py-3">
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        v-model="projectPreferences[projectId]"
+                        class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20"
+                      />
+                      <span class="text-sm text-gray-600">
+                        {{ projectPreferences[projectId] ? 'Interesado' : 'No interesado' }}
+                      </span>
+                    </label>
+                  </td>
+                  <td class="px-4 py-3">
+                    <button
+                      @click="removeProject(projectId)"
+                      class="text-error-500 hover:text-error-700 transition-colors"
+                    >
+                      <Trash2 class="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p v-else class="text-sm text-gray-400">Sin proyectos agregados</p>
         </div>
 
         <!-- Tab: Competencias -->
         <div v-if="activeFilterTab === 'competencias'" class="flex flex-col gap-4">
           <div class="flex flex-wrap gap-3 items-end">
-            <div class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-1.5 flex-1 min-w-[200px]">
               <label class="text-sm font-medium text-gray-700">Competencia</label>
-              <select
+              <AppSelect
                 v-model="selectedCompetence"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white w-64"
-              >
-                <option value="">Seleccionar competencia</option>
-                <option v-for="c in competenceOptions" :key="c.id" :value="c.id">
-                  {{ c.competitionName }}
-                </option>
-              </select>
+                :options="competenceSelectOptions"
+                placeholder="Seleccionar competencia"
+                searchable
+                search-placeholder="Buscar competencia..."
+              />
             </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Nivel (opcional)</label>
-              <select
+            <div class="flex flex-col gap-1.5 w-48">
+              <label class="text-sm font-medium text-gray-700">Nivel <span class="text-error-500">*</span></label>
+              <AppSelect
                 v-model="selectedLevel"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white w-48"
-              >
-                <option value="">Sin nivel</option>
-                <option v-for="l in levelOptions" :key="l.id" :value="l.id">
-                  {{ l.significance }}
-                </option>
-              </select>
+                :options="levelSelectOptions"
+                placeholder="Seleccionar nivel"
+              />
             </div>
             <button
               @click="addCompetenceFilter"
-              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
+              :disabled="!selectedCompetence || !selectedLevel"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus class="w-4 h-4" />
               Agregar
@@ -319,15 +518,11 @@ onMounted(loadFilterOptions)
         <div v-if="activeFilterTab === 'belbin'" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div v-for="role in belbinRoleLabels" :key="role.key" class="flex flex-col gap-1.5">
             <label class="text-sm font-medium text-gray-700">{{ role.label }}</label>
-            <select
+            <AppSelect
               v-model="belbin[role.key]"
-              class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-            >
-              <option :value="null">Indiferente</option>
-              <option v-for="opt in belbinOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+              :options="belbinSelectOptions"
+              placeholder="Indiferente"
+            />
           </div>
         </div>
 

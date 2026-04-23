@@ -1,334 +1,12 @@
-<template>
-  <div>
-    <PageBreadcrumb
-      :page-title="pageTitle"
-      :items="[{ label: 'Personas', path: '/person' }]"
-    />
-
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
-      <!-- Header -->
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-base font-semibold text-gray-800">{{ pageTitle }}</h2>
-      </div>
-
-      <!-- Tabs Navigation -->
-      <div class="border-b border-gray-200 px-6">
-        <nav class="-mb-px flex gap-0 overflow-x-auto no-scrollbar">
-          <button
-            v-for="tab in tabs"
-            :key="tab.key"
-            @click="activeTab = tab.key"
-            class="flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
-            :class="activeTab === tab.key
-              ? 'border-brand-500 text-brand-500'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-          >
-            {{ tab.label }}
-          </button>
-        </nav>
-      </div>
-
-      <!-- Tab Content -->
-      <div class="p-6">
-
-        <!-- Tab: Datos Básicos -->
-        <div v-show="activeTab === 'basic'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Nombre <span class="text-error-500">*</span></label>
-            <input v-model="personName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Nombre" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Apellidos <span class="text-error-500">*</span></label>
-            <input v-model="surName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Apellidos" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">CI <span class="text-error-500">*</span></label>
-            <input v-model="card" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Carnet de identidad" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Dirección</label>
-            <input v-model="address" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Dirección" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-            <input v-model="phone" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Teléfono" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Correo</label>
-            <input v-model="email" type="email" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Correo electrónico" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Sexo</label>
-            <select v-model="sex" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option value="M">Masculino</option>
-              <option value="F">Femenino</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Estado</label>
-            <select v-model="status" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha de ingreso</label>
-            <input v-model="inDate" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
-            <input v-model="birthDate" type="date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Carga de trabajo</label>
-            <input v-model.number="workload" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Experiencia (años)</label>
-            <input v-model.number="experience" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
-          </div>
-
-          <!-- Atributos -->
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Provincia</label>
-            <select v-model="selectedCounty" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in countyOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Raza</label>
-            <select v-model="selectedRace" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in raceOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Grupo</label>
-            <select v-model="selectedGroup" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in groupOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Nacionalidad</label>
-            <select v-model="selectedNacionality" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in nacionalityOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Religión</label>
-            <select v-model="selectedReligion" class="form-input bg-white">
-              <option value="">Seleccione...</option>
-              <option v-for="o in religionOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Tab: Competencias -->
-        <div v-show="activeTab === 'competences'" class="space-y-4">
-          <div class="flex gap-3 flex-wrap">
-            <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Competencia</label>
-              <select v-model="selectedCompetence" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in competenceOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-            <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Nivel</label>
-              <select v-model="selectedLevel" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in levelOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-            <div class="flex items-end">
-              <button @click="addCompetence" :disabled="!selectedCompetence || !selectedLevel"
-                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                <Plus class="w-4 h-4" /> Agregar
-              </button>
-            </div>
-          </div>
-          <MiniTable
-            :rows="competenceValues"
-            :columns="[{ field: 'competenceName', header: 'Competencia' }, { field: 'levelName', header: 'Nivel' }]"
-            v-model:selected="selectedCompetences"
-            @remove="removeCompetences"
-          />
-        </div>
-
-        <!-- Tab: Intereses -->
-        <div v-show="activeTab === 'interests'" class="space-y-6">
-          <!-- Roles -->
-          <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Roles</h3>
-            <div class="flex gap-3 flex-wrap mb-3">
-              <div class="flex-1 min-w-48 space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Rol</label>
-                <select v-model="selectedRole" class="form-input bg-white">
-                  <option value="">Seleccione...</option>
-                  <option v-for="o in roleOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-                </select>
-              </div>
-              <div class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
-                <label class="flex items-center gap-2 h-10 cursor-pointer">
-                  <input type="checkbox" v-model="rolePreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
-                  <span class="text-sm text-gray-600">Preferido</span>
-                </label>
-              </div>
-              <div class="flex items-end">
-                <button @click="addRoleInterest" :disabled="!selectedRole"
-                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                  <Plus class="w-4 h-4" /> Agregar
-                </button>
-              </div>
-            </div>
-            <MiniTable
-              :rows="personalInterests"
-              :columns="[{ field: 'roleName', header: 'Rol' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
-              v-model:selected="selectedRoleInterests"
-              @remove="removeRoleInterests"
-            />
-          </div>
-
-          <!-- Proyectos -->
-          <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Proyectos</h3>
-            <div class="flex gap-3 flex-wrap mb-3">
-              <div class="flex-1 min-w-48 space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Proyecto</label>
-                <select v-model="selectedProject" class="form-input bg-white">
-                  <option value="">Seleccione...</option>
-                  <option v-for="o in projectOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-                </select>
-              </div>
-              <div class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
-                <label class="flex items-center gap-2 h-10 cursor-pointer">
-                  <input type="checkbox" v-model="projectPreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
-                  <span class="text-sm text-gray-600">Preferido</span>
-                </label>
-              </div>
-              <div class="flex items-end">
-                <button @click="addProjectInterest" :disabled="!selectedProject"
-                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                  <Plus class="w-4 h-4" /> Agregar
-                </button>
-              </div>
-            </div>
-            <MiniTable
-              :rows="personalProjectInterests"
-              :columns="[{ field: 'projectName', header: 'Proyecto' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
-              v-model:selected="selectedProjectInterests"
-              @remove="removeProjectInterests"
-            />
-          </div>
-        </div>
-
-        <!-- Tab: Test Psicológico -->
-        <div v-show="activeTab === 'test'" class="space-y-6">
-          <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Tipo MBTI</h3>
-            <div class="w-64 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Tipo</label>
-              <select v-model="mbtiType" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in mbtiOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Roles Belbin</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <div v-for="(key, label) in belbinRoleLabels" :key="key" class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">{{ label }}</label>
-                <select v-model="belbinRoles[key]" class="form-input bg-white">
-                  <option v-for="o in belbinOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tab: Incompatibilidades -->
-        <div v-show="activeTab === 'conflicts'" class="space-y-4">
-          <div class="flex gap-3 flex-wrap">
-            <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Índice de conflicto</label>
-              <select v-model="selectedConflictIndex" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in conflictIndexOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-            <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Persona</label>
-              <select v-model="selectedConflictPerson" class="form-input bg-white">
-                <option value="">Seleccione...</option>
-                <option v-for="o in personOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
-            </div>
-            <div class="flex items-end">
-              <button @click="addConflict" :disabled="!selectedConflictIndex || !selectedConflictPerson"
-                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                <Plus class="w-4 h-4" /> Agregar
-              </button>
-            </div>
-          </div>
-          <MiniTable
-            :rows="personConflicts"
-            :columns="[{ field: 'conflictName', header: 'Índice conflicto' }, { field: 'personConflictName', header: 'Persona' }]"
-            v-model:selected="selectedConflicts"
-            @remove="removeConflicts"
-          />
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-        <button
-          type="button"
-          @click="router.push('/person')"
-          class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          @click="handleSave"
-          :disabled="saving"
-          class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 transition-colors flex items-center gap-2"
-        >
-          <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
-          <Save v-else class="w-4 h-4" />
-          {{ saving ? 'Guardando...' : 'Guardar' }}
-        </button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { ref, computed, onMounted, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle } from 'lucide-vue-next'
+import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle, ChevronRight } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
-import countyService from '@/features/nomenclatives/services/countyService.js'
-import raceService from '@/features/nomenclatives/services/raceService.js'
-import personGroupService from '@/features/nomenclatives/services/personGroupService.js'
-import nacionalityService from '@/features/nomenclatives/services/nacionalityService.js'
-import religionService from '@/features/nomenclatives/services/religionService.js'
-import competenceService from '@/features/competences/services/competenceService.js'
-import levelsService from '@/features/nomenclatives/services/levelsService.js'
-import roleService from '@/features/roles/services/roleService.js'
-import projectService from '@/features/projects/services/projectService.js'
-import conflictIndexService from '@/features/nomenclatives/services/conflictIndexService.js'
-import personService from '@/features/persons/services/personService.js'
+import AppSelect from '@/components/ui/AppSelect.vue'
+import AppDatePicker from '@/components/ui/AppDatePicker.vue'
+import { api } from '@/lib/api'
 
 // Inline mini-table component for sub-collections
 const MiniTable = defineComponent({
@@ -418,6 +96,26 @@ const tabs = [
   { key: 'conflicts', label: 'Incompatibilidades' },
 ]
 
+// Static options
+const sexOptions = [
+  { label: 'Masculino', value: 'M' },
+  { label: 'Femenino', value: 'F' },
+]
+const statusOptions = [
+  { label: 'Activo', value: 'Activo' },
+  { label: 'Inactivo', value: 'Inactivo' },
+]
+const mbtiValues = [
+  'ESTJ','ENTJ','ESFJ','ENFJ','ESTP','ENTP','ESFP','ENFP',
+  'ISTJ','INTJ','ISFJ','INFJ','ISTP','INTP','ISFP','INFP',
+]
+const mbtiOptions = mbtiValues.map(v => ({ label: v, value: v }))
+const belbinOptions = [
+  { label: 'Preferido', value: 'Preferido' },
+  { label: 'Evitado', value: 'Evitado' },
+  { label: 'Indiferente', value: 'Indiferente' },
+]
+
 // Basic data
 const personName = ref('')
 const card = ref('')
@@ -427,7 +125,6 @@ const phone = ref('')
 const sex = ref('')
 const email = ref('')
 const inDate = ref('')
-const workload = ref(0)
 const experience = ref(0)
 const status = ref('')
 const birthDate = ref('')
@@ -439,7 +136,7 @@ const selectedGroup = ref('')
 const selectedNacionality = ref('')
 const selectedReligion = ref('')
 
-// Options
+// Dynamic options
 const countyOptions = ref([])
 const raceOptions = ref([])
 const groupOptions = ref([])
@@ -470,10 +167,6 @@ const selectedProjectInterests = ref([])
 
 // MBTI
 const mbtiType = ref('')
-const mbtiOptions = [
-  'ESTJ','ENTJ','ESFJ','ENFJ','ESTP','ENTP','ESFP','ENFP',
-  'ISTJ','INTJ','ISFJ','INFJ','ISTP','INTP','ISFP','INFP'
-].map(v => ({ label: v, value: v }))
 
 // Belbin
 const belbinRoles = ref({
@@ -500,12 +193,6 @@ const belbinRoleLabels = {
   'Especialista': 'especialista',
 }
 
-const belbinOptions = [
-  { label: 'Preferido', value: 'Preferido' },
-  { label: 'Evitado', value: 'Evitado' },
-  { label: 'Indiferente', value: 'Indiferente' },
-]
-
 // Conflicts
 const conflictIndexOptions = ref([])
 const selectedConflictIndex = ref('')
@@ -518,21 +205,28 @@ const saving = ref(false)
 const isEditMode = computed(() => props.mode === 'edit')
 const pageTitle = computed(() => isEditMode.value ? 'Editar Persona' : 'Crear Persona')
 
+const activeTabIndex = computed(() => tabs.findIndex(t => t.key === activeTab.value))
+const isLastTab = computed(() => activeTabIndex.value === tabs.length - 1)
+
+function goToNextTab() {
+  if (!isLastTab.value) activeTab.value = tabs[activeTabIndex.value + 1].key
+}
+
 onMounted(async () => {
   try {
     const [counties, races, groups, nats, rels, competences, levels, roles, projects, conflicts, persons] =
       await Promise.all([
-        countyService.getAll(),
-        raceService.getAll(),
-        personGroupService.getAll(),
-        nacionalityService.getAll(),
-        religionService.getAll(),
-        competenceService.getAll(),
-        levelsService.getAll(),
-        roleService.getAll(),
-        projectService.getAll(),
-        conflictIndexService.getAll(),
-        personService.getAll(),
+        api.get('county').json(),
+        api.get('race').json(),
+        api.get('personGroups').json(),
+        api.get('nacionality').json(),
+        api.get('religion').json(),
+        api.get('competence').json(),
+        api.get('levels').json(),
+        api.get('role').json(),
+        api.get('project').json(),
+        api.get('conflictIndex').json(),
+        api.get('person').json(),
       ])
 
     countyOptions.value = counties.map(c => ({ label: c.countyName, value: c.id }))
@@ -552,7 +246,7 @@ onMounted(async () => {
 
   if (isEditMode.value && route.params.id) {
     try {
-      const res = await personService.getById(route.params.id)
+      const res = await api.get(`person/${route.params.id}`).json()
       const p = res?.data ?? res
       personName.value = p.personName ?? ''
       card.value = p.card ?? ''
@@ -563,7 +257,6 @@ onMounted(async () => {
       email.value = p.email ?? ''
       inDate.value = p.inDate ? p.inDate.split('T')[0] : ''
       birthDate.value = p.birthDate ? p.birthDate.split('T')[0] : ''
-      workload.value = p.workload ?? 0
       experience.value = p.experience ?? 0
       status.value = p.status ?? ''
       selectedCounty.value = p.county?.id ?? p.county ?? ''
@@ -572,37 +265,48 @@ onMounted(async () => {
       selectedNacionality.value = p.nacionality?.id ?? p.nacionality ?? ''
       selectedReligion.value = p.religion?.id ?? p.religion ?? ''
 
-      competenceValues.value = p.competenceValues?.map(cv => ({
-        competenceId: cv.competenceId ?? cv.competence?.id,
-        competenceName: competenceOptions.value.find(c => c.value === (cv.competenceId ?? cv.competence?.id))?.label ?? '',
-        levelsId: cv.levelsId ?? cv.levels?.id,
-        levelName: levelOptions.value.find(l => l.value === (cv.levelsId ?? cv.levels?.id))?.label ?? '',
-      })) ?? []
+      competenceValues.value = p.competenceValues?.map(cv => {
+        const compId = cv.competenceId ?? cv.competence?.id
+        const lvlId  = cv.levelsId ?? cv.levelId ?? cv.levels?.id ?? cv.level?.id
+        return {
+          competenceId: compId,
+          competenceName: competenceOptions.value.find(c => c.value === compId)?.label ?? cv.competence?.competitionName ?? '',
+          levelsId: lvlId,
+          levelName: levelOptions.value.find(l => l.value === lvlId)?.label ?? cv.levels?.significance ?? cv.level?.significance ?? '',
+        }
+      }) ?? []
 
-      personalInterests.value = p.personalInterests?.map(pi => ({
-        roleId: pi.roleId ?? pi.role?.id,
-        roleName: roleOptions.value.find(r => r.value === (pi.roleId ?? pi.role?.id))?.label ?? '',
-        preference: pi.preference,
-      })) ?? []
+      personalInterests.value = p.personalInterests?.map(pi => {
+        const roleId = pi.roleId ?? pi.role?.id
+        return {
+          roleId,
+          roleName: roleOptions.value.find(r => r.value === roleId)?.label ?? pi.role?.roleName ?? '',
+          preference: pi.preference ?? false,
+        }
+      }) ?? []
 
-      personalProjectInterests.value = p.personalProjectInterests?.map(ppi => ({
-        projectId: ppi.projectId ?? ppi.project?.id,
-        projectName: projectOptions.value.find(pr => pr.value === (ppi.projectId ?? ppi.project?.id))?.label ?? '',
-        preference: ppi.preference,
-      })) ?? []
+      personalProjectInterests.value = p.personalProjectInterests?.map(ppi => {
+        const projectId = ppi.projectId ?? ppi.project?.id
+        return {
+          projectId,
+          projectName: projectOptions.value.find(pr => pr.value === projectId)?.label ?? ppi.project?.projectName ?? '',
+          preference: ppi.preference ?? false,
+        }
+      }) ?? []
 
       if (p.personTest) {
-        mbtiType.value = p.personTest.tipoMB ?? ''
+        mbtiType.value = p.personTest.mbtiType ?? ''
+        // Mapeo correcto API → rol Belbin
         const belbinMap = {
-          implementador: p.personTest.e_S,
-          coordinador: p.personTest.i_D,
-          cerebro: p.personTest.c_O,
-          investigador: p.personTest.i_S,
-          monitor: p.personTest.c_E,
-          cohesionador: p.personTest.i_R,
-          impulsor: p.personTest.m_E,
-          finalizador: p.personTest.c_H,
-          especialista: p.personTest.i_F,
+          implementador: p.personTest.i_M,
+          coordinador:   p.personTest.c_O,
+          cerebro:       p.personTest.c_E,
+          investigador:  p.personTest.i_R,
+          monitor:       p.personTest.m_E,
+          cohesionador:  p.personTest.c_H,
+          impulsor:      p.personTest.i_S,
+          finalizador:   p.personTest.i_F,
+          especialista:  p.personTest.e_S,
         }
         const charToOption = { 'P': 'Preferido', 'E': 'Evitado', 'I': 'Indiferente' }
         Object.keys(belbinRoles.value).forEach(k => {
@@ -610,12 +314,16 @@ onMounted(async () => {
         })
       }
 
-      personConflicts.value = p.personConflicts?.map(pc => ({
-        conflictIndexId: pc.conflictIndexId ?? pc.conflictIndex?.id,
-        conflictName: conflictIndexOptions.value.find(c => c.value === (pc.conflictIndexId ?? pc.conflictIndex?.id))?.label ?? '',
-        personConflictId: pc.personConflictId,
-        personConflictName: personOptions.value.find(per => per.value === pc.personConflictId)?.label ?? '',
-      })) ?? []
+      personConflicts.value = p.personConflicts?.map(pc => {
+        const ciId     = pc.conflictIndexId ?? pc.conflictIndex?.id
+        const pcId     = pc.personConflictId ?? pc.conflictPersonId ?? pc.conflictPerson?.id
+        return {
+          conflictIndexId: ciId,
+          conflictName: conflictIndexOptions.value.find(c => c.value === ciId)?.label ?? pc.conflictIndex?.description ?? '',
+          personConflictId: pcId,
+          personConflictName: personOptions.value.find(per => per.value === pcId)?.label ?? pc.conflictPerson?.personName ?? '',
+        }
+      }) ?? []
     } catch {
       toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la persona', life: 3000 })
     }
@@ -722,7 +430,6 @@ async function handleSave() {
       sex: sex.value || null,
       email: email.value,
       inDate: inDate.value || null,
-      workload: workload.value,
       experience: experience.value,
       status: status.value,
       birthDate: birthDate.value || null,
@@ -732,24 +439,40 @@ async function handleSave() {
       nacionality: selectedNacionality.value || null,
       religion: selectedReligion.value || null,
       personTest: {
-        tipoMB: mbtiType.value || '',
-        e_S: belbinRoles.value.implementador.charAt(0),
-        i_D: belbinRoles.value.coordinador.charAt(0),
-        c_O: belbinRoles.value.cerebro.charAt(0),
-        i_S: belbinRoles.value.investigador.charAt(0),
-        c_E: belbinRoles.value.monitor.charAt(0),
-        i_R: belbinRoles.value.cohesionador.charAt(0),
-        m_E: belbinRoles.value.impulsor.charAt(0),
-        c_H: belbinRoles.value.finalizador.charAt(0),
-        i_F: belbinRoles.value.especialista.charAt(0),
+        mbtiType: mbtiType.value || '',
+        i_M: belbinRoles.value.implementador.charAt(0),
+        c_O: belbinRoles.value.coordinador.charAt(0),
+        c_E: belbinRoles.value.cerebro.charAt(0),
+        i_R: belbinRoles.value.investigador.charAt(0),
+        m_E: belbinRoles.value.monitor.charAt(0),
+        c_H: belbinRoles.value.cohesionador.charAt(0),
+        i_S: belbinRoles.value.impulsor.charAt(0),
+        i_F: belbinRoles.value.finalizador.charAt(0),
+        e_S: belbinRoles.value.especialista.charAt(0),
       },
+      competenceValues: competenceValues.value.map(cv => ({
+        competenceId: cv.competenceId,
+        levelsId: cv.levelsId,
+      })),
+      personalInterests: personalInterests.value.map(pi => ({
+        roleId: pi.roleId,
+        preference: pi.preference,
+      })),
+      personalProjectInterests: personalProjectInterests.value.map(ppi => ({
+        projectId: ppi.projectId,
+        preference: ppi.preference,
+      })),
+      personConflicts: personConflicts.value.map(pc => ({
+        conflictIndexId: pc.conflictIndexId,
+        personConflictId: pc.personConflictId,
+      })),
     }
 
     if (isEditMode.value) {
-      await personService.update(route.params.id, payload)
+      await api.put(`person/${route.params.id}`, { json: payload }).json()
       toast.add({ severity: 'success', summary: 'Éxito', detail: 'Persona actualizada correctamente', life: 3000 })
     } else {
-      await personService.create(payload)
+      await api.post('person', { json: payload }).json()
       toast.add({ severity: 'success', summary: 'Éxito', detail: 'Persona creada correctamente', life: 3000 })
     }
     router.push('/person')
@@ -766,3 +489,275 @@ async function handleSave() {
 }
 </script>
 
+<template>
+  <div>
+    <PageBreadcrumb
+      :page-title="pageTitle"
+      :items="[{ label: 'Personas', path: '/person' }]"
+    />
+
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-base font-semibold text-gray-800">{{ pageTitle }}</h2>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="border-b border-gray-200 px-6">
+        <nav class="-mb-px flex gap-0 overflow-x-auto no-scrollbar">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            @click="activeTab = tab.key"
+            class="flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
+            :class="activeTab === tab.key
+              ? 'border-brand-500 text-brand-500'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          >
+            {{ tab.label }}
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="p-6">
+
+        <!-- Tab: Datos Básicos -->
+        <div v-show="activeTab === 'basic'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Nombre <span class="text-error-500">*</span></label>
+            <input v-model="personName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Nombre" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Apellidos <span class="text-error-500">*</span></label>
+            <input v-model="surName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Apellidos" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">CI <span class="text-error-500">*</span></label>
+            <input v-model="card" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Carnet de identidad" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Dirección</label>
+            <input v-model="address" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Dirección" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+            <input v-model="phone" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Teléfono" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Correo</label>
+            <input v-model="email" type="email" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Correo electrónico" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Sexo</label>
+            <AppSelect v-model="sex" :options="sexOptions" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Estado</label>
+            <AppSelect v-model="status" :options="statusOptions" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Fecha de ingreso</label>
+            <AppDatePicker v-model="inDate" placeholder="dd/mm/aaaa" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
+            <AppDatePicker v-model="birthDate" placeholder="dd/mm/aaaa" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Experiencia (años)</label>
+            <input v-model.number="experience" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Provincia</label>
+            <AppSelect v-model="selectedCounty" :options="countyOptions" searchable />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Raza</label>
+            <AppSelect v-model="selectedRace" :options="raceOptions" searchable />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Grupo</label>
+            <AppSelect v-model="selectedGroup" :options="groupOptions" searchable />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Nacionalidad</label>
+            <AppSelect v-model="selectedNacionality" :options="nacionalityOptions" searchable />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Religión</label>
+            <AppSelect v-model="selectedReligion" :options="religionOptions" searchable />
+          </div>
+        </div>
+
+        <!-- Tab: Competencias -->
+        <div v-show="activeTab === 'competences'" class="space-y-4">
+          <div class="flex gap-3 flex-wrap">
+            <div class="flex-1 min-w-48 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Competencia</label>
+              <AppSelect v-model="selectedCompetence" :options="competenceOptions" searchable />
+            </div>
+            <div class="flex-1 min-w-48 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Nivel</label>
+              <AppSelect v-model="selectedLevel" :options="levelOptions" searchable />
+            </div>
+            <div class="flex items-end">
+              <button @click="addCompetence" :disabled="!selectedCompetence || !selectedLevel"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
+                <Plus class="w-4 h-4" /> Agregar
+              </button>
+            </div>
+          </div>
+          <MiniTable
+            :rows="competenceValues"
+            :columns="[{ field: 'competenceName', header: 'Competencia' }, { field: 'levelName', header: 'Nivel' }]"
+            v-model:selected="selectedCompetences"
+            @remove="removeCompetences"
+          />
+        </div>
+
+        <!-- Tab: Intereses -->
+        <div v-show="activeTab === 'interests'" class="space-y-6">
+          <!-- Roles -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Roles</h3>
+            <div class="flex gap-3 flex-wrap mb-3">
+              <div class="flex-1 min-w-48 space-y-1">
+                <label class="block text-sm font-medium text-gray-700">Rol</label>
+                <AppSelect v-model="selectedRole" :options="roleOptions" searchable />
+              </div>
+              <div class="space-y-1">
+                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
+                <label class="flex items-center gap-2 h-10 cursor-pointer">
+                  <input type="checkbox" v-model="rolePreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
+                  <span class="text-sm text-gray-600">Preferido</span>
+                </label>
+              </div>
+              <div class="flex items-end">
+                <button @click="addRoleInterest" :disabled="!selectedRole"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
+                  <Plus class="w-4 h-4" /> Agregar
+                </button>
+              </div>
+            </div>
+            <MiniTable
+              :rows="personalInterests"
+              :columns="[{ field: 'roleName', header: 'Rol' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
+              v-model:selected="selectedRoleInterests"
+              @remove="removeRoleInterests"
+            />
+          </div>
+
+          <!-- Proyectos -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Proyectos</h3>
+            <div class="flex gap-3 flex-wrap mb-3">
+              <div class="flex-1 min-w-48 space-y-1">
+                <label class="block text-sm font-medium text-gray-700">Proyecto</label>
+                <AppSelect v-model="selectedProject" :options="projectOptions" searchable />
+              </div>
+              <div class="space-y-1">
+                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
+                <label class="flex items-center gap-2 h-10 cursor-pointer">
+                  <input type="checkbox" v-model="projectPreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
+                  <span class="text-sm text-gray-600">Preferido</span>
+                </label>
+              </div>
+              <div class="flex items-end">
+                <button @click="addProjectInterest" :disabled="!selectedProject"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
+                  <Plus class="w-4 h-4" /> Agregar
+                </button>
+              </div>
+            </div>
+            <MiniTable
+              :rows="personalProjectInterests"
+              :columns="[{ field: 'projectName', header: 'Proyecto' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
+              v-model:selected="selectedProjectInterests"
+              @remove="removeProjectInterests"
+            />
+          </div>
+        </div>
+
+        <!-- Tab: Test Psicológico -->
+        <div v-show="activeTab === 'test'" class="space-y-6">
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Tipo MBTI</h3>
+            <div class="w-64 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Tipo</label>
+              <AppSelect v-model="mbtiType" :options="mbtiOptions" />
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Roles Belbin</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div v-for="(key, label) in belbinRoleLabels" :key="key" class="space-y-1">
+                <label class="block text-sm font-medium text-gray-700">{{ label }}</label>
+                <AppSelect v-model="belbinRoles[key]" :options="belbinOptions" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Incompatibilidades -->
+        <div v-show="activeTab === 'conflicts'" class="space-y-4">
+          <div class="flex gap-3 flex-wrap">
+            <div class="flex-1 min-w-48 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Índice de conflicto</label>
+              <AppSelect v-model="selectedConflictIndex" :options="conflictIndexOptions" searchable />
+            </div>
+            <div class="flex-1 min-w-48 space-y-1">
+              <label class="block text-sm font-medium text-gray-700">Persona</label>
+              <AppSelect v-model="selectedConflictPerson" :options="personOptions" searchable search-placeholder="Buscar persona..." />
+            </div>
+            <div class="flex items-end">
+              <button @click="addConflict" :disabled="!selectedConflictIndex || !selectedConflictPerson"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
+                <Plus class="w-4 h-4" /> Agregar
+              </button>
+            </div>
+          </div>
+          <MiniTable
+            :rows="personConflicts"
+            :columns="[{ field: 'conflictName', header: 'Índice conflicto' }, { field: 'personConflictName', header: 'Persona' }]"
+            v-model:selected="selectedConflicts"
+            @remove="removeConflicts"
+          />
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+        <button
+          type="button"
+          @click="router.push('/person')"
+          class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Cancelar
+        </button>
+        <!-- En modo crear: avanza tabs hasta el último, luego guarda -->
+        <button
+          v-if="!isEditMode && !isLastTab"
+          type="button"
+          @click="goToNextTab"
+          class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors flex items-center gap-2"
+        >
+          Siguiente
+          <ChevronRight class="w-4 h-4" />
+        </button>
+        <button
+          v-else
+          type="button"
+          @click="handleSave"
+          :disabled="saving"
+          class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 transition-colors flex items-center gap-2"
+        >
+          <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
+          <Save v-else class="w-4 h-4" />
+          {{ saving ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</template>

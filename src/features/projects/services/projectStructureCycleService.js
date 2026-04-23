@@ -1,48 +1,11 @@
-import apiClient from '@/core/api/axios.js'
-
-const ENDPOINT = '/project-structure-cycle'
+import { api } from '@/lib/api'
 
 const projectStructureCycleService = {
-    async getAll() {
-        try {
-            return (await apiClient.get(ENDPOINT)).data
-        } catch (error) {
-            console.error('Error al obtener registros:', error)
-            throw error
-        }
-    },
-    async getById(id) {
-        try {
-            return (await apiClient.get(`${ENDPOINT}/${id}`)).data
-        } catch (error) {
-            console.error(`Error al obtener registro con ID ${id}:`, error)
-            throw error
-        }
-    },
-    async create(data) {
-        try {
-            return (await apiClient.post(ENDPOINT, data)).data
-        } catch (error) {
-            console.error('Error al crear registro:', error)
-            throw error
-        }
-    },
-    async update(id, data) {
-        try {
-            return (await apiClient.put(`${ENDPOINT}/${id}`, data)).data
-        } catch (error) {
-            console.error(`Error al actualizar registro con ID ${id}:`, error)
-            throw error
-        }
-    },
-    async delete(id) {
-        try {
-            return (await apiClient.delete(`${ENDPOINT}/${id}`)).data
-        } catch (error) {
-            console.error(`Error al eliminar registro con ID ${id}:`, error)
-            throw error
-        }
-    }
+  async getAll() { return api.get('project-structure-cycle').json() },
+  async getById(id) { return api.get(`project-structure-cycle/${id}`).json() },
+  async create(data) { return api.post('project-structure-cycle', { json: data }).json() },
+  async update(id, data) { return api.put(`project-structure-cycle/${id}`, { json: data }).json() },
+  async delete(id) { return api.delete(`project-structure-cycle/${id}`).text() }
 }
 
 export default projectStructureCycleService

@@ -32,11 +32,7 @@
             <label class="block text-sm font-medium text-gray-700">
               Fecha Inicial <span class="text-error-500">*</span>
             </label>
-            <input
-              v-model="initialDate"
-              type="date"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
-            />
+            <AppDatePicker v-model="initialDate" placeholder="dd/mm/aaaa" />
           </div>
 
           <!-- Cliente -->
@@ -181,6 +177,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { Plus, Trash2, Save, Loader2 } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
+import AppDatePicker from '@/components/ui/AppDatePicker.vue'
 import clientService from '@/features/nomenclatives/services/clientService.js'
 import countyService from '@/features/nomenclatives/services/countyService.js'
 import projectStructureService from '@/features/nomenclatives/services/projectStructureService.js'

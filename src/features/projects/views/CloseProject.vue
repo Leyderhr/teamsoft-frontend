@@ -1,239 +1,256 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
-import Panel from 'primevue/panel'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
-import ConfirmDialog from 'primevue/confirmdialog'
-import InputText from 'primevue/inputtext'
-import { FilterMatchMode } from '@primevue/core/api'
-
+import { Lock, RefreshCw, Loader2, Search, AlertTriangle } from 'lucide-vue-next'
+import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import projectService from '@/features/projects/services/projectService.js'
 
-const toast   = useToast()
-const confirm = useConfirm()
+const toast = useToast()
 
 const projects      = ref([])
 const loading       = ref(false)
-const selectedProject = ref(null)
-const filters       = ref({
-  global:      { value: null, matchMode: FilterMatchMode.CONTAINS },
-  projectName: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
-})
+const selectedId    = ref(null)
+const searchQuery   = ref('')
+const showConfirm   = ref(false)
+const closing       = ref(false)
 
-// ===========================
-// Carga de datos
-// ===========================
-const loadProjects = async () => {
+// ---- Carga de datos ----
+async function loadProjects() {
   loading.value = true
   try {
-    const data = await projectService.getAll()
-    projects.value = data
-  } catch (e) {
+    projects.value = await projectService.getAll()
+  } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los proyectos', life: 3000 })
   } finally {
     loading.value = false
   }
 }
 
-// ===========================
-// Estado / helpers
-// ===========================
-const canClose = computed(() =>
-  selectedProject.value !== null && !selectedProject.value.close
-)
+onMounted(loadProjects)
 
-const projectStatusSeverity = (project) => {
-  if (project.close)    return 'danger'
-  if (project.finalize) return 'warning'
-  return 'success'
-}
+// ---- Filtro ----
+const filteredProjects = computed(() => {
+  const q = searchQuery.value.toLowerCase()
+  if (!q) return projects.value
+  return projects.value.filter(p =>
+    p.projectName?.toLowerCase().includes(q) ||
+    p.client?.entityName?.toLowerCase().includes(q) ||
+    p.county?.countyName?.toLowerCase().includes(q)
+  )
+})
 
-const projectStatusLabel = (project) => {
-  if (project.close)    return 'Cerrado'
-  if (project.finalize) return 'Finalizado'
+// ---- Helpers de estado ----
+function statusLabel(p) {
+  if (p.close)    return 'Cerrado'
+  if (p.finalize) return 'Finalizado'
   return 'Activo'
 }
 
-// ===========================
-// Cerrar proyecto
-// ===========================
-const confirmClose = () => {
-  if (!selectedProject.value) return
-
-  confirm.require({
-    message:  `¿Está seguro de que desea cerrar el proyecto "${selectedProject.value.projectName}"? Esta acción cambiará su estado a Cerrado.`,
-    header:   'Confirmar cierre de proyecto',
-    icon:     'pi pi-exclamation-triangle',
-    acceptLabel: 'Sí, cerrar',
-    rejectLabel: 'Cancelar',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
-      try {
-        await projectService.close(selectedProject.value.id)
-        toast.add({
-          severity: 'success',
-          summary:  'Proyecto cerrado',
-          detail:   `"${selectedProject.value.projectName}" ha sido cerrado correctamente`,
-          life:     4000
-        })
-        selectedProject.value = null
-        await loadProjects()
-      } catch (e) {
-        toast.add({
-          severity: 'error',
-          summary:  'Error al cerrar',
-          detail:   e?.message || 'No se pudo cerrar el proyecto',
-          life:     4000
-        })
-      }
-    }
-  })
+function statusClass(p) {
+  if (p.close)    return 'bg-error-50 text-error-700 ring-1 ring-error-200'
+  if (p.finalize) return 'bg-warning-50 text-warning-700 ring-1 ring-warning-200'
+  return 'bg-success-50 text-success-700 ring-1 ring-success-200'
 }
 
-onMounted(() => {
-  loadProjects()
-})
+function formatDate(d) {
+  if (!d) return '—'
+  return new Date(d).toLocaleDateString('es-ES')
+}
+
+// ---- Selección ----
+const selectedProject = computed(() => projects.value.find(p => p.id === selectedId.value) ?? null)
+const canClose = computed(() => selectedProject.value !== null && !selectedProject.value.close)
+
+function selectRow(p) {
+  selectedId.value = selectedId.value === p.id ? null : p.id
+}
+
+// ---- Cerrar proyecto ----
+async function doClose() {
+  if (!selectedProject.value) return
+  closing.value = true
+  try {
+    await projectService.close(selectedProject.value.id)
+    toast.add({
+      severity: 'success',
+      summary: 'Proyecto cerrado',
+      detail: `"${selectedProject.value.projectName}" ha sido cerrado correctamente`,
+      life: 4000,
+    })
+    selectedId.value = null
+    showConfirm.value = false
+    await loadProjects()
+  } catch (e) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error al cerrar',
+      detail: e?.message || 'No se pudo cerrar el proyecto',
+      life: 4000,
+    })
+  } finally {
+    closing.value = false
+  }
+}
 </script>
 
 <template>
-  <div class="p-4 pl-15">
-    <h1 class="titulo text-black text-left">Cerrar Proyecto</h1>
+  <div class="space-y-6">
+    <PageBreadcrumb page-title="Cerrar Proyecto" />
 
-    <ConfirmDialog/>
-
-    <Panel>
-      <template #header>
-        <div class="flex align-items-center gap-2 w-full">
-          <i class="pi pi-list text-blue-600"/>
-          <span class="font-semibold text-lg">Lista de Proyectos</span>
-          <div class="ml-auto">
-            <InputText
-                v-model="filters['global'].value"
-                placeholder="Buscar proyecto..."
-                class="search-input"
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
+        <h2 class="text-base font-semibold text-gray-800">Lista de Proyectos</h2>
+        <div class="flex items-center gap-3 flex-wrap">
+          <!-- Buscador -->
+          <div class="relative">
+            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Buscar proyecto..."
+              class="pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors w-56"
             />
+          </div>
+          <!-- Actualizar -->
+          <button
+            type="button"
+            @click="loadProjects"
+            :disabled="loading"
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+          >
+            <RefreshCw class="w-4 h-4" :class="loading ? 'animate-spin' : ''" />
+            Actualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-100">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="w-10 px-4 py-3"></th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provincia</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Inicio</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <!-- Loading -->
+            <tr v-if="loading">
+              <td colspan="6" class="px-4 py-10 text-center">
+                <div class="flex items-center justify-center gap-2 text-sm text-gray-400">
+                  <Loader2 class="w-5 h-5 animate-spin" />
+                  Cargando proyectos...
+                </div>
+              </td>
+            </tr>
+            <!-- Sin resultados -->
+            <tr v-else-if="!filteredProjects.length">
+              <td colspan="6" class="px-4 py-10 text-center text-sm text-gray-400">
+                Sin proyectos para mostrar
+              </td>
+            </tr>
+            <!-- Filas -->
+            <tr
+              v-else
+              v-for="p in filteredProjects"
+              :key="p.id"
+              class="hover:bg-gray-50 cursor-pointer transition-colors"
+              :class="selectedId === p.id ? 'bg-brand-50' : ''"
+              @click="selectRow(p)"
+            >
+              <td class="px-4 py-3">
+                <input
+                  type="radio"
+                  :value="p.id"
+                  v-model="selectedId"
+                  class="w-4 h-4 text-brand-500 border-gray-300 focus:ring-brand-500/20 cursor-pointer"
+                  @click.stop
+                />
+              </td>
+              <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ p.projectName }}</td>
+              <td class="px-4 py-3 text-sm text-gray-600">{{ p.client?.entityName || '—' }}</td>
+              <td class="px-4 py-3 text-sm text-gray-600">{{ p.county?.countyName || '—' }}</td>
+              <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(p.initialDate) }}</td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="statusClass(p)">
+                  {{ statusLabel(p) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer de acciones -->
+      <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-4 flex-wrap">
+        <div class="text-sm text-gray-500">
+          <span v-if="selectedProject">
+            Seleccionado: <strong class="text-gray-800">{{ selectedProject.projectName }}</strong>
+            <span v-if="selectedProject.close" class="ml-2 text-error-600">(ya está cerrado)</span>
+          </span>
+          <span v-else class="text-gray-400">Ningún proyecto seleccionado</span>
+        </div>
+        <button
+          type="button"
+          :disabled="!canClose"
+          @click="showConfirm = true"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-error-500 text-white text-sm font-medium hover:bg-error-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          <Lock class="w-4 h-4" />
+          Cerrar Proyecto
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <Teleport to="body">
+      <div
+        v-if="showConfirm"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-black/40" @click="showConfirm = false" />
+        <!-- Panel -->
+        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-error-50 flex items-center justify-center">
+              <AlertTriangle class="w-5 h-5 text-error-500" />
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-gray-900">Confirmar cierre de proyecto</h3>
+              <p class="mt-1 text-sm text-gray-500">
+                ¿Está seguro de que desea cerrar el proyecto
+                <strong class="text-gray-800">«{{ selectedProject?.projectName }}»</strong>?
+                Esta acción cambiará su estado a <span class="text-error-600 font-medium">Cerrado</span>.
+              </p>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              @click="showConfirm = false"
+              class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              :disabled="closing"
+              @click="doClose"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-error-500 text-white text-sm font-medium hover:bg-error-600 disabled:opacity-50 transition-colors"
+            >
+              <Loader2 v-if="closing" class="w-4 h-4 animate-spin" />
+              <Lock v-else class="w-4 h-4" />
+              {{ closing ? 'Cerrando...' : 'Sí, cerrar' }}
+            </button>
           </div>
         </div>
-      </template>
-
-      <DataTable
-          :value="projects"
-          v-model:selection="selectedProject"
-          selectionMode="single"
-          :loading="loading"
-          v-model:filters="filters"
-          filterDisplay="row"
-          :globalFilterFields="['projectName', 'client.entityName', 'county.countyName']"
-          dataKey="id"
-          paginator
-          :rows="10"
-          :rowsPerPageOptions="[10, 20, 30, 50]"
-          stripedRows
-          rowHover
-          scrollable
-          scrollHeight="calc(100vh - 420px)"
-          class="projects-table"
-      >
-        <Column field="id" header="ID" :style="{ width: '70px' }" sortable/>
-
-        <Column field="projectName" header="Nombre del Proyecto" sortable filter filterPlaceholder="Buscar...">
-          <template #body="{ data }">
-            <span class="font-semibold">{{ data.projectName }}</span>
-          </template>
-        </Column>
-
-        <Column field="client.entityName" header="Cliente" sortable>
-          <template #body="{ data }">
-            {{ data.client?.entityName || '—' }}
-          </template>
-        </Column>
-
-        <Column field="county.countyName" header="Provincia" sortable>
-          <template #body="{ data }">
-            {{ data.county?.countyName || '—' }}
-          </template>
-        </Column>
-
-        <Column field="initialDate" header="Fecha Inicio" sortable>
-          <template #body="{ data }">
-            {{ data.initialDate ? new Date(data.initialDate).toLocaleDateString('es-ES') : '—' }}
-          </template>
-        </Column>
-
-        <Column field="close" header="Estado" :style="{ width: '120px' }" sortable>
-          <template #body="{ data }">
-            <Tag
-                :value="projectStatusLabel(data)"
-                :severity="projectStatusSeverity(data)"
-            />
-          </template>
-        </Column>
-
-        <!-- Footer con acciones -->
-        <template #footer>
-          <div class="flex align-items-center gap-3">
-            <Button
-                label="Cerrar Proyecto"
-                icon="pi pi-lock"
-                severity="danger"
-                :disabled="!canClose"
-                @click="confirmClose"
-            />
-            <Button
-                label="Actualizar"
-                icon="pi pi-refresh"
-                class="p-button-secondary"
-                @click="loadProjects"
-                :loading="loading"
-            />
-            <span v-if="selectedProject" class="selected-info">
-              <i class="pi pi-info-circle mr-1"/>
-              Proyecto seleccionado:
-              <strong>{{ selectedProject.projectName }}</strong>
-              <span v-if="selectedProject.close" class="text-red-500 ml-2">(ya está cerrado)</span>
-            </span>
-          </div>
-        </template>
-      </DataTable>
-    </Panel>
+      </div>
+    </Teleport>
   </div>
 </template>
-
-<style scoped>
-.titulo {
-  font-size: 2.5rem;
-  margin: 20px 0;
-  font-family: Arial, "Arial CE", "Lucida Grande CE", lucida, "Helvetica CE", sans-serif;
-}
-
-.search-input {
-  width: 260px;
-}
-
-.projects-table {
-  width: 100%;
-}
-
-.selected-info {
-  font-size: 0.9rem;
-  color: #555;
-}
-
-/* Helpers */
-.flex              { display: flex; }
-.align-items-center { align-items: center; }
-.gap-2             { gap: 0.5rem; }
-.gap-3             { gap: 0.75rem; }
-.w-full            { width: 100%; }
-.ml-auto           { margin-left: auto; }
-.mr-1              { margin-right: 0.25rem; }
-.ml-2              { margin-left: 0.5rem; }
-.font-semibold     { font-weight: 600; }
-.text-lg           { font-size: 1.125rem; }
-.text-red-500      { color: #ef4444; }
-.text-blue-600     { color: #2563eb; }
-</style>

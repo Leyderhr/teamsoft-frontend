@@ -16,6 +16,7 @@ import projectStructureService from "@/features/nomenclatives/services/projectSt
 export const nomenclativeConfigs = {
     religion: {
         key: 'religion',
+        endpoint: 'religion',
         title: 'Religiones',
         listTitle: 'Lista de Religiones',
         entityName: {
@@ -36,6 +37,7 @@ export const nomenclativeConfigs = {
 
     race: {
         key: 'race',
+        endpoint: 'race',
         title: 'Razas',
         listTitle: 'Lista de Razas',
         entityName: {
@@ -56,6 +58,7 @@ export const nomenclativeConfigs = {
 
     ageGroup: {
         key: 'age-group',
+        endpoint: 'ageGroups',
         title: 'Grupos de Edad',
         listTitle: 'Lista de Grupos de Edad',
         entityName: {
@@ -80,6 +83,7 @@ export const nomenclativeConfigs = {
 
     nacionality: {
         key: 'nacionality',
+        endpoint: 'nacionality',
         title: 'Nacionalidades',
         listTitle: 'Lista de Nacionalidades',
         entityName: {
@@ -102,6 +106,7 @@ export const nomenclativeConfigs = {
 
     county: {
         key: 'county',
+        endpoint: 'county',
         title: 'Provincias',
         listTitle: 'Lista de Provincias',
         entityName: {
@@ -124,6 +129,7 @@ export const nomenclativeConfigs = {
 
     conflictIndex: {
         key: 'conflict-index',
+        endpoint: 'conflictIndex',
         title: 'Índices de Conflicto',
         listTitle: 'Lista de Índices de Conflicto',
         entityName: {
@@ -146,6 +152,7 @@ export const nomenclativeConfigs = {
 
     roleEvaluation: {
         key: 'role-eval',
+        endpoint: 'roleEvaluation',
         title: 'Evaluación en el Rol',
         listTitle: 'Lista de Evaluaciones de Rol',
         entityName: {
@@ -168,6 +175,7 @@ export const nomenclativeConfigs = {
 
     personGroup: {
         key: 'person-group',
+        endpoint: 'personGroups',
         title: 'Grupos de Personas',
         listTitle: 'Lista de Grupos de Personas',
         entityName: {
@@ -182,7 +190,7 @@ export const nomenclativeConfigs = {
         ],
         fields: [
             { name: 'name', label: 'Nombre del Grupo', type: 'text', required: true },
-            { name: 'parentGroupId', label: 'Grupo Padre', type: 'select', required: false, optionsService: personGroupService, optionLabel: 'name', optionValue: 'id' }
+            { name: 'parentGroupId', label: 'Grupo Padre', type: 'select', required: false, optionsService: personGroupService, optionLabel: 'name', optionValue: 'id', editKey: 'father.id' }
         ],
         breadcrumb: [{ name: 'Grupos de Personas', disable: true }],
         showImportButton: false
@@ -190,6 +198,7 @@ export const nomenclativeConfigs = {
 
     costDistance: {
         key: 'cost-distance',
+        endpoint: 'costDistance',
         title: 'Costo de Trabajar a Distancia',
         listTitle: 'Lista de Costos de Distancia',
         entityName: {
@@ -205,8 +214,8 @@ export const nomenclativeConfigs = {
         ],
         fields: [
             { name: 'costDistance', label: 'Costo', type: 'number', required: true, min: 0 },
-            { name: 'countyAId', label: 'Provincia A', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id' },
-            { name: 'countyBId', label: 'Provincia B', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id' }
+            { name: 'countyAId', label: 'Provincia A', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id', editKey: 'countyA.id' },
+            { name: 'countyBId', label: 'Provincia B', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id', editKey: 'countyB.id' }
         ],
         breadcrumb: [{ name: 'Costo de Trabajar a Distancia', disable: true }],
         showImportButton: false
@@ -214,6 +223,7 @@ export const nomenclativeConfigs = {
 
     roleLoad: {
         key: 'role-load',
+        endpoint: 'roleLoad',
         title: 'Carga del Rol',
         listTitle: 'Lista de Cargas de Rol',
         entityName: {
@@ -236,6 +246,7 @@ export const nomenclativeConfigs = {
 
     client: {
         key: 'client-entity',
+        endpoint: 'clients',
         title: 'Clientes',
         listTitle: 'Lista de Clientes',
         entityName: {
@@ -260,6 +271,7 @@ export const nomenclativeConfigs = {
 
     competenceImportance: {
         key: 'competence-importance',
+        endpoint: 'competenceImportance',
         title: 'Importancia de Competencias',
         listTitle: 'Lista de Importancias de Competencias',
         entityName: {
@@ -282,6 +294,7 @@ export const nomenclativeConfigs = {
 
     levels: {
         key: 'levels',
+        endpoint: 'levels',
         title: 'Niveles de Competencias',
         listTitle: 'Lista de Niveles',
         entityName: {
@@ -304,6 +317,7 @@ export const nomenclativeConfigs = {
 
     projectStructure: {
         key: 'project-structure',
+        endpoint: 'project-structure',
         title: 'Estructuras de Proyecto',
         listTitle: 'Lista de Estructuras de Proyecto',
         entityName: {
