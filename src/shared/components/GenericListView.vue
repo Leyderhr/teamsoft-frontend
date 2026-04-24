@@ -84,7 +84,9 @@ const handleImport = () => {
 
 // Export
 const handleExport = () => {
-  if (typeof props.onExportClick === 'function') props.onExportClick()
+  if (typeof props.onExportClick === 'function') {
+    props.onExportClick()
+  }
 }
 </script>
 
