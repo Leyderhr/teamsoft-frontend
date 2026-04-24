@@ -19,35 +19,38 @@ const importResult = ref(null)
 const errorMessage = ref('')
 const isDragOver = ref(false)
 const overlayRef = ref(null)
+const fileInput = ref(null)
 
-// Resetear al abrir y dar foco al overlay para capturar Escape
-watch(() => props.visible, (val) => {
-  if (val) {
-    state.value = 'idle'
-    selectedFile.value = null
-    updateIfExist.value = false
-    fileError.value = ''
-    importResult.value = null
-    errorMessage.value = ''
-    isDragOver.value = false
-    setTimeout(() => overlayRef.value?.focus(), 50)
-  }
-})
-
-function closeModal() {
-  if (state.value === 'loading') return
+function resetState() {
   state.value = 'idle'
   selectedFile.value = null
   updateIfExist.value = false
   fileError.value = ''
   importResult.value = null
   errorMessage.value = ''
+  isDragOver.value = false
+}
+
+// Resetear al abrir y dar foco al overlay para capturar Escape
+watch(() => props.visible, (val) => {
+  if (val) {
+    resetState()
+    setTimeout(() => overlayRef.value?.focus(), 50)
+  }
+})
+
+function closeModal() {
+  if (state.value === 'loading') return
+  resetState()
   emit('update:visible', false)
 }
 
 function validateAndSetFile(file) {
   if (!file) return
-  if (!file.name.toLowerCase().endsWith('.csv')) {
+  const allowedMimes = ['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel']
+  const validExtension = file.name.toLowerCase().endsWith('.csv')
+  const validMime = allowedMimes.includes(file.type) || file.type === ''
+  if (!validExtension || !validMime) {
     fileError.value = 'Solo se aceptan archivos .csv'
     selectedFile.value = null
     return
@@ -89,10 +92,6 @@ function retryImport() {
 function onKeydown(event) {
   if (event.key === 'Escape') closeModal()
 }
-
-function onOverlayClick() {
-  closeModal()
-}
 </script>
 
 <template>
@@ -101,9 +100,12 @@ function onOverlayClick() {
       v-if="visible"
       ref="overlayRef"
       tabindex="-1"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="title"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm outline-none"
       @keydown="onKeydown"
-      @click.self="onOverlayClick"
+      @click.self="closeModal"
     >
       <div class="bg-white rounded-2xl shadow-theme-xl p-6 w-full max-w-md mx-4">
 
@@ -111,6 +113,7 @@ function onOverlayClick() {
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-semibold text-gray-900">{{ title }}</h2>
           <button
+            aria-label="Cerrar"
             @click="closeModal"
             class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
@@ -126,7 +129,7 @@ function onOverlayClick() {
             :class="isDragOver
               ? 'border-brand-500 bg-brand-50'
               : 'border-gray-300 hover:border-brand-500 hover:bg-brand-50'"
-            @click="$refs.fileInput.click()"
+            @click="fileInput.click()"
             @dragover.prevent="isDragOver = true"
             @dragleave="isDragOver = false"
             @drop.prevent="onDrop"
