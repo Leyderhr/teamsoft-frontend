@@ -1,11 +1,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { ArrowLeft, ChevronRight, Loader2, Plus, Trash2, Save, Flag, Star } from 'lucide-vue-next'
+import { ArrowLeft, ChevronRight, Check, Loader2, Plus, Trash2, Save, Flag, Star } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import DataTable from '@/shared/components/DataTable.vue'
+import AppSelect from '@/components/ui/AppSelect.vue'
 import experimentService from '@/features/experiments/services/experimentService.js'
 import projectService from '@/features/projects/services/projectService.js'
+import assignedRoleService from '@/features/projects/services/assignedRoleService.js'
 import competenceService from '@/features/competences/services/competenceService.js'
 import levelsService from '@/features/nomenclatives/services/levelsService.js'
 import roleEvaluationService from '@/features/nomenclatives/services/roleEvaluationService.js'
@@ -59,6 +61,24 @@ const otherMembers = ref([])
 
 const saving = ref(false)
 
+const stepTitles = ['Seleccionar Proyecto', 'Seleccionar Miembro', 'Evaluación']
+
+const genCompetenceSelectOptions = computed(() =>
+  competenceOptions.value.filter(c => !c.technical).map(c => ({ label: c.competitionName, value: c.id }))
+)
+const techCompetenceSelectOptions = computed(() =>
+  competenceOptions.value.filter(c => c.technical).map(c => ({ label: c.competitionName, value: c.id }))
+)
+const levelSelectOptions = computed(() =>
+  levelOptions.value.map(l => ({ label: l.significance, value: l.id }))
+)
+const roleEvalSelectOptions = computed(() =>
+  roleEvalOptions.value.map(o => ({ label: o.significance, value: o.id }))
+)
+const conflictIndexSelectOptions = computed(() =>
+  conflictIndexOptions.value.map(o => ({ label: o.description, value: o.id }))
+)
+
 // =====================
 // Computed
 // =====================
@@ -76,8 +96,7 @@ const allEvaluated = computed(() => members.value.length > 0 && members.value.ev
 const loadProjects = async () => {
   loadingProjects.value = true
   try {
-    const data = await projectService.getAll()
-    projects.value = data.filter(p => p.finalize && !p.close)
+    projects.value = await projectService.getAll()
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los proyectos', life: 3000 })
   } finally {
@@ -88,7 +107,23 @@ const loadProjects = async () => {
 const loadMembers = async () => {
   loadingMembers.value = true
   try {
-    members.value = await experimentService.getMembersToEvaluate(selectedProject.value.id)
+    const assignedRoles = await assignedRoleService.getByProject(selectedProject.value.id)
+    const personMap = new Map()
+    for (const ar of assignedRoles) {
+      const person = ar.workersFk
+      if (!person) continue
+      if (!personMap.has(person.id)) {
+        personMap.set(person.id, {
+          id: person.id,
+          personName: person.personName,
+          surName: person.surName,
+          evaluated: false,
+          assignedRoles: []
+        })
+      }
+      personMap.get(person.id).assignedRoles.push(ar)
+    }
+    members.value = Array.from(personMap.values())
   } catch {
     members.value = []
     toast.add({ severity: 'warn', summary: 'Aviso', detail: 'No se pudieron cargar los miembros', life: 3000 })
@@ -232,12 +267,31 @@ onMounted(loadProjects)
     <PageBreadcrumb :page-title="stepTitle" :items="[]" />
 
     <!-- Step indicator -->
-    <div class="flex items-center gap-2 mb-5 text-sm">
-      <span :class="currentStep >= 1 ? 'text-brand-500 font-semibold' : 'text-gray-400'">Proyecto</span>
-      <ChevronRight class="w-3.5 h-3.5 text-gray-400" />
-      <span :class="currentStep >= 2 ? 'text-brand-500 font-semibold' : 'text-gray-400'">Miembros</span>
-      <ChevronRight class="w-3.5 h-3.5 text-gray-400" />
-      <span :class="currentStep >= 3 ? 'text-brand-500 font-semibold' : 'text-gray-400'">Evaluación</span>
+    <div class="flex items-center gap-1 overflow-x-auto pb-1 mb-5">
+      <template v-for="(title, idx) in stepTitles" :key="idx">
+        <div
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all"
+          :class="currentStep === idx + 1
+            ? 'bg-brand-500 text-white font-semibold'
+            : currentStep > idx + 1
+              ? 'bg-brand-50 text-brand-600 font-medium'
+              : 'bg-gray-100 text-gray-500 border border-gray-200'"
+        >
+          <span
+            class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+            :class="currentStep === idx + 1
+              ? 'bg-white/20'
+              : currentStep > idx + 1
+                ? 'bg-brand-100 text-brand-600'
+                : 'bg-gray-200 text-gray-500'"
+          >
+            <Check v-if="currentStep > idx + 1" class="w-3 h-3" />
+            <span v-else>{{ idx + 1 }}</span>
+          </span>
+          {{ title }}
+        </div>
+        <div v-if="idx < stepTitles.length - 1" class="h-px w-4 bg-gray-200 shrink-0" />
+      </template>
     </div>
 
     <!-- ========= STEP 1: Select project ========= -->
@@ -250,8 +304,9 @@ onMounted(loadProjects)
           <DataTable
             :columns="[
               { field: 'projectName', header: 'Proyecto', sortable: true },
-              { field: 'clientFk.entityName', header: 'Cliente', sortable: true },
-              { field: 'beginDate', header: 'Fecha Inicio', sortable: true },
+              { field: 'client.entityName', header: 'Cliente', sortable: true },
+              { field: 'county.countyName', header: 'Provincia', sortable: true },
+              { field: 'initialDate', header: 'Fecha Inicio', sortable: true },
               { field: 'endDate', header: 'Fecha Fin', sortable: true },
             ]"
             :items="projects"
@@ -372,25 +427,21 @@ onMounted(loadProjects)
             <div class="flex flex-wrap gap-3 items-end">
               <div class="flex flex-col gap-1.5">
                 <label class="text-sm font-medium text-gray-700">Competencia Genérica</label>
-                <select
+                <AppSelect
                   v-model="selectedGenCompetence"
-                  class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white w-64"
-                >
-                  <option :value="null" disabled>Seleccione competencia</option>
-                  <option v-for="c in competenceOptions.filter(c => !c.technical)" :key="c.id" :value="c.id">
-                    {{ c.competitionName }}
-                  </option>
-                </select>
+                  :options="genCompetenceSelectOptions"
+                  placeholder="Seleccione competencia"
+                  class="w-64"
+                />
               </div>
               <div class="flex flex-col gap-1.5">
                 <label class="text-sm font-medium text-gray-700">Nivel</label>
-                <select
+                <AppSelect
                   v-model="selectedGenLevel"
-                  class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white w-48"
-                >
-                  <option :value="null" disabled>Nivel</option>
-                  <option v-for="l in levelOptions" :key="l.id" :value="l.id">{{ l.significance }}</option>
-                </select>
+                  :options="levelSelectOptions"
+                  placeholder="Nivel"
+                  class="w-48"
+                />
               </div>
               <button
                 @click="addGenCompetence"
@@ -435,25 +486,21 @@ onMounted(loadProjects)
             <div class="flex flex-wrap gap-3 items-end">
               <div class="flex flex-col gap-1.5">
                 <label class="text-sm font-medium text-gray-700">Competencia Técnica</label>
-                <select
+                <AppSelect
                   v-model="selectedTechCompetence"
-                  class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white w-64"
-                >
-                  <option :value="null" disabled>Seleccione competencia</option>
-                  <option v-for="c in competenceOptions.filter(c => c.technical)" :key="c.id" :value="c.id">
-                    {{ c.competitionName }}
-                  </option>
-                </select>
+                  :options="techCompetenceSelectOptions"
+                  placeholder="Seleccione competencia"
+                  class="w-64"
+                />
               </div>
               <div class="flex flex-col gap-1.5">
                 <label class="text-sm font-medium text-gray-700">Nivel</label>
-                <select
+                <AppSelect
                   v-model="selectedTechLevel"
-                  class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white w-48"
-                >
-                  <option :value="null" disabled>Nivel</option>
-                  <option v-for="l in levelOptions" :key="l.id" :value="l.id">{{ l.significance }}</option>
-                </select>
+                  :options="levelSelectOptions"
+                  placeholder="Nivel"
+                  class="w-48"
+                />
               </div>
               <button
                 @click="addTechCompetence"
@@ -509,13 +556,11 @@ onMounted(loadProjects)
                   <tr v-for="(role, idx) in memberRoles" :key="idx" class="hover:bg-gray-50">
                     <td class="px-5 py-3 text-sm text-gray-700">{{ role.roleName }}</td>
                     <td class="px-5 py-3">
-                      <select
+                      <AppSelect
                         v-model="role.roleEvalId"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-                      >
-                        <option :value="null" disabled>Seleccione evaluación</option>
-                        <option v-for="opt in roleEvalOptions" :key="opt.id" :value="opt.id">{{ opt.significance }}</option>
-                      </select>
+                        :options="roleEvalSelectOptions"
+                        placeholder="Seleccione evaluación"
+                      />
                     </td>
                   </tr>
                 </tbody>
@@ -540,13 +585,11 @@ onMounted(loadProjects)
                   <tr v-for="(m, idx) in otherMembers" :key="idx" class="hover:bg-gray-50">
                     <td class="px-5 py-3 text-sm text-gray-700">{{ m.personName }} {{ m.surName }}</td>
                     <td class="px-5 py-3">
-                      <select
+                      <AppSelect
                         v-model="m.conflictIndexId"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-                      >
-                        <option :value="null" disabled>Seleccione nivel</option>
-                        <option v-for="opt in conflictIndexOptions" :key="opt.id" :value="opt.id">{{ opt.description }}</option>
-                      </select>
+                        :options="conflictIndexSelectOptions"
+                        placeholder="Seleccione nivel"
+                      />
                     </td>
                   </tr>
                 </tbody>

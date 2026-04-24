@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { Save, Loader2, RefreshCw } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
+import AppSelect from '@/components/ui/AppSelect.vue'
 import experimentService from '@/features/experiments/services/experimentService.js'
 
 const toast = useToast()
@@ -145,14 +146,10 @@ onMounted(loadConfig)
 
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-gray-700">Solución Inicial</label>
-              <select
+              <AppSelect
                 v-model="selectedInitialSolution"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-              >
-                <option v-for="opt in initialSolutionOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
+                :options="initialSolutionOptions"
+              />
             </div>
 
             <div class="flex flex-col gap-1.5">
@@ -168,28 +165,20 @@ onMounted(loadConfig)
 
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-gray-700">Operador</label>
-              <select
+              <AppSelect
                 v-model="selectedOperator"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-              >
-                <option v-for="opt in operatorOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
+                :options="operatorOptions"
+              />
             </div>
 
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-gray-700">Tipo de Operador</label>
-              <select
+              <AppSelect
                 v-model="selectedOperatorType"
+                :options="operatorTypeOptions"
                 :disabled="operatorTypeDisabled"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                <option value="" disabled selected>No aplica para Aleatorio</option>
-                <option v-for="opt in operatorTypeOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
+                placeholder="No aplica para Aleatorio"
+              />
             </div>
 
           </div>
