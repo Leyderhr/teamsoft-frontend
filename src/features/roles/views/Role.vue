@@ -10,12 +10,15 @@ import roleService from '@/features/roles/services/roleService.js'
 const toast = useToast()
 const selectedItem = ref(null)
 const showImportModal = ref(false)
+const isExporting = ref(false)
 
 const { data: items, isLoading: loading, refetch: loadData } = useRoles()
 
 const handleImportClick = () => { showImportModal.value = true }
 
 const handleExport = async () => {
+  if (isExporting.value) return
+  isExporting.value = true
   try {
     const blob = await roleService.exportFile()
     const url = URL.createObjectURL(blob)
@@ -25,12 +28,17 @@ const handleExport = async () => {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 0)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
     toast.add({ severity: 'success', summary: 'Éxito', detail: 'Roles exportados correctamente', life: 3000 })
-  } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo exportar los roles', life: 3000 })
+  } catch (err) {
+    console.error('[handleExport]', err)
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.message || 'No se pudo exportar los roles', life: 3000 })
+  } finally {
+    isExporting.value = false
   }
 }
+
+const roleImportFn = (file, updateIfExist) => roleService.importFile(file, updateIfExist)
 </script>
 
 <template>
@@ -53,7 +61,7 @@ const handleExport = async () => {
     <ImportModal
       v-model:visible="showImportModal"
       title="Importar Roles"
-      :import-fn="(file, updateIfExist) => roleService.importFile(file, updateIfExist)"
+      :import-fn="roleImportFn"
       @success="loadData"
     />
   </div>
