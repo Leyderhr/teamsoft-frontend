@@ -55,25 +55,6 @@
             </router-link>
           </li>
 
-          <!-- ── CONFIGURACIÓN (Cambiar contraseña) ── -->
-          <li>
-            <router-link
-              to="/change-password"
-              class="menu-item group hover:bg-gray-100 hover:text-gray-700"
-              :class="[
-                isActive('/change-password') ? 'menu-item-active' : 'menu-item-inactive',
-                !isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start',
-              ]"
-            >
-              <span :class="isActive('/change-password') ? 'menu-item-icon-active' : 'menu-item-icon-inactive group-hover:text-gray-600'">
-                <Settings class="w-5 h-5 flex-shrink-0" />
-              </span>
-              <span v-if="isExpanded || isHovered || isMobileOpen" class="text-sm font-medium whitespace-nowrap">
-                Configuración
-              </span>
-            </router-link>
-          </li>
-
           <!-- ── CONFIGURAR (solo GESTOR) ── -->
           <template v-if="securityStore.isGestor">
             <li>
@@ -287,42 +268,21 @@
           <!-- ── EXPERIMENTOS ── -->
           <template v-if="securityStore.isExperimentador">
             <li>
-              <button
-                @click="toggleSubmenu('experimentos')"
-                class="menu-item group w-full hover:bg-gray-100 hover:text-gray-700"
+              <router-link
+                to="/experiments"
+                class="menu-item group hover:bg-gray-100 hover:text-gray-700"
                 :class="[
-                  isSubmenuOpen('experimentos') ? 'menu-item-active' : 'menu-item-inactive',
+                  isActive('/experiments') ? 'menu-item-active' : 'menu-item-inactive',
                   !isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start',
                 ]"
               >
-                <span :class="isSubmenuOpen('experimentos') ? 'menu-item-icon-active' : 'menu-item-icon-inactive group-hover:text-gray-600'">
+                <span :class="isActive('/experiments') ? 'menu-item-icon-active' : 'menu-item-icon-inactive group-hover:text-gray-600'">
                   <FlaskConical class="w-5 h-5 flex-shrink-0" />
                 </span>
                 <span v-if="isExpanded || isHovered || isMobileOpen" class="text-sm font-medium whitespace-nowrap">
                   Experimentos
                 </span>
-                <ChevronDown
-                  v-if="isExpanded || isHovered || isMobileOpen"
-                  class="ml-auto w-4 h-4 transition-transform duration-200 flex-shrink-0"
-                  :class="isSubmenuOpen('experimentos') ? 'rotate-180 text-brand-500' : 'text-gray-400'"
-                />
-              </button>
-              <transition @enter="startTransition" @after-enter="endTransition" @before-leave="startTransition" @after-leave="endTransition">
-                <div v-show="isSubmenuOpen('experimentos') && (isExpanded || isHovered || isMobileOpen)" style="overflow:hidden">
-                  <ul class="mt-1 ml-9 space-y-0.5">
-                    <li>
-                      <router-link to="/experiments" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive('/experiments') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        Configurar
-                      </router-link>
-                    </li>
-                    <li v-if="securityStore.isJefeEquipo || securityStore.isExperimentador">
-                      <router-link to="/manage-projects/member-evaluation" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive('/manage-projects/member-evaluation') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        Evaluación miembros
-                      </router-link>
-                    </li>
-                  </ul>
-                </div>
-              </transition>
+              </router-link>
             </li>
           </template>
 
@@ -436,7 +396,6 @@ const isSubmenuOpen = (key) => {
     configurar: configurarAllPaths.value,
     rrhh: rrhhItems.value.map(i => i.path),
     proyectos: proyectosItems.value.map(i => i.path),
-    experimentos: ['/experiments', '/manage-projects/member-evaluation'],
     admin: ['/manage-user-role/users', '/reports/person-report', '/reports/finished-teams', '/reports/list-workers', '/audit'],
   }
   return activeMap[key]?.some(p => route.path.startsWith(p)) ?? false
@@ -511,6 +470,9 @@ const proyectosItems = computed(() => {
   }
   if (securityStore.isJefeEquipo || securityStore.isDirectivoTecnico) {
     items.push({ name: 'Cerrar proyecto', path: '/manage-projects/close-project' })
+  }
+  if (securityStore.isJefeEquipo || securityStore.isExperimentador) {
+    items.push({ name: 'Evaluación miembros', path: '/manage-projects/member-evaluation' })
   }
   return items
 })

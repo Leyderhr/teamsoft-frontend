@@ -258,7 +258,14 @@ onMounted(async () => {
       inDate.value = p.inDate ? p.inDate.split('T')[0] : ''
       birthDate.value = p.birthDate ? p.birthDate.split('T')[0] : ''
       experience.value = p.experience ?? 0
-      status.value = p.status ?? ''
+      const rawStatus = p.status
+      if (rawStatus === true || rawStatus === 'active' || String(rawStatus).toLowerCase() === 'activo') {
+        status.value = 'Activo'
+      } else if (rawStatus === false || rawStatus === 'inactive' || String(rawStatus).toLowerCase() === 'inactivo') {
+        status.value = 'Inactivo'
+      } else {
+        status.value = rawStatus ?? ''
+      }
       selectedCounty.value = p.county?.id ?? p.county ?? ''
       selectedRace.value = p.race?.id ?? p.race ?? ''
       selectedGroup.value = p.group?.id ?? p.group ?? ''
@@ -294,36 +301,46 @@ onMounted(async () => {
         }
       }) ?? []
 
-      if (p.personTest) {
-        mbtiType.value = p.personTest.mbtiType ?? ''
-        // Mapeo correcto API → rol Belbin
+      const test = p.personTest ?? p.workerTest
+      if (test) {
+        mbtiType.value = test.mbtiType ?? test.tipoMB ?? ''
         const belbinMap = {
-          implementador: p.personTest.i_M,
-          coordinador:   p.personTest.c_O,
-          cerebro:       p.personTest.c_E,
-          investigador:  p.personTest.i_R,
-          monitor:       p.personTest.m_E,
-          cohesionador:  p.personTest.c_H,
-          impulsor:      p.personTest.i_S,
-          finalizador:   p.personTest.i_F,
-          especialista:  p.personTest.e_S,
+          implementador: test.i_M,
+          coordinador:   test.c_O,
+          cerebro:       test.c_E,
+          investigador:  test.i_R,
+          monitor:       test.m_E,
+          cohesionador:  test.c_H,
+          impulsor:      test.i_S,
+          finalizador:   test.i_F,
+          especialista:  test.e_S,
         }
-        const charToOption = { 'P': 'Preferido', 'E': 'Evitado', 'I': 'Indiferente' }
+        // handles both single-char ('P','E','I') and full-string ('Preferido','Evitado','Indiferente')
+        const charToOption = {
+          P: 'Preferido', Preferido: 'Preferido',
+          E: 'Evitado',   Evitado: 'Evitado',
+          I: 'Indiferente', Indiferente: 'Indiferente',
+        }
         Object.keys(belbinRoles.value).forEach(k => {
           belbinRoles.value[k] = charToOption[belbinMap[k]] ?? 'Indiferente'
         })
       }
 
-      personConflicts.value = p.personConflicts?.map(pc => {
-        const ciId     = pc.conflictIndexId ?? pc.conflictIndex?.id
-        const pcId     = pc.personConflictId ?? pc.conflictPersonId ?? pc.conflictPerson?.id
+      const rawConflicts = p.personConflicts ?? p.workerConflicts ?? []
+      personConflicts.value = rawConflicts.map(pc => {
+        const ciId = pc.conflictIndexId ?? pc.conflictIndex?.id
+        const conflictWorker = pc.conflictPerson ?? pc.workersFk ?? pc.workerFk ?? pc.worker
+        const pcId = pc.personConflictId ?? pc.conflictPersonId ?? conflictWorker?.id
+        const fallbackName = conflictWorker
+          ? `${conflictWorker.personName ?? ''} ${conflictWorker.surName ?? ''}`.trim()
+          : ''
         return {
           conflictIndexId: ciId,
           conflictName: conflictIndexOptions.value.find(c => c.value === ciId)?.label ?? pc.conflictIndex?.description ?? '',
           personConflictId: pcId,
-          personConflictName: personOptions.value.find(per => per.value === pcId)?.label ?? pc.conflictPerson?.personName ?? '',
+          personConflictName: personOptions.value.find(per => per.value === pcId)?.label ?? fallbackName,
         }
-      }) ?? []
+      })
     } catch {
       toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la persona', life: 3000 })
     }

@@ -1,3 +1,3 @@
 export { useTeamFormation } from './queries'
-export { useSaveTeams } from './mutations'
+export { useSaveTeams, useBossProposals, useMemberProposals } from './mutations'
 export * from './types'

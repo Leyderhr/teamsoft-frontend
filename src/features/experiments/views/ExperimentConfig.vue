@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { Save, Loader2, RefreshCw } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
@@ -8,126 +8,119 @@ import experimentService from '@/features/experiments/services/experimentService
 
 const toast = useToast()
 const saving = ref(false)
-const loading = ref(false)
 
 // ============ TeamSoft Parameters ============
+// initialSolutionConf: 0=Belbin 1=Competencias 2=Min roles 3=Jefe equipo 4=Aleatorio
 const initialSolutionOptions = [
-  { label: 'Belbin', value: 'BELBIN' },
-  { label: 'Competencias', value: 'COMPETENCES' },
-  { label: 'Mínimo de roles', value: 'MIN_ROLES' },
-  { label: 'Jefe de equipo', value: 'TEAM_LEADER' },
-  { label: 'Aleatorio', value: 'RANDOM' }
+  { label: 'Belbin', value: 0 },
+  { label: 'Competencias', value: 1 },
+  { label: 'Mínimo de roles', value: 2 },
+  { label: 'Jefe de equipo', value: 3 },
+  { label: 'Aleatorio', value: 4 },
 ]
-const selectedInitialSolution = ref('RANDOM')
-const numPersonTries = ref(3)
+const selectedInitialSolution = ref(4)
+const numPersonTries = ref(100)
 
+// operatorOpc: 0=Mutación 1=Cruzamiento 2=Aleatorio
 const operatorOptions = [
-  { label: 'Mutación', value: 'MUTATION' },
-  { label: 'Cruzamiento', value: 'CROSSOVER' },
-  { label: 'Aleatorio', value: 'RANDOM' }
+  { label: 'Mutación', value: 0 },
+  { label: 'Cruzamiento', value: 1 },
+  { label: 'Aleatorio', value: 2 },
 ]
-const selectedOperator = ref('RANDOM')
+const selectedOperator = ref(0)
 
+// operatorTypeOpc for mutation: 0-4
 const mutationTypeOptions = [
-  { label: 'Sustitución', value: 'SUBSTITUTION' },
-  { label: 'Permutación de roles', value: 'ROLE_PERMUTATION' },
-  { label: 'Permutación de proyectos', value: 'PROJECT_PERMUTATION' },
-  { label: 'Sustitución del jefe', value: 'BOSS_SUBSTITUTION' },
-  { label: 'Permutación en todos los roles', value: 'ALL_ROLES_PERMUTATION' }
+  { label: 'Sustitución', value: 0 },
+  { label: 'Permutación de roles', value: 1 },
+  { label: 'Permutación de proyectos', value: 2 },
+  { label: 'Sustitución del jefe', value: 3 },
+  { label: 'Permutación en todos los roles', value: 4 },
 ]
 
+// operatorTypeOpc for crossover: 0-7
 const crossoverTypeOptions = [
-  { label: 'Cruce de vector de proyecto', value: 'PROJECT_VECTOR' },
-  { label: 'Cruce de vector de rol', value: 'ROLE_VECTOR' },
-  { label: 'Cruce de vector de persona', value: 'PERSON_VECTOR' },
-  { label: 'Cruce de experiencia en rol', value: 'ROLE_EXPERIENCE' },
-  { label: 'Cruce de un punto', value: 'ONE_POINT' },
-  { label: 'Cruce de dos puntos', value: 'TWO_POINT' },
-  { label: 'Cruce de vector de mejor estado', value: 'BEST_STATE_VECTOR' },
-  { label: 'Cruce general de mejor estado', value: 'BEST_STATE_GENERAL' }
+  { label: 'Cruce de vector de proyecto', value: 0 },
+  { label: 'Cruce de vector de rol', value: 1 },
+  { label: 'Cruce de vector de persona', value: 2 },
+  { label: 'Cruce de experiencia en rol', value: 3 },
+  { label: 'Cruce de un punto', value: 4 },
+  { label: 'Cruce de dos puntos', value: 5 },
+  { label: 'Cruce de vector de mejor estado', value: 6 },
+  { label: 'Cruce general de mejor estado', value: 7 },
 ]
 
 const operatorTypeOptions = computed(() => {
-  if (selectedOperator.value === 'MUTATION') return mutationTypeOptions
-  if (selectedOperator.value === 'CROSSOVER') return crossoverTypeOptions
+  if (selectedOperator.value === 0) return mutationTypeOptions
+  if (selectedOperator.value === 1) return crossoverTypeOptions
   return []
 })
-const operatorTypeDisabled = computed(() => selectedOperator.value === 'RANDOM')
-const selectedOperatorType = ref(null)
+const operatorTypeDisabled = computed(() => selectedOperator.value === 2)
+const selectedOperatorType = ref(0)
 
 watch(selectedOperator, () => {
-  selectedOperatorType.value = null
+  selectedOperatorType.value = 0
 })
 
 // ============ Configuration Strategy ============
-const executions = ref(5)
-const iterations = ref(1000)
-const calculateTime = ref(false)
-const validate = ref(true)
-const possibleValidateNumber = ref(10)
+const executions = ref(1)
+const iterations = ref(100)
+const calculateTime = ref(true)
+const validate = ref(false)
+const possibleValidateNumber = ref(20)
 
 // ============ Algorithm Parameters (BICIAM) ============
-const hillClimbingRestartCount = ref(10)
-const tabuListSize = ref(10)
-const tabuListNeighborhoodSize = ref(5)
-const distanceHillClimbingRestart = ref(5)
-const tabuMultiobjectiveSize = ref(10)
+const hillClimbingRestartCount    = ref(10)
+const tabuSolutionsMaxelements    = ref(20)
+const multiobjectiveHCRestartSizeNeighbors  = ref(2)
+const multiobjectiveHCDistanceSizeNeighbors = ref(2)
+const multiobjectiveTabuSolutionsMaxelements = ref(20)
 
-// ============ Load / Save ============
-const loadConfig = async () => {
-  loading.value = true
-  try {
-    const data = await experimentService.getConfig()
-    selectedInitialSolution.value = data.initialSolution ?? 'RANDOM'
-    numPersonTries.value = data.numPersonTries ?? 3
-    selectedOperator.value = data.operator ?? 'RANDOM'
-    selectedOperatorType.value = data.operatorType ?? null
-    executions.value = data.executions ?? 5
-    iterations.value = data.iterations ?? 1000
-    calculateTime.value = data.calculateTime ?? false
-    validate.value = data.validate ?? true
-    possibleValidateNumber.value = data.possibleValidateNumber ?? 10
-    hillClimbingRestartCount.value = data.hillClimbingRestartCount ?? 10
-    tabuListSize.value = data.tabuListSize ?? 10
-    tabuListNeighborhoodSize.value = data.tabuListNeighborhoodSize ?? 5
-    distanceHillClimbingRestart.value = data.distanceHillClimbingRestart ?? 5
-    tabuMultiobjectiveSize.value = data.tabuMultiobjectiveSize ?? 10
-  } catch (error) {
-    console.warn('Usando valores por defecto para la configuración del experimento')
-  } finally {
-    loading.value = false
-  }
+// ============ Reset / Save ============
+function resetDefaults() {
+  selectedInitialSolution.value = 4
+  numPersonTries.value = 100
+  selectedOperator.value = 0
+  selectedOperatorType.value = 0
+  executions.value = 1
+  iterations.value = 100
+  calculateTime.value = true
+  validate.value = false
+  possibleValidateNumber.value = 20
+  hillClimbingRestartCount.value = 10
+  tabuSolutionsMaxelements.value = 20
+  multiobjectiveHCRestartSizeNeighbors.value = 2
+  multiobjectiveHCDistanceSizeNeighbors.value = 2
+  multiobjectiveTabuSolutionsMaxelements.value = 20
 }
 
 const handleSave = async () => {
   saving.value = true
   try {
     await experimentService.saveConfig({
-      initialSolution: selectedInitialSolution.value,
-      numPersonTries: numPersonTries.value,
-      operator: selectedOperator.value,
-      operatorType: selectedOperatorType.value,
-      executions: executions.value,
-      iterations: iterations.value,
-      calculateTime: calculateTime.value,
-      validate: validate.value,
+      initialSolutionConf:    selectedInitialSolution.value,
+      numberPersonTries:      numPersonTries.value,
+      operatorOpc:            selectedOperator.value,
+      operatorTypeOpc:        operatorTypeDisabled.value ? 0 : (selectedOperatorType.value ?? 0),
+      executions:             executions.value,
+      iterations:             iterations.value,
+      calculateTime:          calculateTime.value,
+      validate:               validate.value,
       possibleValidateNumber: possibleValidateNumber.value,
-      hillClimbingRestartCount: hillClimbingRestartCount.value,
-      tabuListSize: tabuListSize.value,
-      tabuListNeighborhoodSize: tabuListNeighborhoodSize.value,
-      distanceHillClimbingRestart: distanceHillClimbingRestart.value,
-      tabuMultiobjectiveSize: tabuMultiobjectiveSize.value
+      hillClimbingRestartCount:              hillClimbingRestartCount.value,
+      tabuSolutionsMaxelements:              tabuSolutionsMaxelements.value,
+      multiobjectiveHCRestartSizeNeighbors:  multiobjectiveHCRestartSizeNeighbors.value,
+      multiobjectiveHCDistanceSizeNeighbors: multiobjectiveHCDistanceSizeNeighbors.value,
+      multiobjectiveTabuSolutionsMaxelements: multiobjectiveTabuSolutionsMaxelements.value,
     })
     toast.add({ severity: 'success', summary: 'Guardado', detail: 'Configuración guardada correctamente', life: 3000 })
   } catch (error) {
     console.error('Error guardando configuración:', error)
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración', life: 3000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración', life: 5000 })
   } finally {
     saving.value = false
   }
 }
-
-onMounted(loadConfig)
 </script>
 
 <template>
@@ -272,7 +265,7 @@ onMounted(loadConfig)
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-gray-700">Tamaño de Lista Tabú</label>
               <input
-                v-model.number="tabuListSize"
+                v-model.number="tabuSolutionsMaxelements"
                 type="number"
                 min="1"
                 max="100"
@@ -281,9 +274,9 @@ onMounted(loadConfig)
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Vecindad de Lista Tabú</label>
+              <label class="text-sm font-medium text-gray-700">Vecindad HC Multiobjetivo con Reinicio</label>
               <input
-                v-model.number="tabuListNeighborhoodSize"
+                v-model.number="multiobjectiveHCRestartSizeNeighbors"
                 type="number"
                 min="1"
                 max="100"
@@ -292,9 +285,9 @@ onMounted(loadConfig)
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Distancia Reinicio HC</label>
+              <label class="text-sm font-medium text-gray-700">Distancia HC Multiobjetivo con Reinicio</label>
               <input
-                v-model.number="distanceHillClimbingRestart"
+                v-model.number="multiobjectiveHCDistanceSizeNeighbors"
                 type="number"
                 min="1"
                 max="100"
@@ -305,7 +298,7 @@ onMounted(loadConfig)
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-gray-700">Tamaño Tabú Multiobjetivo</label>
               <input
-                v-model.number="tabuMultiobjectiveSize"
+                v-model.number="multiobjectiveTabuSolutionsMaxelements"
                 type="number"
                 min="1"
                 max="100"
@@ -320,9 +313,8 @@ onMounted(loadConfig)
       <!-- Footer actions -->
       <div class="flex justify-end gap-3">
         <button
-          @click="loadConfig"
-          :disabled="loading"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          @click="resetDefaults"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
           <RefreshCw class="w-4 h-4" />
           Restablecer

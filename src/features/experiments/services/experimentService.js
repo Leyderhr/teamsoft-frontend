@@ -1,11 +1,8 @@
 import { api } from '@/lib/api'
 
 const experimentService = {
-  async getConfig() {
-    return api.get('experiment/config').json()
-  },
   async saveConfig(config) {
-    return api.put('experiment/config', { json: config }).json()
+    return api.put('algorithm', { json: config }).json()
   },
   async getMembersToEvaluate(projectId) {
     return api.get(`close-project/${projectId}/members`).json()
