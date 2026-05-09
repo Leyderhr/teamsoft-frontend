@@ -1,16 +1,18 @@
 <script setup>
 import { Loader2 } from 'lucide-vue-next'
 import AppMultiSelect from '@/components/ui/AppMultiSelect.vue'
+import { useTeamFormationStore } from '@/stores/teamFormation'
+
+const store = useTeamFormationStore()
 
 defineProps({
-  config: { type: Object, required: true },
-  availableProjects: { type: Array, default: () => [] },
-  availableGroups: { type: Array, default: () => [] },
-  loadingProjects: { type: Boolean, default: false },
-  loadingGroups: { type: Boolean, default: false },
-  showValidation: { type: Boolean, default: false },
-  projectError: { type: Boolean, default: false },
-  groupError: { type: Boolean, default: false },
+  availableProjects: { type: Array,   default: () => [] },
+  availableGroups:   { type: Array,   default: () => [] },
+  loadingProjects:   { type: Boolean, default: false },
+  loadingGroups:     { type: Boolean, default: false },
+  showValidation:    { type: Boolean, default: false },
+  projectError:      { type: Boolean, default: false },
+  groupError:        { type: Boolean, default: false },
 })
 </script>
 
@@ -35,8 +37,8 @@ defineProps({
           </div>
           <div v-else :class="projectError ? 'ring-2 ring-error-500/30 rounded-lg' : ''">
             <AppMultiSelect
-              :model-value="config.selectedProjectIds"
-              @update:model-value="config.selectedProjectIds = $event"
+              :model-value="store.step1.selectedProjectIds"
+              @update:model-value="store.updateStep1({ selectedProjectIds: $event })"
               :options="availableProjects"
               placeholder="Seleccionar proyectos..."
               :searchable="true"
@@ -44,7 +46,7 @@ defineProps({
             />
           </div>
           <p v-if="projectError" class="text-xs text-error-500">Seleccione al menos un proyecto</p>
-          <p v-else class="text-xs text-gray-400">{{ config.selectedProjectIds.length }} seleccionado(s)</p>
+          <p v-else class="text-xs text-gray-400">{{ store.step1.selectedProjectIds.length }} seleccionado(s)</p>
         </div>
 
         <!-- Grupos -->
@@ -57,8 +59,8 @@ defineProps({
           </div>
           <div v-else :class="groupError ? 'ring-2 ring-error-500/30 rounded-lg' : ''">
             <AppMultiSelect
-              :model-value="config.selectedGroupIds"
-              @update:model-value="config.selectedGroupIds = $event"
+              :model-value="store.step1.selectedGroupIds"
+              @update:model-value="store.updateStep1({ selectedGroupIds: $event })"
               :options="availableGroups"
               placeholder="Seleccionar grupos..."
               :searchable="true"
@@ -66,7 +68,7 @@ defineProps({
             />
           </div>
           <p v-if="groupError" class="text-xs text-error-500">Seleccione al menos un grupo</p>
-          <p v-else class="text-xs text-gray-400">{{ config.selectedGroupIds.length }} seleccionado(s)</p>
+          <p v-else class="text-xs text-gray-400">{{ store.step1.selectedGroupIds.length }} seleccionado(s)</p>
         </div>
 
       </div>
@@ -89,16 +91,16 @@ defineProps({
 
             <div class="flex items-center gap-3 flex-wrap">
               <input type="checkbox" id="confRoleLimited"
-                :checked="config.confRole" @change="config.confRole = true"
+                :checked="store.step1.confRole" @change="store.updateStep1({ confRole: true })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
               <label for="confRoleLimited" class="text-sm text-gray-700 cursor-pointer select-none">
                 Cantidad máxima de roles
               </label>
-              <template v-if="config.confRole">
+              <template v-if="store.step1.confRole">
                 <input
                   type="number" min="1" max="20"
-                  :value="config.maximumRoles"
-                  @input="config.maximumRoles = Number($event.target.value)"
+                  :value="store.step1.maximunRoles"
+                  @input="store.updateStep1({ maximunRoles: Number($event.target.value) })"
                   class="w-20 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
                 />
                 <span class="text-xs text-gray-400">roles máx.</span>
@@ -107,7 +109,7 @@ defineProps({
 
             <div class="flex items-center gap-3">
               <input type="checkbox" id="confRoleAll"
-                :checked="!config.confRole" @change="config.confRole = false"
+                :checked="!store.step1.confRole" @change="store.updateStep1({ confRole: false })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
               <label for="confRoleAll" class="text-sm text-gray-700 cursor-pointer select-none">
                 Los que sean posibles
@@ -121,24 +123,24 @@ defineProps({
 
             <label class="flex items-center gap-3 cursor-pointer">
               <input type="checkbox"
-                :checked="config.onlyOneProject"
-                @change="config.onlyOneProject = $event.target.checked"
+                :checked="store.step1.onlyOneProject"
+                @change="store.updateStep1({ onlyOneProject: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
               <span class="text-sm text-gray-700 select-none">Cada persona se asigna a un solo proyecto</span>
             </label>
 
             <label class="flex items-center gap-3 cursor-pointer">
               <input type="checkbox"
-                :checked="config.confAllGroup"
-                @change="config.confAllGroup = $event.target.checked"
+                :checked="store.step1.confAllGroup"
+                @change="store.updateStep1({ confAllGroup: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
               <span class="text-sm text-gray-700 select-none">Asignar a todo el personal del grupo seleccionado</span>
             </label>
 
             <label class="flex items-center gap-3 cursor-pointer">
               <input type="checkbox"
-                :checked="config.bossNeedToBeAssignedToAnotherRoles"
-                @change="config.bossNeedToBeAssignedToAnotherRoles = $event.target.checked"
+                :checked="store.step1.bossNeedToBeAssignedToAnotherRoles"
+                @change="store.updateStep1({ bossNeedToBeAssignedToAnotherRoles: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
               <span class="text-sm text-gray-700 select-none">El líder con más de un rol</span>
             </label>
@@ -151,20 +153,20 @@ defineProps({
         <!-- Fila inferior: Cantidad mínima de roles -->
         <div class="flex items-center gap-3">
           <input type="checkbox" id="isMinimunRoles"
-            :checked="config.isMinimunRoles"
-            @change="config.isMinimunRoles = $event.target.checked"
+            :checked="store.step1.minimunRoles"
+            @change="store.updateStep1({ minimunRoles: $event.target.checked })"
             class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
           <label for="isMinimunRoles" class="text-sm font-medium text-gray-700 cursor-pointer select-none">
             Habilitar cantidad mínima de roles
           </label>
           <input
             type="number" min="1" max="20"
-            :value="config.minimumRole"
-            @input="config.minimumRole = Number($event.target.value)"
+            :value="store.step1.minimumRole"
+            @input="store.updateStep1({ minimumRole: Number($event.target.value) })"
             class="w-20 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
-            :class="config.isMinimunRoles ? 'visible' : 'invisible'"
+            :class="store.step1.minimunRoles ? 'visible' : 'invisible'"
           />
-          <span class="text-xs text-gray-400" :class="config.isMinimunRoles ? 'visible' : 'invisible'">
+          <span class="text-xs text-gray-400" :class="store.step1.minimunRoles ? 'visible' : 'invisible'">
             roles mín.
           </span>
         </div>
@@ -183,29 +185,29 @@ defineProps({
 
           <!-- Asignar primero a los jefes -->
           <div class="rounded-xl border-2 transition-colors overflow-hidden"
-            :class="config.assignBossFirst ? 'border-brand-400' : 'border-gray-200 hover:border-gray-300'">
+            :class="store.step1.assignBossFirst ? 'border-brand-400' : 'border-gray-200 hover:border-gray-300'">
             <label class="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors"
-              :class="config.assignBossFirst ? 'bg-brand-50' : 'bg-white hover:bg-gray-50'">
+              :class="store.step1.assignBossFirst ? 'bg-brand-50' : 'bg-white hover:bg-gray-50'">
               <input type="radio"
-                :checked="config.assignBossFirst === true" @change="config.assignBossFirst = true"
+                :checked="store.step1.assignBossFirst === true" @change="store.updateStep1({ assignBossFirst: true })"
                 class="w-4 h-4 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
               <span class="text-sm font-medium text-gray-800 select-none">
                 Asignar primero a todos los jefes de proyecto
               </span>
             </label>
             <div class="px-11 pb-3 pt-2 border-t space-y-2 transition-colors"
-              :class="config.assignBossFirst ? 'bg-brand-50/60 border-brand-100' : 'bg-gray-50 border-gray-100'">
-              <label class="flex items-center gap-3 cursor-pointer" :class="!config.assignBossFirst && 'opacity-40 pointer-events-none'">
+              :class="store.step1.assignBossFirst ? 'bg-brand-50/60 border-brand-100' : 'bg-gray-50 border-gray-100'">
+              <label class="flex items-center gap-3 cursor-pointer" :class="!store.step1.assignBossFirst && 'opacity-40 pointer-events-none'">
                 <input type="radio"
-                  :checked="config.formSimultaneous === false" @change="config.formSimultaneous = false"
-                  :disabled="!config.assignBossFirst"
+                  :checked="store.step1.formSimultaneous === false" @change="store.updateStep1({ formSimultaneous: false })"
+                  :disabled="!store.step1.assignBossFirst"
                   class="w-4 h-4 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
                 <span class="text-sm text-gray-700 select-none">Formar equipos de uno en uno</span>
               </label>
-              <label class="flex items-center gap-3 cursor-pointer" :class="!config.assignBossFirst && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-3 cursor-pointer" :class="!store.step1.assignBossFirst && 'opacity-40 pointer-events-none'">
                 <input type="radio"
-                  :checked="config.formSimultaneous === true" @change="config.formSimultaneous = true"
-                  :disabled="!config.assignBossFirst"
+                  :checked="store.step1.formSimultaneous === true" @change="store.updateStep1({ formSimultaneous: true })"
+                  :disabled="!store.step1.assignBossFirst"
                   class="w-4 h-4 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
                 <span class="text-sm text-gray-700 select-none">Formar los equipos de forma simultánea</span>
               </label>
@@ -214,29 +216,29 @@ defineProps({
 
           <!-- No asignar primero a los jefes -->
           <div class="rounded-xl border-2 transition-colors overflow-hidden"
-            :class="!config.assignBossFirst ? 'border-brand-400' : 'border-gray-200 hover:border-gray-300'">
+            :class="!store.step1.assignBossFirst ? 'border-brand-400' : 'border-gray-200 hover:border-gray-300'">
             <label class="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors"
-              :class="!config.assignBossFirst ? 'bg-brand-50' : 'bg-white hover:bg-gray-50'">
+              :class="!store.step1.assignBossFirst ? 'bg-brand-50' : 'bg-white hover:bg-gray-50'">
               <input type="radio"
-                :checked="config.assignBossFirst === false" @change="config.assignBossFirst = false"
+                :checked="store.step1.assignBossFirst === false" @change="store.updateStep1({ assignBossFirst: false })"
                 class="w-4 h-4 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
               <span class="text-sm font-medium text-gray-800 select-none">
                 No asignar primero a los jefes de proyecto
               </span>
             </label>
             <div class="px-11 pb-3 pt-2 border-t space-y-2 transition-colors"
-              :class="!config.assignBossFirst ? 'bg-brand-50/60 border-brand-100' : 'bg-gray-50 border-gray-100'">
-              <label class="flex items-center gap-3 cursor-pointer" :class="config.assignBossFirst && 'opacity-40 pointer-events-none'">
+              :class="!store.step1.assignBossFirst ? 'bg-brand-50/60 border-brand-100' : 'bg-gray-50 border-gray-100'">
+              <label class="flex items-center gap-3 cursor-pointer" :class="store.step1.assignBossFirst && 'opacity-40 pointer-events-none'">
                 <input type="radio"
-                  :checked="config.formSimultaneous === false" @change="config.formSimultaneous = false"
-                  :disabled="config.assignBossFirst"
+                  :checked="store.step1.formSimultaneous === false" @change="store.updateStep1({ formSimultaneous: false })"
+                  :disabled="store.step1.assignBossFirst"
                   class="w-4 h-4 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
                 <span class="text-sm text-gray-700 select-none">Formar los equipos de uno en uno</span>
               </label>
-              <label class="flex items-center gap-3 cursor-pointer" :class="config.assignBossFirst && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-3 cursor-pointer" :class="store.step1.assignBossFirst && 'opacity-40 pointer-events-none'">
                 <input type="radio"
-                  :checked="config.formSimultaneous === true" @change="config.formSimultaneous = true"
-                  :disabled="config.assignBossFirst"
+                  :checked="store.step1.formSimultaneous === true" @change="store.updateStep1({ formSimultaneous: true })"
+                  :disabled="store.step1.assignBossFirst"
                   class="w-4 h-4 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
                 <span class="text-sm text-gray-700 select-none">Formar los equipos de forma simultánea</span>
               </label>
