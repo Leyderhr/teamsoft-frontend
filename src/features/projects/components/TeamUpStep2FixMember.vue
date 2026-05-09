@@ -117,7 +117,14 @@ function onRoleLoadSelect(id) {
 }
 
 watch(considerNewProjectLoad, (val) => {
-  if (!val) store.updateStep2Factors({ maxRoleLoad: null })
+  if (!val) {
+    store.updateStep2Factors({ maxRoleLoad: null })
+  } else {
+    const match = roleLoadData.value?.find(r => r.id === workLoadRoleLoadId.value)
+    store.updateStep2Factors({
+      maxRoleLoad: match ? { value: match.value ?? 40.0 } : null,
+    })
+  }
 })
 
 // ──────────────────────────────────────────────
@@ -221,6 +228,11 @@ function removeMember(idx) {
 }
 
 function generateBossProposals() {
+  const { valid, error } = store.validateProposalWeights()
+  if (!valid) {
+    toast.add({ severity: 'warn', summary: 'Pesos inválidos', detail: error, life: 4000 })
+    return
+  }
   bossProposalsMutation.mutate(
     store.bossProposalsPayload,
     {
@@ -254,6 +266,11 @@ function generateBossProposals() {
 function generateMemberProposals() {
   if (!memberProposalProjectId.value || !memberProposalRoleId.value) {
     toast.add({ severity: 'warn', summary: 'Faltan datos', detail: 'Selecciona un proyecto y un rol', life: 3000 })
+    return
+  }
+  const { valid, error } = store.validateProposalWeights()
+  if (!valid) {
+    toast.add({ severity: 'warn', summary: 'Pesos inválidos', detail: error, life: 4000 })
     return
   }
   const payload = store.memberProposalsPayload(memberProposalProjectId.value, memberProposalRoleId.value)
