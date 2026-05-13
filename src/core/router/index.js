@@ -167,15 +167,6 @@ const routes = [
                 }
             },
             {
-                path: 'audit',
-                name: 'AuditTrail',
-                component: () => import('@/features/audit/views/AuditTrail.vue'),
-                meta: {
-                    breadcrumb: [{ name: 'Auditar Sistema', disable: true }],
-                    roles: ['ROLE_ADMIN']
-                }
-            },
-            {
                 path: 'reports/person-report',
                 name: 'PersonReport',
                 component: () => import('@/features/reports/views/PersonReport.vue'),

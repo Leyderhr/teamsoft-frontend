@@ -106,7 +106,7 @@ const levelSelectOptions = computed(() => [
 ])
 
 const belbinSelectOptions = computed(() => [
-  { value: null, label: 'Indiferente' },
+  { value: null, label: 'Sin filtro' },
   ...belbinOptions.map(opt => ({ value: opt.value, label: opt.label }))
 ])
 
@@ -521,7 +521,7 @@ onMounted(loadFilterOptions)
             <AppSelect
               v-model="belbin[role.key]"
               :options="belbinSelectOptions"
-              placeholder="Indiferente"
+              placeholder="Sin filtro"
             />
           </div>
         </div>

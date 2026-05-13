@@ -1,8 +1,9 @@
+import { toValue } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { api } from '@/lib/api'
 
 async function fetchTeamFormationResults(params) {
-  return api.post('teamFormation/teams', { json: params }).json()
+  return api.post('teamFormation/teams', { json: toValue(params) }).json()
 }
 
 export function useTeamFormation(params, options = {}) {

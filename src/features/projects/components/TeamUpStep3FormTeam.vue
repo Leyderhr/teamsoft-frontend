@@ -12,6 +12,10 @@ import { useTeamFormationStore } from '@/stores/teamFormation'
 
 const store = useTeamFormationStore()
 
+defineProps({
+  availableProjects: { type: Array, default: () => [] },
+})
+
 // ──────────────────────────────────────────────
 // Factor definitions
 // ──────────────────────────────────────────────

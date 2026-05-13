@@ -332,11 +332,7 @@
                         Listar personas
                       </router-link>
                     </li>
-                    <li>
-                      <router-link to="/audit" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive('/audit') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        Auditoría
-                      </router-link>
-                    </li>
+
                   </ul>
                 </div>
               </transition>
@@ -396,7 +392,7 @@ const isSubmenuOpen = (key) => {
     configurar: configurarAllPaths.value,
     rrhh: rrhhItems.value.map(i => i.path),
     proyectos: proyectosItems.value.map(i => i.path),
-    admin: ['/manage-user-role/users', '/reports/person-report', '/reports/finished-teams', '/reports/list-workers', '/audit'],
+    admin: ['/manage-user-role/users', '/reports/person-report', '/reports/finished-teams', '/reports/list-workers'],
   }
   return activeMap[key]?.some(p => route.path.startsWith(p)) ?? false
 }
