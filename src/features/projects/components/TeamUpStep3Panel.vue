@@ -1,10 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import {
   Settings2, X, Cog, Loader2, Save, Pin,
   Users, Folder, Briefcase, ChevronRight,
-  UserCircle, UserCheck, Trash2,
+  UserCircle, UserCheck, Trash2, AlertCircle,
 } from 'lucide-vue-next'
 import { useTeamFormationStore } from '@/stores/teamFormation'
 import { useTeamFormation } from '@/services/team-formation/queries'
@@ -30,6 +30,9 @@ const saving = computed(() => saveTeamsMutation.isPending.value)
 // Panel open/close
 // ──────────────────────────────────────────────
 const panelOpen = ref(false)
+const weightError = ref(null)
+
+watch(panelOpen, (open) => { if (!open) weightError.value = null })
 
 // ──────────────────────────────────────────────
 // Proposal tree expand state
@@ -52,12 +55,26 @@ function toggleProject(key) {
 // Generate and Save handlers
 // ──────────────────────────────────────────────
 async function handleGenerate() {
-  const { valid, error } = store.validateTeamsWeights()
-  if (!valid) {
-    toast.add({ severity: 'warn', summary: 'Pesos inválidos', detail: error, life: 4000 })
+  weightError.value = null
+  const validation = store.validateTeamsWeights()
+  if (!validation.valid) {
+    weightError.value = validation.error
     return
   }
-  await generateTeams()
+  const result = await generateTeams()
+  if (result?.isError) {
+    let detail = 'Error al generar equipos en el servidor'
+    try {
+      const body = await result.error?.response?.json()
+      const code = body?.['Error: '] || body?.error || body?.message
+      if (code === 'fo_weights_most_sum_one') {
+        detail = 'Los pesos de todos los factores habilitados deben sumar exactamente 1.0'
+      } else if (code) {
+        detail = code
+      }
+    } catch {}
+    weightError.value = detail
+  }
 }
 
 function handleSave() {
@@ -187,6 +204,10 @@ function removeFixedMember(idx) {
             <Cog v-else class="w-4 h-4" />
             Generar propuestas
           </button>
+          <div v-if="weightError" class="flex items-start gap-2 rounded-lg bg-error-50 border border-error-200 px-3 py-2.5">
+            <AlertCircle class="w-4 h-4 text-error-500 flex-shrink-0 mt-0.5" />
+            <p class="text-xs text-error-700 leading-snug">{{ weightError }}</p>
+          </div>
           <button
             type="button"
             @click="handleSave"

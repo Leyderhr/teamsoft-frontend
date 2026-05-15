@@ -54,6 +54,8 @@ export const DEFAULT_TF_PARAMS = {
   allBelbinRoles: false, demandNBrains: false, countBrains: 0,
   balanceBelbinCategories: false, allBelbinCategories: false,
   actionMentalOper: '>', mentalSocialOper: '>',
+  // Selected incompatibilities (wire format sent to backend)
+  sWI: [], sRI: [],
   // Backend-filled (always empty from frontend)
   groupList: [], ppg: [], searchArea: [], projects: [],
   maxLevel: null, minLevel: null, maxConflictIndex: null, maxCostDistance: null,
@@ -73,18 +75,29 @@ const STEP2_WEIGHT_PAIRS = [
 
 const STEP3_WEIGHT_PAIRS = [
   ['maxCompetences', 'maxCompetencesWeight'],
+  ['balanceCompetences', 'balanceCompetenceWeight'],
   ['takeWorkLoad', 'workLoadWeight'],
+  ['balancePersonWorkload', 'balanceWorkLoadWeight'],
   ['minIncomp', 'minIncompWeight'],
+  ['balanceSynergy', 'balanceSynergyWeight'],
   ['minCostDistance', 'minCostDistanceWeight'],
+  ['balanceCostDistance', 'balanceCostDistanceWeight'],
   ['maxInterests', 'maxInterestsWeight'],
+  ['balanceInterests', 'balanceInterestWeight'],
   ['maxBelbinRoles', 'maxBelbinWeight'],
+  ['balanceBelbinRoles', 'balanceBelbinWeight'],
   ['maxProjectInterests', 'maxProjectInterestsWeight'],
   ['maxMbtiTypes', 'maxMbtiTypesWeight'],
   ['maxMultiroleTeamMembers', 'maxMultiroleTeamMembersWeight'],
+  ['balanceMultiroleTeamMembers', 'balanceMultiroleTeamMembersWeight'],
   ['maxSex', 'maxSexWeight'],
+  ['balanceMaximizeSexFactor', 'balanceMaximizeSexFactorWeight'],
   ['heterogeneousTeams', 'heterogeneousTeamsWeight'],
+  ['balanceHeterogeneousTeams', 'balanceHeterogeneousTeamsNacionalityFactorWeight'],
   ['maxReligion', 'maxReligionWeight'],
+  ['balanceMaximizeReligion', 'balanceMaximizeReligionWeight'],
   ['maxAgeHeterogeneity', 'maxAgeHeterogeneityWeight'],
+  ['balanceMaximizeAgeHeterogeneity', 'balanceMaximizeAgeHeterogeneityWeight'],
 ]
 
 function checkWeights(factors, pairs) {
@@ -103,6 +116,14 @@ function toWireFixedWorkers(fixedWorkers) {
     ...(fw.isBoss ? {} : { role: { id: fw.roleId } }),
     boss: { id: fw.personId },
   }))
+}
+
+function toWireSWI(items) {
+  return items.map(w => ({ workerAFk: { id: w.personAId }, workerBFk: { id: w.personBId } }))
+}
+
+function toWireSRI(items) {
+  return items.map(r => ({ roleAFk: { id: r.roleAId }, roleBFk: { id: r.roleBId } }))
 }
 
 function confFormMode(step1) {
@@ -155,7 +176,11 @@ export const useTeamFormationStore = defineStore('teamFormation', {
       notAlreadyBossAssigned: false,
       maxRoleLoad: null,
       minIncomp: false,                 minIncompWeight: null,
-      anyIncompatibility: false,
+      balanceSynergy: false,            balanceSynergyWeight: null,
+      anyIncompatibility: false,        anySelectedIncompatibility: false,
+      // UI-format lists (transformed to wire format in teamsPayload getter)
+      workerIncompatibilities: [],      // [{ personAId, personAName, personBId, personBName }]
+      roleIncompatibilities: [],        // [{ roleAId, roleAName, roleBId, roleBName }]
       minCostDistance: false,           minCostDistanceWeight: null,
       balanceCostDistance: false,       balanceCostDistanceWeight: null,
       maxInterests: false,              maxInterestsWeight: null,
@@ -212,6 +237,7 @@ export const useTeamFormationStore = defineStore('teamFormation', {
 
     teamsPayload: (state) => {
       const s3 = state.step3Factors
+      const { workerIncompatibilities, roleIncompatibilities, ...s3Rest } = s3
       return {
         teamFormationParameters: {
           ...DEFAULT_TF_PARAMS,
@@ -224,8 +250,10 @@ export const useTeamFormationStore = defineStore('teamFormation', {
           minimumRole: state.step1.minimumRole,
           bossNeedToBeAssignedToAnotherRoles: state.step1.bossNeedToBeAssignedToAnotherRoles,
           confFormMode: confFormMode(state.step1),
-          // Step 3 factors (spread, then fix the one key mismatch)
-          ...s3,
+          // Step 3 factors (spread UI state, then override wire-format fields)
+          ...s3Rest,
+          sWI: toWireSWI(workerIncompatibilities),
+          sRI: toWireSRI(roleIncompatibilities),
           balanceHeterogeneousTeamsNacionalityFactorWeight: s3.balanceHeterogeneousTeamsNacionalityFactorWeight,
           maxRoleLoad: s3.maxRoleLoad,
           fixedWorkers: toWireFixedWorkers(state.fixedWorkers),
@@ -256,6 +284,31 @@ export const useTeamFormationStore = defineStore('teamFormation', {
     },
     removeFixedWorker(index) {
       this.fixedWorkers.splice(index, 1)
+    },
+    addWorkerIncompatibility(item) {
+      const dup = this.step3Factors.workerIncompatibilities.some(
+        w => (w.personAId === item.personAId && w.personBId === item.personBId) ||
+             (w.personAId === item.personBId && w.personBId === item.personAId)
+      )
+      if (!dup) this.step3Factors.workerIncompatibilities.push(item)
+    },
+    removeWorkerIncompatibilities(indices) {
+      this.step3Factors.workerIncompatibilities =
+        this.step3Factors.workerIncompatibilities.filter((_, i) => !indices.includes(i))
+    },
+    addRoleIncompatibility(item) {
+      const dup = this.step3Factors.roleIncompatibilities.some(
+        r => (r.roleAId === item.roleAId && r.roleBId === item.roleBId) ||
+             (r.roleAId === item.roleBId && r.roleBId === item.roleAId)
+      )
+      if (!dup) this.step3Factors.roleIncompatibilities.push(item)
+    },
+    removeRoleIncompatibilities(indices) {
+      this.step3Factors.roleIncompatibilities =
+        this.step3Factors.roleIncompatibilities.filter((_, i) => !indices.includes(i))
+    },
+    setRoleIncompatibilities(items) {
+      this.step3Factors.roleIncompatibilities = items
     },
     validateProposalWeights() {
       return checkWeights(this.step2Factors, STEP2_WEIGHT_PAIRS)

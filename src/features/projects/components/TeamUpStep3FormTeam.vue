@@ -2,12 +2,14 @@
 import { ref, computed, watch } from 'vue'
 import {
   Award, BarChart2, AlertCircle, Navigation, Bookmark, Brain, Lightbulb,
-  Cpu, Network, Equal, Globe, BookOpen, Calendar, Cog, Plus, Minus,
+  Cpu, Network, Equal, Globe, BookOpen, Calendar, Cog, Plus, Minus, Trash2,
 } from 'lucide-vue-next'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import TeamUpStep3Panel from '@/features/projects/components/TeamUpStep3Panel.vue'
 import { useLevels, useCompetenceImportance, useRoleLoad } from '@/services/nomenclatives/queries'
 import { useCompetences } from '@/services/competences/queries'
+import { useRoles } from '@/services/roles/queries'
+import { usePersons } from '@/composables/usePersons'
 import { useTeamFormationStore } from '@/stores/teamFormation'
 
 const store = useTeamFormationStore()
@@ -26,9 +28,9 @@ const factors = [
   { id: 'workload',     label: 'Carga de trabajo',     icon: BarChart2,   hasBalance: true,
     enabledKey: 'takeWorkLoad',            weightKey: 'workLoadWeight',
     balanceKey: 'balancePersonWorkload',   balanceWeightKey: 'balanceWorkLoadWeight' },
-  { id: 'incomp',       label: 'Incompatibilidades',   icon: AlertCircle, hasBalance: false,
+  { id: 'incomp',       label: 'Incompatibilidades',   icon: AlertCircle, hasBalance: true,
     enabledKey: 'minIncomp',              weightKey: 'minIncompWeight',
-    balanceKey: null,                     balanceWeightKey: null },
+    balanceKey: 'balanceSynergy',         balanceWeightKey: 'balanceSynergyWeight' },
   { id: 'distance',     label: 'Costo a distancia',    icon: Navigation,  hasBalance: true,
     enabledKey: 'minCostDistance',        weightKey: 'minCostDistanceWeight',
     balanceKey: 'balanceCostDistance',    balanceWeightKey: 'balanceCostDistanceWeight' },
@@ -121,6 +123,90 @@ const considerNewProjectLoad   = ref(true)
 const workLoadRoleLoadId       = ref(null)
 
 // ──────────────────────────────────────────────
+// Incompatibilities panel state
+// ──────────────────────────────────────────────
+const { persons: personsData }  = usePersons()
+const { data: rolesData }       = useRoles()
+
+const personOptions = computed(() =>
+  personsData.value?.map(p => ({ label: `${p.personName} ${p.surName}`, value: p.id })) || []
+)
+const roleOptions = computed(() =>
+  rolesData.value?.map(r => ({ label: r.roleName, value: r.id })) || []
+)
+
+const workerIncompPersonA        = ref(null)
+const workerIncompPersonB        = ref(null)
+const selectedWorkerIncompIndices = ref([])
+
+const roleIncompRoleA            = ref(null)
+const roleIncompRoleB            = ref(null)
+const selectedRoleIncompIndices  = ref([])
+
+function addWorkerIncompatibility() {
+  if (!workerIncompPersonA.value || !workerIncompPersonB.value) return
+  if (workerIncompPersonA.value === workerIncompPersonB.value) return
+  const personA = personsData.value?.find(p => p.id === workerIncompPersonA.value)
+  const personB = personsData.value?.find(p => p.id === workerIncompPersonB.value)
+  if (!personA || !personB) return
+  store.addWorkerIncompatibility({
+    personAId: personA.id,
+    personAName: `${personA.personName} ${personA.surName}`,
+    personBId: personB.id,
+    personBName: `${personB.personName} ${personB.surName}`,
+  })
+  workerIncompPersonA.value = null
+  workerIncompPersonB.value = null
+}
+
+function removeSelectedWorkerIncomps() {
+  store.removeWorkerIncompatibilities(selectedWorkerIncompIndices.value)
+  selectedWorkerIncompIndices.value = []
+}
+
+function addRoleIncompatibility() {
+  if (!roleIncompRoleA.value || !roleIncompRoleB.value) return
+  if (roleIncompRoleA.value === roleIncompRoleB.value) return
+  const roleA = rolesData.value?.find(r => r.id === roleIncompRoleA.value)
+  const roleB = rolesData.value?.find(r => r.id === roleIncompRoleB.value)
+  if (!roleA || !roleB) return
+  store.addRoleIncompatibility({
+    roleAId: roleA.id,
+    roleAName: roleA.roleName,
+    roleBId: roleB.id,
+    roleBName: roleB.roleName,
+  })
+  roleIncompRoleA.value = null
+  roleIncompRoleB.value = null
+}
+
+function removeSelectedRoleIncomps() {
+  store.removeRoleIncompatibilities(selectedRoleIncompIndices.value)
+  selectedRoleIncompIndices.value = []
+}
+
+function setModelRoleIncompatibilities() {
+  if (!rolesData.value) return
+  const pairs = []
+  const seen = new Set()
+  for (const role of rolesData.value) {
+    for (const incompRole of (role.incompatibleRoles || [])) {
+      const key = [Math.min(role.id, incompRole.id), Math.max(role.id, incompRole.id)].join('-')
+      if (!seen.has(key)) {
+        seen.add(key)
+        pairs.push({
+          roleAId: role.id,
+          roleAName: role.roleName,
+          roleBId: incompRole.id,
+          roleBName: incompRole.roleName,
+        })
+      }
+    }
+  }
+  store.setRoleIncompatibilities(pairs)
+}
+
+// ──────────────────────────────────────────────
 // Queries (competence + workload panels)
 // ──────────────────────────────────────────────
 const { data: levelsData      } = useLevels()
@@ -162,16 +248,11 @@ function onRoleLoadSelect(id) {
   })
 }
 
-watch(considerNewProjectLoad, (val) => {
-  if (!val) {
-    store.updateStep3Factors({ maxRoleLoad: null })
-  } else {
-    const match = roleLoadData.value?.find(r => r.id === workLoadRoleLoadId.value)
-    store.updateStep3Factors({
-      maxRoleLoad: match ? { value: match.value ?? 40.0 } : null,
-    })
+watch(roleLoadOptions, (opts) => {
+  if (opts.length && workLoadRoleLoadId.value === null) {
+    onRoleLoadSelect(opts[opts.length - 1].value)
   }
-})
+}, { immediate: true })
 </script>
 
 <template>
@@ -390,7 +471,7 @@ watch(considerNewProjectLoad, (val) => {
             <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
               <input type="checkbox" :checked="store.step3Factors.takeWorkLoad" @change="store.updateStep3Factors({ takeWorkLoad: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Tomar en consideración</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Minimizar carga de trabajo</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.takeWorkLoad && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Peso:</span>
@@ -404,7 +485,7 @@ watch(considerNewProjectLoad, (val) => {
               <input type="checkbox" :checked="store.step3Factors.balancePersonWorkload" @change="store.updateStep3Factors({ balancePersonWorkload: $event.target.checked })"
                 :disabled="!store.step3Factors.takeWorkLoad"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Ponderar en el equipo</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balancePersonWorkload && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Balance:</span>
@@ -427,11 +508,8 @@ watch(considerNewProjectLoad, (val) => {
           <div class="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Carga que representa la asignación en el nuevo proyecto</p>
             <div class="flex items-center gap-3 flex-wrap">
-              <label class="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" :checked="considerNewProjectLoad" @change="considerNewProjectLoad = $event.target.checked"
-                  :disabled="!store.step3Factors.takeWorkLoad"
-                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-              </label>
+              <input type="checkbox" checked disabled
+                class="w-4 h-4 rounded border-gray-300 text-brand-500 cursor-not-allowed" />
               <div class="flex-1 min-w-[160px]" :class="!considerNewProjectLoad && 'opacity-40 pointer-events-none'">
                 <AppSelect :model-value="workLoadRoleLoadId" @update:model-value="onRoleLoadSelect($event)"
                   :options="roleLoadOptions" placeholder="Seleccionar nivel de carga..."
@@ -450,27 +528,161 @@ watch(considerNewProjectLoad, (val) => {
         <h3 class="text-base font-semibold text-gray-800">Incompatibilidades</h3>
       </div>
       <div class="p-6 space-y-5">
-        <div class="flex items-center gap-5 flex-wrap">
-          <label class="flex items-center gap-2.5 cursor-pointer">
-            <input type="checkbox" :checked="store.step3Factors.minIncomp" @change="store.updateStep3Factors({ minIncomp: $event.target.checked })"
-              class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-            <span class="text-sm font-medium text-gray-700 select-none">Minimizar incompatibilidades en el equipo</span>
-          </label>
-          <div class="flex items-center gap-2" :class="!store.step3Factors.minIncomp && 'opacity-40 pointer-events-none'">
-            <span class="text-xs text-gray-500">Peso:</span>
-            <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-              :value="store.step3Factors.minIncompWeight" @input="store.updateStep3Factors({ minIncompWeight: Number($event.target.value) })"
-              class="w-20 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+
+        <!-- Maximizar sinergia + Balancear entre equipos -->
+        <div class="flex flex-wrap items-center gap-x-8 gap-y-3">
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" :checked="store.step3Factors.minIncomp" @change="store.updateStep3Factors({ minIncomp: $event.target.checked })"
+                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+              <span class="text-sm font-medium text-gray-700 select-none">Maximizar sinergia</span>
+            </label>
+            <div class="flex items-center gap-1.5" :class="!store.step3Factors.minIncomp && 'opacity-40 pointer-events-none'">
+              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                :value="store.step3Factors.minIncompWeight" @input="store.updateStep3Factors({ minIncompWeight: Number($event.target.value) })"
+                class="w-20 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            </div>
+          </div>
+          <div class="flex items-center gap-3" :class="!store.step3Factors.minIncomp && 'opacity-40 pointer-events-none'">
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" :checked="store.step3Factors.balanceSynergy" @change="store.updateStep3Factors({ balanceSynergy: $event.target.checked })"
+                :disabled="!store.step3Factors.minIncomp"
+                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+              <span class="text-sm font-medium text-gray-700 select-none">Balancear entre equipos</span>
+            </label>
+            <div class="flex items-center gap-1.5" :class="!store.step3Factors.balanceSynergy && 'opacity-40 pointer-events-none'">
+              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                :value="store.step3Factors.balanceSynergyWeight" @input="store.updateStep3Factors({ balanceSynergyWeight: Number($event.target.value) })"
+                class="w-20 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            </div>
           </div>
         </div>
+
         <div class="h-px bg-gray-100" />
-        <div :class="!store.step3Factors.minIncomp && 'opacity-40 pointer-events-none'">
+
+        <!-- No permitir checkboxes -->
+        <div class="space-y-2.5">
           <label class="flex items-center gap-2.5 cursor-pointer">
             <input type="checkbox" :checked="store.step3Factors.anyIncompatibility" @change="store.updateStep3Factors({ anyIncompatibility: $event.target.checked })"
-              :disabled="!store.step3Factors.minIncomp"
               class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-            <span class="text-sm text-gray-700 select-none">Considerar cualquier tipo de incompatibilidad</span>
+            <span class="text-sm text-gray-700 select-none">No permitir ninguna de las incompatibilidades registradas</span>
           </label>
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" :checked="store.step3Factors.anySelectedIncompatibility" @change="store.updateStep3Factors({ anySelectedIncompatibility: $event.target.checked })"
+              class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+            <span class="text-sm text-gray-700 select-none">No permitir las incompatibilidades seleccionadas</span>
+          </label>
+        </div>
+
+        <div class="h-px bg-gray-100" />
+
+        <!-- Entre trabajadores + Entre roles -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+          <!-- Entre trabajadores -->
+          <div class="relative border border-gray-200 rounded-xl p-4 pt-5 space-y-3">
+            <span class="absolute -top-2.5 left-3 bg-white px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Entre trabajadores</span>
+            <AppSelect :model-value="workerIncompPersonA" @update:model-value="workerIncompPersonA = $event"
+              :options="personOptions" placeholder="-Seleccione-" :searchable="true" search-placeholder="Buscar persona..." />
+            <AppSelect :model-value="workerIncompPersonB" @update:model-value="workerIncompPersonB = $event"
+              :options="personOptions" placeholder="-Seleccione-" :searchable="true" search-placeholder="Buscar persona..." />
+            <button type="button" @click="addWorkerIncompatibility"
+              :disabled="!workerIncompPersonA || !workerIncompPersonB || workerIncompPersonA === workerIncompPersonB"
+              class="w-full py-2 rounded-lg bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+              Agregar
+            </button>
+            <div class="overflow-hidden rounded-lg border border-gray-200">
+              <table class="min-w-full text-sm">
+                <thead class="bg-brand-500">
+                  <tr>
+                    <th class="w-8 px-3 py-2.5">
+                      <input type="checkbox" class="w-3.5 h-3.5 rounded border-white/70 text-white cursor-pointer"
+                        :checked="selectedWorkerIncompIndices.length > 0 && selectedWorkerIncompIndices.length === store.step3Factors.workerIncompatibilities.length"
+                        :indeterminate="selectedWorkerIncompIndices.length > 0 && selectedWorkerIncompIndices.length < store.step3Factors.workerIncompatibilities.length"
+                        @change="selectedWorkerIncompIndices = $event.target.checked ? store.step3Factors.workerIncompatibilities.map((_, i) => i) : []" />
+                    </th>
+                    <th class="px-3 py-2.5 text-left text-xs font-semibold text-white">Persona A</th>
+                    <th class="px-3 py-2.5 text-left text-xs font-semibold text-white">Persona B</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="(item, idx) in store.step3Factors.workerIncompatibilities" :key="idx"
+                    class="hover:bg-gray-50/60 transition-colors">
+                    <td class="px-3 py-2">
+                      <input type="checkbox" :value="idx" v-model="selectedWorkerIncompIndices"
+                        class="w-3.5 h-3.5 rounded border-gray-300 text-brand-500 cursor-pointer" />
+                    </td>
+                    <td class="px-3 py-2 text-gray-700 truncate max-w-[120px]">{{ item.personAName }}</td>
+                    <td class="px-3 py-2 text-gray-700 truncate max-w-[120px]">{{ item.personBName }}</td>
+                  </tr>
+                  <tr v-if="!store.step3Factors.workerIncompatibilities.length">
+                    <td colspan="3" class="px-3 py-4 text-center text-sm text-gray-400">No records found.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <button type="button" @click="removeSelectedWorkerIncomps"
+              :disabled="!selectedWorkerIncompIndices.length"
+              class="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-brand-500/90 text-white text-sm font-semibold hover:bg-brand-600 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+              <Trash2 class="w-3.5 h-3.5" />
+              Quitar seleccionado
+            </button>
+          </div>
+
+          <!-- Entre roles -->
+          <div class="relative border border-gray-200 rounded-xl p-4 pt-5 space-y-3">
+            <span class="absolute -top-2.5 left-3 bg-white px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Entre roles</span>
+            <button type="button" @click="setModelRoleIncompatibilities"
+              class="w-full py-2 rounded-lg bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors cursor-pointer">
+              Establecer incompatibilidades del modelo
+            </button>
+            <AppSelect :model-value="roleIncompRoleA" @update:model-value="roleIncompRoleA = $event"
+              :options="roleOptions" placeholder="-Seleccione-" :searchable="true" search-placeholder="Buscar rol..." />
+            <AppSelect :model-value="roleIncompRoleB" @update:model-value="roleIncompRoleB = $event"
+              :options="roleOptions" placeholder="-Seleccione-" :searchable="true" search-placeholder="Buscar rol..." />
+            <button type="button" @click="addRoleIncompatibility"
+              :disabled="!roleIncompRoleA || !roleIncompRoleB || roleIncompRoleA === roleIncompRoleB"
+              class="w-full py-2 rounded-lg bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+              Agregar
+            </button>
+            <div class="overflow-hidden rounded-lg border border-gray-200">
+              <table class="min-w-full text-sm">
+                <thead class="bg-brand-500">
+                  <tr>
+                    <th class="w-8 px-3 py-2.5">
+                      <input type="checkbox" class="w-3.5 h-3.5 rounded border-white/70 text-white cursor-pointer"
+                        :checked="selectedRoleIncompIndices.length > 0 && selectedRoleIncompIndices.length === store.step3Factors.roleIncompatibilities.length"
+                        :indeterminate="selectedRoleIncompIndices.length > 0 && selectedRoleIncompIndices.length < store.step3Factors.roleIncompatibilities.length"
+                        @change="selectedRoleIncompIndices = $event.target.checked ? store.step3Factors.roleIncompatibilities.map((_, i) => i) : []" />
+                    </th>
+                    <th class="px-3 py-2.5 text-left text-xs font-semibold text-white">Rol A</th>
+                    <th class="px-3 py-2.5 text-left text-xs font-semibold text-white">Rol B</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="(item, idx) in store.step3Factors.roleIncompatibilities" :key="idx"
+                    class="hover:bg-gray-50/60 transition-colors">
+                    <td class="px-3 py-2">
+                      <input type="checkbox" :value="idx" v-model="selectedRoleIncompIndices"
+                        class="w-3.5 h-3.5 rounded border-gray-300 text-brand-500 cursor-pointer" />
+                    </td>
+                    <td class="px-3 py-2 text-gray-700 truncate max-w-[120px]">{{ item.roleAName }}</td>
+                    <td class="px-3 py-2 text-gray-700 truncate max-w-[120px]">{{ item.roleBName }}</td>
+                  </tr>
+                  <tr v-if="!store.step3Factors.roleIncompatibilities.length">
+                    <td colspan="3" class="px-3 py-4 text-center text-sm text-gray-400">No records found.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <button type="button" @click="removeSelectedRoleIncomps"
+              :disabled="!selectedRoleIncompIndices.length"
+              class="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-brand-500/90 text-white text-sm font-semibold hover:bg-brand-600 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+              <Trash2 class="w-3.5 h-3.5" />
+              Quitar seleccionado
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
