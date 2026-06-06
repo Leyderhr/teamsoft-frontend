@@ -3,12 +3,13 @@ import { ref, computed, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import {
   Award, BarChart2, Bookmark, Brain, Navigation, Lightbulb,
-  Cog, Users, ChevronRight, Trash2, UserCircle, Folder, Loader2, Crown,
+  Cog, Users, ChevronRight, Trash2, UserCircle, Folder, Loader2, Crown, AlertCircle,
 } from 'lucide-vue-next'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import { useLevels, useCompetenceImportance, useRoleLoad } from '@/services/nomenclatives/queries'
 import { useCompetences } from '@/services/competences/queries'
 import { useRoles } from '@/services/roles/queries'
+import { useNonBossRoles, useBossCompetitions } from '@/services/projects/queries'
 import { useBossProposals, useMemberProposals } from '@/services/team-formation/mutations'
 import { useTeamFormationStore } from '@/stores/teamFormation'
 
@@ -43,16 +44,20 @@ const { data: rolesData       } = useRoles()
 const { data: roleLoadData    } = useRoleLoad()
 
 const levelOptions = computed(() =>
-  levelsData.value?.map(l => ({ label: l.levelName ?? l.name, value: l.id })) || []
+  levelsData.value?.map(l => ({ label: l.significance, value: l.id })) || []
 )
 const importanceOptions = computed(() =>
-  importanceData.value?.map(i => ({ label: i.importanceName ?? i.name, value: i.id })) || []
+  importanceData.value?.map(i => ({ label: i.significance, value: i.id })) || []
 )
 const roleOptions = computed(() =>
   rolesData.value?.map(r => ({ label: r.roleName, value: r.id })) || []
 )
 const roleLoadOptions = computed(() =>
   roleLoadData.value?.map(r => ({ label: r.significance, value: r.id })) || []
+)
+
+const selectedProjectOptions = computed(() =>
+  props.availableProjects.filter(p => store.step1.selectedProjectIds.includes(p.value))
 )
 const technicalCompetences = computed(() =>
   competencesData.value?.filter(c => c.technical === true) || []
@@ -127,6 +132,12 @@ watch(considerNewProjectLoad, (val) => {
   }
 })
 
+watch(roleLoadOptions, (opts) => {
+  if (opts.length && workLoadRoleLoadId.value === null) {
+    onRoleLoadSelect(opts[opts.length - 1].value)
+  }
+}, { immediate: true })
+
 // ──────────────────────────────────────────────
 // Error helper (ky HTTPError → readable message)
 // ──────────────────────────────────────────────
@@ -143,18 +154,72 @@ async function parseApiError(e) {
 // ──────────────────────────────────────────────
 // Proposals
 // ──────────────────────────────────────────────
-const proposalMode        = ref('boss')
-const proposalsTree       = ref([])
-const selectedTreePerson  = ref(null)
-const assignRoleId        = ref(null)
+const proposalMode       = ref('boss')
+const bossTree           = ref([])
+const memberTree         = ref([])
+const proposalsTree      = computed({
+  get: () => proposalMode.value === 'boss' ? bossTree.value : memberTree.value,
+  set: (v) => { if (proposalMode.value === 'boss') bossTree.value = v; else memberTree.value = v },
+})
+const selectedTreePerson = ref(null)
+const assignRoleId       = ref(null)
 
 const memberProposalProjectId = ref(null)
 const memberProposalRoleId    = ref(null)
 
+// ──────────────────────────────────────────────
+// Project-scoped queries (non-boss roles + boss competitions)
+// ──────────────────────────────────────────────
+const nonBossRolesIds    = computed(() => memberProposalProjectId.value ? [memberProposalProjectId.value] : [])
+const bossCompetitionIds = computed(() => competenceProjectId.value      ? [competenceProjectId.value]      : [])
+
+const { data: nonBossRolesData     } = useNonBossRoles(nonBossRolesIds)
+const { data: bossCompetitionsData } = useBossCompetitions(bossCompetitionIds)
+
+const nonBossRoleOptions = computed(() => {
+  const list = nonBossRolesData.value
+  if (!list?.length) return []
+  return (list[0].nonBossRoles ?? []).map(r => ({ label: r.roleName, value: r.id }))
+})
+
+const bossProjectTechnicalCompetences = computed(() => {
+  const list = bossCompetitionsData.value
+  if (!list?.length) return []
+  return (list[0].technicalCompetitions ?? []).map(rc => rc.competence)
+})
+
+const bossProjectGenericCompetences = computed(() => {
+  const list = bossCompetitionsData.value
+  if (!list?.length) return []
+  return (list[0].nonTechnicalCompetitions ?? []).map(rc => rc.competence)
+})
+
+const displayTechnicalCompetences = computed(() =>
+  selectProjectCompetences.value && competenceProjectId.value
+    ? bossProjectTechnicalCompetences.value
+    : technicalCompetences.value
+)
+
+const displayGenericCompetences = computed(() =>
+  selectProjectCompetences.value && competenceProjectId.value
+    ? bossProjectGenericCompetences.value
+    : genericCompetences.value
+)
+
+const weightError = ref(null)
+
+watch(memberProposalProjectId, () => {
+  memberProposalRoleId.value = null
+})
+
+watch(competenceProjectId, () => {
+  competenceSettings.value = {}
+})
+
 watch(proposalMode, () => {
-  proposalsTree.value = []
   selectedTreePerson.value = null
   assignRoleId.value = null
+  weightError.value = null
 })
 
 const bossProposalsMutation   = useBossProposals()
@@ -228,9 +293,10 @@ function removeMember(idx) {
 }
 
 function generateBossProposals() {
+  weightError.value = null
   const { valid, error } = store.validateProposalWeights()
   if (!valid) {
-    toast.add({ severity: 'warn', summary: 'Pesos inválidos', detail: error, life: 4000 })
+    weightError.value = error
     return
   }
   bossProposalsMutation.mutate(
@@ -264,13 +330,14 @@ function generateBossProposals() {
 }
 
 function generateMemberProposals() {
+  weightError.value = null
   if (!memberProposalProjectId.value || !memberProposalRoleId.value) {
     toast.add({ severity: 'warn', summary: 'Faltan datos', detail: 'Selecciona un proyecto y un rol', life: 3000 })
     return
   }
   const { valid, error } = store.validateProposalWeights()
   if (!valid) {
-    toast.add({ severity: 'warn', summary: 'Pesos inválidos', detail: error, life: 4000 })
+    weightError.value = error
     return
   }
   const payload = store.memberProposalsPayload(memberProposalProjectId.value, memberProposalRoleId.value)
@@ -432,11 +499,11 @@ function generateMemberProposals() {
                   <AppSelect
                     :model-value="competenceProjectId"
                     @update:model-value="competenceProjectId = $event"
-                    :options="availableProjects"
+                    :options="selectedProjectOptions"
                     placeholder="Seleccionar proyecto..."
                     :searchable="true"
                   />
-                  <p v-if="!availableProjects.length" class="text-xs text-amber-500">
+                  <p v-if="!selectedProjectOptions.length" class="text-xs text-amber-500">
                     No hay proyectos seleccionados. Selecciona proyectos en el Paso 1.
                   </p>
                 </div>
@@ -454,7 +521,7 @@ function generateMemberProposals() {
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-gray-100">
-                        <tr v-for="comp in technicalCompetences" :key="comp.id" class="hover:bg-gray-50/50">
+                        <tr v-for="comp in displayTechnicalCompetences" :key="comp.id" class="hover:bg-gray-50/50">
                           <td class="px-4 py-2 text-gray-700">{{ comp.competitionName }}</td>
                           <td class="px-4 py-2">
                             <AppSelect size="sm" :model-value="getMinLevel(comp.id)" @update:model-value="setMinLevel(comp.id, $event)" :options="levelOptions" placeholder="Nivel..." />
@@ -463,7 +530,7 @@ function generateMemberProposals() {
                             <AppSelect size="sm" :model-value="getImportance(comp.id)" @update:model-value="setImportance(comp.id, $event)" :options="importanceOptions" placeholder="Import..." />
                           </td>
                         </tr>
-                        <tr v-if="!technicalCompetences.length">
+                        <tr v-if="!displayTechnicalCompetences.length">
                           <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Sin competencias técnicas disponibles</td>
                         </tr>
                       </tbody>
@@ -484,7 +551,7 @@ function generateMemberProposals() {
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-gray-100">
-                        <tr v-for="comp in genericCompetences" :key="comp.id" class="hover:bg-gray-50/50">
+                        <tr v-for="comp in displayGenericCompetences" :key="comp.id" class="hover:bg-gray-50/50">
                           <td class="px-4 py-2 text-gray-700">{{ comp.competitionName }}</td>
                           <td class="px-4 py-2">
                             <AppSelect size="sm" :model-value="getMinLevel(comp.id)" @update:model-value="setMinLevel(comp.id, $event)" :options="levelOptions" placeholder="Nivel..." />
@@ -493,7 +560,7 @@ function generateMemberProposals() {
                             <AppSelect size="sm" :model-value="getImportance(comp.id)" @update:model-value="setImportance(comp.id, $event)" :options="importanceOptions" placeholder="Import..." />
                           </td>
                         </tr>
-                        <tr v-if="!genericCompetences.length">
+                        <tr v-if="!displayGenericCompetences.length">
                           <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Sin competencias genéricas disponibles</td>
                         </tr>
                       </tbody>
@@ -779,6 +846,10 @@ function generateMemberProposals() {
                 <Crown v-else class="w-3.5 h-3.5" />
                 Generar propuestas de Jefe
               </button>
+              <div v-if="weightError" class="flex items-start gap-2 rounded-lg bg-error-50 border border-error-200 px-3 py-2">
+                <AlertCircle class="w-3.5 h-3.5 text-error-500 flex-shrink-0 mt-0.5" />
+                <p class="text-xs text-error-700 leading-snug">{{ weightError }}</p>
+              </div>
             </template>
 
             <!-- Member mode -->
@@ -787,7 +858,7 @@ function generateMemberProposals() {
                 <label class="text-xs text-gray-500 font-medium">Proyecto</label>
                 <AppSelect
                   v-model="memberProposalProjectId"
-                  :options="availableProjects"
+                  :options="selectedProjectOptions"
                   placeholder="Seleccionar proyecto..."
                   :searchable="true"
                 />
@@ -796,7 +867,8 @@ function generateMemberProposals() {
                 <label class="text-xs text-gray-500 font-medium">Rol</label>
                 <AppSelect
                   v-model="memberProposalRoleId"
-                  :options="roleOptions"
+                  :options="nonBossRoleOptions"
+                  :disabled="!memberProposalProjectId"
                   placeholder="Seleccionar rol..."
                   :searchable="true"
                 />
@@ -811,6 +883,10 @@ function generateMemberProposals() {
                 <Users v-else class="w-3.5 h-3.5" />
                 Generar propuestas de Miembro
               </button>
+              <div v-if="weightError" class="flex items-start gap-2 rounded-lg bg-error-50 border border-error-200 px-3 py-2">
+                <AlertCircle class="w-3.5 h-3.5 text-error-500 flex-shrink-0 mt-0.5" />
+                <p class="text-xs text-error-700 leading-snug">{{ weightError }}</p>
+              </div>
             </template>
 
           </div>
@@ -869,33 +945,26 @@ function generateMemberProposals() {
               <span class="text-gray-400"> — {{ selectedTreePerson.projectName }}</span>
             </div>
 
-            <AppSelect
-              v-model="assignRoleId"
-              :options="roleOptions"
-              placeholder="Seleccionar rol (para miembro)..."
+            <button
+              v-if="proposalMode === 'boss'"
+              type="button"
+              @click="assignAsBoss"
               :disabled="!selectedTreePerson"
-            />
-
-            <div class="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                @click="assignAsBoss"
-                :disabled="!selectedTreePerson"
-                class="flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 border-amber-400 text-amber-700 bg-amber-50 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                <Crown class="w-3.5 h-3.5" />
-                Fijar como Jefe
-              </button>
-              <button
-                type="button"
-                @click="assignAsMember"
-                :disabled="!selectedTreePerson || !assignRoleId"
-                class="flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 border-brand-400 text-brand-700 bg-brand-50 text-xs font-semibold hover:bg-brand-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                <Users class="w-3.5 h-3.5" />
-                Fijar como Miembro
-              </button>
-            </div>
+              class="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 border-amber-400 text-amber-700 bg-amber-50 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              <Crown class="w-3.5 h-3.5" />
+              Fijar como Jefe
+            </button>
+            <button
+              v-else
+              type="button"
+              @click="assignAsMember"
+              :disabled="!selectedTreePerson || !assignRoleId"
+              class="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 border-brand-400 text-brand-700 bg-brand-50 text-xs font-semibold hover:bg-brand-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              <Users class="w-3.5 h-3.5" />
+              Fijar como Miembro
+            </button>
           </div>
         </div>
 

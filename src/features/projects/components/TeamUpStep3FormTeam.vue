@@ -14,9 +14,25 @@ import { useTeamFormationStore } from '@/stores/teamFormation'
 
 const store = useTeamFormationStore()
 
-defineProps({
+const props = defineProps({
   availableProjects: { type: Array, default: () => [] },
 })
+
+const selectedProjectOptions = computed(() =>
+  props.availableProjects.filter(p => store.step1.selectedProjectIds.includes(p.value))
+)
+
+const operatorOptions = [
+  { label: '>', value: '>' },
+  { label: '<', value: '<' },
+  { label: '=', value: '=' },
+]
+
+const belbinCategories = [
+  { label: 'Roles de acción', operKey: 'actionMentalOper' },
+  { label: 'Roles mentales',  operKey: 'mentalSocialOper' },
+  { label: 'Roles sociales',  operKey: 'socialOper' },
+]
 
 // ──────────────────────────────────────────────
 // Factor definitions
@@ -40,28 +56,36 @@ const factors = [
   { id: 'psico',        label: 'Caract. psicológicas', icon: Brain,       hasBalance: true,
     enabledKey: 'maxBelbinRoles',         weightKey: 'maxBelbinWeight',
     balanceKey: 'balanceBelbinRoles',     balanceWeightKey: 'balanceBelbinWeight' },
-  { id: 'teamInterest', label: 'Interés por el equipo',icon: Lightbulb,   hasBalance: false,
+  { id: 'teamInterest', label: 'Interés por el equipo',icon: Lightbulb,   hasBalance: true,
     enabledKey: 'maxProjectInterests',    weightKey: 'maxProjectInterestsWeight',
-    balanceKey: null,                     balanceWeightKey: null },
-  { id: 'mbtiTypes',    label: 'Tipos MBTI',           icon: Cpu,         hasBalance: false,
+    balanceKey: 'balanceProjectInterests', balanceWeightKey: 'balanceProjectInterestWeight' },
+  { id: 'mbtiTypes',    label: 'Tipos MBTI',           icon: Cpu,         hasBalance: true,
     enabledKey: 'maxMbtiTypes',           weightKey: 'maxMbtiTypesWeight',
-    balanceKey: null,                     balanceWeightKey: null },
+    balanceKey: 'balanceMbtiTypes',       balanceWeightKey: 'balanceMbtiTypesWeight' },
   { id: 'multirole',    label: 'Equipo multirol',      icon: Network,     hasBalance: true,
     enabledKey: 'maxMultiroleTeamMembers',       weightKey: 'maxMultiroleTeamMembersWeight',
     balanceKey: 'balanceMultiroleTeamMembers',   balanceWeightKey: 'balanceMultiroleTeamMembersWeight' },
   { id: 'sex',          label: 'Sexo',                 icon: Equal,       hasBalance: true,
-    enabledKey: 'maxSex',                        weightKey: 'maxSexWeight',
-    balanceKey: 'balanceMaximizeSexFactor',       balanceWeightKey: 'balanceMaximizeSexFactorWeight' },
+    enabledKey: 'maxSex',              secondaryEnabledKey: 'minSex',
+    weightKey: 'maxSexWeight',
+    balanceKey: 'balanceMaximizeSexFactor', balanceWeightKey: 'balanceMaximizeSexFactorWeight' },
   { id: 'nationality',  label: 'Nacionalidad',         icon: Globe,       hasBalance: true,
-    enabledKey: 'heterogeneousTeams',             weightKey: 'heterogeneousTeamsWeight',
-    balanceKey: 'balanceHeterogeneousTeams',       balanceWeightKey: 'balanceHeterogeneousTeamsNacionalityFactorWeight' },
+    enabledKey: 'heterogeneousTeams',  secondaryEnabledKey: 'homogeneousTeams',
+    weightKey: 'heterogeneousTeamsWeight',
+    balanceKey: 'balanceHeterogeneousTeams', balanceWeightKey: 'balanceHeterogeneousTeamsNacionalityFactorWeight' },
   { id: 'religion',     label: 'Religión',             icon: BookOpen,    hasBalance: true,
-    enabledKey: 'maxReligion',                    weightKey: 'maxReligionWeight',
-    balanceKey: 'balanceMaximizeReligion',         balanceWeightKey: 'balanceMaximizeReligionWeight' },
+    enabledKey: 'maxReligion',         secondaryEnabledKey: 'minReligion',
+    weightKey: 'maxReligionWeight',
+    balanceKey: 'balanceMaximizeReligion', balanceWeightKey: 'balanceMaximizeReligionWeight' },
   { id: 'age',          label: 'Rango de edades',      icon: Calendar,    hasBalance: true,
-    enabledKey: 'maxAgeHeterogeneity',             weightKey: 'maxAgeHeterogeneityWeight',
+    enabledKey: 'maxAgeHeterogeneity', secondaryEnabledKey: 'minAgeHomogeneity',
+    weightKey: 'maxAgeHeterogeneityWeight',
     balanceKey: 'balanceMaximizeAgeHeterogeneity', balanceWeightKey: 'balanceMaximizeAgeHeterogeneityWeight' },
 ]
+
+function isFactorEnabled(f) {
+  return store.step3Factors[f.enabledKey] || !!(f.secondaryEnabledKey && store.step3Factors[f.secondaryEnabledKey])
+}
 
 const selectedFactor = ref(null)
 
@@ -314,14 +338,14 @@ watch(roleLoadOptions, (opts) => {
             class="flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all cursor-pointer text-center"
             :class="selectedFactor === f.id
               ? 'border-brand-500 bg-brand-50 shadow-sm'
-              : store.step3Factors[f.enabledKey]
+              : isFactorEnabled(f)
                 ? 'border-brand-200 bg-brand-50/40 hover:border-brand-300'
                 : 'border-gray-200 bg-white hover:border-gray-300'"
           >
             <component :is="f.icon" class="w-4 h-4 flex-shrink-0 transition-colors"
-              :class="store.step3Factors[f.enabledKey] ? 'text-brand-500' : 'text-gray-400'" />
+              :class="isFactorEnabled(f) ? 'text-brand-500' : 'text-gray-400'" />
             <span class="text-xs font-medium leading-tight"
-              :class="store.step3Factors[f.enabledKey] ? 'text-brand-700' : 'text-gray-600'">
+              :class="isFactorEnabled(f) ? 'text-brand-700' : 'text-gray-600'">
               {{ f.label }}
             </span>
             <div class="flex flex-col items-center gap-0.5 w-full mt-0.5">
@@ -335,8 +359,8 @@ watch(roleLoadOptions, (opts) => {
               <div v-if="f.hasBalance" class="flex items-center gap-0.5">
                 <span class="text-[10px] text-gray-400">Balanceo:</span>
                 <span class="text-[10px] font-semibold tabular-nums"
-                  :class="store.step3Factors[f.balanceKey] && store.step3Factors[f.balanceWeightKey] != null ? 'text-brand-400' : 'text-gray-300'">
-                  {{ store.step3Factors[f.balanceKey] && store.step3Factors[f.balanceWeightKey] != null ? store.step3Factors[f.balanceWeightKey] : '—' }}
+                  :class="store.step3Factors[f.enabledKey] && store.step3Factors[f.balanceKey] && store.step3Factors[f.balanceWeightKey] != null ? 'text-brand-400' : 'text-gray-300'">
+                  {{ store.step3Factors[f.enabledKey] && store.step3Factors[f.balanceKey] && store.step3Factors[f.balanceWeightKey] != null ? store.step3Factors[f.balanceWeightKey] : '—' }}
                 </span>
               </div>
             </div>
@@ -408,7 +432,7 @@ watch(roleLoadOptions, (opts) => {
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-medium text-gray-600">Proyecto</label>
               <AppSelect :model-value="competenceProjectId" @update:model-value="competenceProjectId = $event"
-                :options="[]" placeholder="Seleccionar proyecto..." :searchable="true" />
+                :options="selectedProjectOptions" placeholder="Seleccionar proyecto..." :searchable="true" />
             </div>
             <div class="space-y-2">
               <p class="text-sm font-semibold text-gray-700">Competencias Técnicas</p>
@@ -530,30 +554,32 @@ watch(roleLoadOptions, (opts) => {
       <div class="p-6 space-y-5">
 
         <!-- Maximizar sinergia + Balancear entre equipos -->
-        <div class="flex flex-wrap items-center gap-x-8 gap-y-3">
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-2.5 cursor-pointer">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex items-center justify-between gap-3">
+            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
               <input type="checkbox" :checked="store.step3Factors.minIncomp" @change="store.updateStep3Factors({ minIncomp: $event.target.checked })"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-              <span class="text-sm font-medium text-gray-700 select-none">Maximizar sinergia</span>
+                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Maximizar sinergia</span>
             </label>
-            <div class="flex items-center gap-1.5" :class="!store.step3Factors.minIncomp && 'opacity-40 pointer-events-none'">
+            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.minIncomp && 'opacity-40 pointer-events-none'">
+              <span class="text-xs text-gray-500">Peso:</span>
               <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
                 :value="store.step3Factors.minIncompWeight" @input="store.updateStep3Factors({ minIncompWeight: Number($event.target.value) })"
-                class="w-20 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
             </div>
           </div>
-          <div class="flex items-center gap-3" :class="!store.step3Factors.minIncomp && 'opacity-40 pointer-events-none'">
-            <label class="flex items-center gap-2.5 cursor-pointer">
+          <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.minIncomp && 'opacity-40 pointer-events-none'">
+            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
               <input type="checkbox" :checked="store.step3Factors.balanceSynergy" @change="store.updateStep3Factors({ balanceSynergy: $event.target.checked })"
                 :disabled="!store.step3Factors.minIncomp"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-              <span class="text-sm font-medium text-gray-700 select-none">Balancear entre equipos</span>
+                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
             </label>
-            <div class="flex items-center gap-1.5" :class="!store.step3Factors.balanceSynergy && 'opacity-40 pointer-events-none'">
+            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceSynergy && 'opacity-40 pointer-events-none'">
+              <span class="text-xs text-gray-500">Balance:</span>
               <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
                 :value="store.step3Factors.balanceSynergyWeight" @input="store.updateStep3Factors({ balanceSynergyWeight: Number($event.target.value) })"
-                class="w-20 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
             </div>
           </div>
         </div>
@@ -577,7 +603,7 @@ watch(roleLoadOptions, (opts) => {
         <div class="h-px bg-gray-100" />
 
         <!-- Entre trabajadores + Entre roles -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div v-if="store.step3Factors.anySelectedIncompatibility" class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           <!-- Entre trabajadores -->
           <div class="relative border border-gray-200 rounded-xl p-4 pt-5 space-y-3">
@@ -699,7 +725,7 @@ watch(roleLoadOptions, (opts) => {
             <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
               <input type="checkbox" :checked="store.step3Factors.minCostDistance" @change="store.updateStep3Factors({ minCostDistance: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Tomar en consideración</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Minimizar costo de trabajo a distancia</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.minCostDistance && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Peso:</span>
@@ -713,7 +739,7 @@ watch(roleLoadOptions, (opts) => {
               <input type="checkbox" :checked="store.step3Factors.balanceCostDistance" @change="store.updateStep3Factors({ balanceCostDistance: $event.target.checked })"
                 :disabled="!store.step3Factors.minCostDistance"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Ponderar en el equipo</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceCostDistance && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Balance:</span>
@@ -738,7 +764,7 @@ watch(roleLoadOptions, (opts) => {
             <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
               <input type="checkbox" :checked="store.step3Factors.maxInterests" @change="store.updateStep3Factors({ maxInterests: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Tomar en consideración</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Maximizar intereses</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxInterests && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Peso:</span>
@@ -752,7 +778,7 @@ watch(roleLoadOptions, (opts) => {
               <input type="checkbox" :checked="store.step3Factors.balanceInterests" @change="store.updateStep3Factors({ balanceInterests: $event.target.checked })"
                 :disabled="!store.step3Factors.maxInterests"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Ponderar en el equipo</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceInterests && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Balance:</span>
@@ -772,12 +798,14 @@ watch(roleLoadOptions, (opts) => {
         <h3 class="text-base font-semibold text-gray-800">Características psicológicas</h3>
       </div>
       <div class="p-6 space-y-5">
+
+        <!-- Peso principal + Balance -->
         <div class="grid grid-cols-2 gap-4">
           <div class="flex items-center justify-between gap-3">
             <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
               <input type="checkbox" :checked="store.step3Factors.maxBelbinRoles" @change="store.updateStep3Factors({ maxBelbinRoles: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Maximizar diversidad Belbin</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Maximizar roles de Belbin</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxBelbinRoles && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Peso:</span>
@@ -791,7 +819,7 @@ watch(roleLoadOptions, (opts) => {
               <input type="checkbox" :checked="store.step3Factors.balanceBelbinRoles" @change="store.updateStep3Factors({ balanceBelbinRoles: $event.target.checked })"
                 :disabled="!store.step3Factors.maxBelbinRoles"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Ponderar en el equipo</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceBelbinRoles && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Balance:</span>
@@ -801,28 +829,64 @@ watch(roleLoadOptions, (opts) => {
             </div>
           </div>
         </div>
+
         <div class="h-px bg-gray-100" />
+
+        <!-- Opciones adicionales de Belbin -->
         <div class="space-y-3">
-          <div class="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tomar en cuenta los roles de Belbin</p>
+
+          <!-- Exigir todos los roles -->
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" :checked="store.step3Factors.allBelbinRoles" @change="store.updateStep3Factors({ allBelbinRoles: $event.target.checked })"
+              class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+            <span class="text-sm text-gray-700 select-none">Exigir la presencia de todos los roles de Belbin en el equipo</span>
+          </label>
+
+          <!-- Exigir N personas cerebro -->
+          <div class="flex items-center gap-3 flex-wrap">
             <label class="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" :checked="store.step3Factors.belbinPreference" @change="store.updateStep3Factors({ belbinPreference: $event.target.checked })"
+              <input type="checkbox" :checked="store.step3Factors.demandNBrains" @change="store.updateStep3Factors({ demandNBrains: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-              <span class="text-sm text-gray-700 select-none">Tener preferencia por los roles Impulsor y/o Coordinador</span>
+              <span class="text-sm text-gray-700 select-none">Exigir la presencia de al menos</span>
             </label>
+            <div class="flex items-center gap-2" :class="!store.step3Factors.demandNBrains && 'opacity-40 pointer-events-none'">
+              <input type="number" min="0" step="1"
+                :value="store.step3Factors.countBrains" @input="store.updateStep3Factors({ countBrains: Number($event.target.value) })"
+                :disabled="!store.step3Factors.demandNBrains"
+                class="w-20 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              <span class="text-sm text-gray-700 select-none">personas con preferencias por el rol cerebro</span>
+            </div>
           </div>
-          <div class="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tomar en cuenta el tipo psicológico de Myers-Briggs</p>
+
+          <!-- Balancear categorías de Belbin -->
+          <div class="space-y-2">
             <label class="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" :checked="store.step3Factors.mbtiExtrovertedPlanner" @change="store.updateStep3Factors({ mbtiExtrovertedPlanner: $event.target.checked })"
+              <input type="checkbox" :checked="store.step3Factors.balanceBelbinCategories" @change="store.updateStep3Factors({ balanceBelbinCategories: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-              <span class="text-sm text-gray-700 select-none">
-                Ser extrovertido y planificado
-                <span class="text-gray-400 text-xs ml-1">(Subtipo E, _, _, J)</span>
-              </span>
+              <span class="text-sm text-gray-700 select-none">Balancear las categorías de los roles Belbin en el equipo</span>
             </label>
+            <div v-if="store.step3Factors.balanceBelbinCategories" class="ml-6 rounded-xl bg-gray-50 border border-gray-100 p-3">
+              <div class="grid grid-cols-3 gap-3">
+                <div v-for="cat in belbinCategories" :key="cat.operKey" class="flex flex-col gap-1.5">
+                  <span class="text-xs font-medium text-gray-600">{{ cat.label }}</span>
+                  <AppSelect
+                    :model-value="store.step3Factors[cat.operKey]"
+                    @update:model-value="store.updateStep3Factors({ [cat.operKey]: $event })"
+                    :options="operatorOptions"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- Exigir todas las categorías -->
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" :checked="store.step3Factors.allBelbinCategories" @change="store.updateStep3Factors({ allBelbinCategories: $event.target.checked })"
+              class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+            <span class="text-sm text-gray-700 select-none">Exigir la presencia de todas las categorías de roles de Belbin</span>
+          </label>
         </div>
+
       </div>
     </div>
 
@@ -833,17 +897,33 @@ watch(roleLoadOptions, (opts) => {
         <h3 class="text-base font-semibold text-gray-800">Interés por el equipo</h3>
       </div>
       <div class="p-6 space-y-5">
-        <div class="flex items-center gap-5 flex-wrap">
-          <label class="flex items-center gap-2.5 cursor-pointer">
-            <input type="checkbox" :checked="store.step3Factors.maxProjectInterests" @change="store.updateStep3Factors({ maxProjectInterests: $event.target.checked })"
-              class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-            <span class="text-sm font-medium text-gray-700 select-none">Tomar en consideración el interés por participar en el equipo</span>
-          </label>
-          <div class="flex items-center gap-2" :class="!store.step3Factors.maxProjectInterests && 'opacity-40 pointer-events-none'">
-            <span class="text-xs text-gray-500">Peso:</span>
-            <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-              :value="store.step3Factors.maxProjectInterestsWeight" @input="store.updateStep3Factors({ maxProjectInterestsWeight: Number($event.target.value) })"
-              class="w-20 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex items-center justify-between gap-3">
+            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+              <input type="checkbox" :checked="store.step3Factors.maxProjectInterests" @change="store.updateStep3Factors({ maxProjectInterests: $event.target.checked })"
+                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Maximizar interés</span>
+            </label>
+            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxProjectInterests && 'opacity-40 pointer-events-none'">
+              <span class="text-xs text-gray-500">Peso:</span>
+              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                :value="store.step3Factors.maxProjectInterestsWeight" @input="store.updateStep3Factors({ maxProjectInterestsWeight: Number($event.target.value) })"
+                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.maxProjectInterests && 'opacity-40 pointer-events-none'">
+            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+              <input type="checkbox" :checked="store.step3Factors.balanceProjectInterests" @change="store.updateStep3Factors({ balanceProjectInterests: $event.target.checked })"
+                :disabled="!store.step3Factors.maxProjectInterests"
+                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+            </label>
+            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceProjectInterests && 'opacity-40 pointer-events-none'">
+              <span class="text-xs text-gray-500">Balance:</span>
+              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                :value="store.step3Factors.balanceProjectInterestWeight" @input="store.updateStep3Factors({ balanceProjectInterestWeight: Number($event.target.value) })"
+                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            </div>
           </div>
         </div>
         <div class="h-px bg-gray-100" />
@@ -865,17 +945,33 @@ watch(roleLoadOptions, (opts) => {
         <h3 class="text-base font-semibold text-gray-800">Tipos MBTI</h3>
       </div>
       <div class="p-6">
-        <div class="flex items-center gap-5 flex-wrap">
-          <label class="flex items-center gap-2.5 cursor-pointer">
-            <input type="checkbox" :checked="store.step3Factors.maxMbtiTypes" @change="store.updateStep3Factors({ maxMbtiTypes: $event.target.checked })"
-              class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-            <span class="text-sm font-medium text-gray-700 select-none">Maximizar la diversidad de tipos MBTI en el equipo</span>
-          </label>
-          <div class="flex items-center gap-2" :class="!store.step3Factors.maxMbtiTypes && 'opacity-40 pointer-events-none'">
-            <span class="text-xs text-gray-500">Peso:</span>
-            <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-              :value="store.step3Factors.maxMbtiTypesWeight" @input="store.updateStep3Factors({ maxMbtiTypesWeight: Number($event.target.value) })"
-              class="w-20 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex items-center justify-between gap-3">
+            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+              <input type="checkbox" :checked="store.step3Factors.maxMbtiTypes" @change="store.updateStep3Factors({ maxMbtiTypes: $event.target.checked })"
+                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Maximizar tipos MBTI</span>
+            </label>
+            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxMbtiTypes && 'opacity-40 pointer-events-none'">
+              <span class="text-xs text-gray-500">Peso:</span>
+              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                :value="store.step3Factors.maxMbtiTypesWeight" @input="store.updateStep3Factors({ maxMbtiTypesWeight: Number($event.target.value) })"
+                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.maxMbtiTypes && 'opacity-40 pointer-events-none'">
+            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+              <input type="checkbox" :checked="store.step3Factors.balanceMbtiTypes" @change="store.updateStep3Factors({ balanceMbtiTypes: $event.target.checked })"
+                :disabled="!store.step3Factors.maxMbtiTypes"
+                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+            </label>
+            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMbtiTypes && 'opacity-40 pointer-events-none'">
+              <span class="text-xs text-gray-500">Balance:</span>
+              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                :value="store.step3Factors.balanceMbtiTypesWeight" @input="store.updateStep3Factors({ balanceMbtiTypesWeight: Number($event.target.value) })"
+                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            </div>
           </div>
         </div>
       </div>
@@ -893,7 +989,7 @@ watch(roleLoadOptions, (opts) => {
             <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
               <input type="checkbox" :checked="store.step3Factors.maxMultiroleTeamMembers" @change="store.updateStep3Factors({ maxMultiroleTeamMembers: $event.target.checked })"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Tomar en consideración</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Maximizar equipos con personas multirol</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxMultiroleTeamMembers && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Peso:</span>
@@ -907,7 +1003,7 @@ watch(roleLoadOptions, (opts) => {
               <input type="checkbox" :checked="store.step3Factors.balanceMultiroleTeamMembers" @change="store.updateStep3Factors({ balanceMultiroleTeamMembers: $event.target.checked })"
                 :disabled="!store.step3Factors.maxMultiroleTeamMembers"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Ponderar en el equipo</span>
+              <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear equipos con personas multirol</span>
             </label>
             <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMultiroleTeamMembers && 'opacity-40 pointer-events-none'">
               <span class="text-xs text-gray-500">Balance:</span>
@@ -927,32 +1023,69 @@ watch(roleLoadOptions, (opts) => {
         <h3 class="text-base font-semibold text-gray-800">Sexo</h3>
       </div>
       <div class="p-6">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="flex items-center justify-between gap-3">
-            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
-              <input type="checkbox" :checked="store.step3Factors.maxSex" @change="store.updateStep3Factors({ maxSex: $event.target.checked })"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Tomar en consideración</span>
-            </label>
-            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxSex && 'opacity-40 pointer-events-none'">
-              <span class="text-xs text-gray-500">Peso:</span>
-              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-                :value="store.step3Factors.maxSexWeight" @input="store.updateStep3Factors({ maxSexWeight: Number($event.target.value) })"
-                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+        <div class="grid grid-cols-2 gap-6">
+          <!-- Heterogéneo -->
+          <div class="space-y-3">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Heterogéneo</p>
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.maxSex"
+                  @change="store.updateStep3Factors({ maxSex: $event.target.checked, ...($event.target.checked && { minSex: false }) })"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Heterogéneo</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxSex && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Peso:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.maxSexWeight" @input="store.updateStep3Factors({ maxSexWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.maxSex && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.balanceMaximizeSexFactor" @change="store.updateStep3Factors({ balanceMaximizeSexFactor: $event.target.checked })"
+                  :disabled="!store.step3Factors.maxSex"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMaximizeSexFactor && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Balance:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.balanceMaximizeSexFactorWeight" @input="store.updateStep3Factors({ balanceMaximizeSexFactorWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
             </div>
           </div>
-          <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.maxSex && 'opacity-40 pointer-events-none'">
-            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
-              <input type="checkbox" :checked="store.step3Factors.balanceMaximizeSexFactor" @change="store.updateStep3Factors({ balanceMaximizeSexFactor: $event.target.checked })"
-                :disabled="!store.step3Factors.maxSex"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Ponderar en el equipo</span>
-            </label>
-            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMaximizeSexFactor && 'opacity-40 pointer-events-none'">
-              <span class="text-xs text-gray-500">Balance:</span>
-              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-                :value="store.step3Factors.balanceMaximizeSexFactorWeight" @input="store.updateStep3Factors({ balanceMaximizeSexFactorWeight: Number($event.target.value) })"
-                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+          <!-- Homogéneo -->
+          <div class="space-y-3">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Homogéneo</p>
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.minSex"
+                  @change="store.updateStep3Factors({ minSex: $event.target.checked, ...($event.target.checked && { maxSex: false }) })"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Homogéneo</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.minSex && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Peso:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.minSexWeight" @input="store.updateStep3Factors({ minSexWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.minSex && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.balanceMinimizeSexFactor" @change="store.updateStep3Factors({ balanceMinimizeSexFactor: $event.target.checked })"
+                  :disabled="!store.step3Factors.minSex"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMinimizeSexFactor && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Balance:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.balanceMinimizeSexFactorWeight" @input="store.updateStep3Factors({ balanceMinimizeSexFactorWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
             </div>
           </div>
         </div>
@@ -966,32 +1099,69 @@ watch(roleLoadOptions, (opts) => {
         <h3 class="text-base font-semibold text-gray-800">Nacionalidad</h3>
       </div>
       <div class="p-6">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="flex items-center justify-between gap-3">
-            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
-              <input type="checkbox" :checked="store.step3Factors.heterogeneousTeams" @change="store.updateStep3Factors({ heterogeneousTeams: $event.target.checked })"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Tomar en consideración</span>
-            </label>
-            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.heterogeneousTeams && 'opacity-40 pointer-events-none'">
-              <span class="text-xs text-gray-500">Peso:</span>
-              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-                :value="store.step3Factors.heterogeneousTeamsWeight" @input="store.updateStep3Factors({ heterogeneousTeamsWeight: Number($event.target.value) })"
-                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+        <div class="grid grid-cols-2 gap-6">
+          <!-- Heterogéneo -->
+          <div class="space-y-3">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Heterogéneo</p>
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.heterogeneousTeams"
+                  @change="store.updateStep3Factors({ heterogeneousTeams: $event.target.checked, ...($event.target.checked && { homogeneousTeams: false }) })"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Heterogéneo</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.heterogeneousTeams && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Peso:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.heterogeneousTeamsWeight" @input="store.updateStep3Factors({ heterogeneousTeamsWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.heterogeneousTeams && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.balanceHeterogeneousTeams" @change="store.updateStep3Factors({ balanceHeterogeneousTeams: $event.target.checked })"
+                  :disabled="!store.step3Factors.heterogeneousTeams"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceHeterogeneousTeams && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Balance:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.balanceHeterogeneousTeamsNacionalityFactorWeight" @input="store.updateStep3Factors({ balanceHeterogeneousTeamsNacionalityFactorWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
             </div>
           </div>
-          <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.heterogeneousTeams && 'opacity-40 pointer-events-none'">
-            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
-              <input type="checkbox" :checked="store.step3Factors.balanceHeterogeneousTeams" @change="store.updateStep3Factors({ balanceHeterogeneousTeams: $event.target.checked })"
-                :disabled="!store.step3Factors.heterogeneousTeams"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Ponderar en el equipo</span>
-            </label>
-            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceHeterogeneousTeams && 'opacity-40 pointer-events-none'">
-              <span class="text-xs text-gray-500">Balance:</span>
-              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-                :value="store.step3Factors.balanceHeterogeneousTeamsNacionalityFactorWeight" @input="store.updateStep3Factors({ balanceHeterogeneousTeamsNacionalityFactorWeight: Number($event.target.value) })"
-                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+          <!-- Homogéneo -->
+          <div class="space-y-3">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Homogéneo</p>
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.homogeneousTeams"
+                  @change="store.updateStep3Factors({ homogeneousTeams: $event.target.checked, ...($event.target.checked && { heterogeneousTeams: false }) })"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Homogéneo</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.homogeneousTeams && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Peso:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.homogeneousTeamsWeight" @input="store.updateStep3Factors({ homogeneousTeamsWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.homogeneousTeams && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.balanceHomogeneousTeams" @change="store.updateStep3Factors({ balanceHomogeneousTeams: $event.target.checked })"
+                  :disabled="!store.step3Factors.homogeneousTeams"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceHomogeneousTeams && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Balance:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.balanceHomogeneousTeamsNacionalityFactorWeight" @input="store.updateStep3Factors({ balanceHomogeneousTeamsNacionalityFactorWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
             </div>
           </div>
         </div>
@@ -1005,32 +1175,69 @@ watch(roleLoadOptions, (opts) => {
         <h3 class="text-base font-semibold text-gray-800">Religión</h3>
       </div>
       <div class="p-6">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="flex items-center justify-between gap-3">
-            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
-              <input type="checkbox" :checked="store.step3Factors.maxReligion" @change="store.updateStep3Factors({ maxReligion: $event.target.checked })"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Tomar en consideración</span>
-            </label>
-            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxReligion && 'opacity-40 pointer-events-none'">
-              <span class="text-xs text-gray-500">Peso:</span>
-              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-                :value="store.step3Factors.maxReligionWeight" @input="store.updateStep3Factors({ maxReligionWeight: Number($event.target.value) })"
-                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+        <div class="grid grid-cols-2 gap-6">
+          <!-- Heterogéneo -->
+          <div class="space-y-3">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Heterogéneo</p>
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.maxReligion"
+                  @change="store.updateStep3Factors({ maxReligion: $event.target.checked, ...($event.target.checked && { minReligion: false }) })"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Heterogéneo</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxReligion && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Peso:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.maxReligionWeight" @input="store.updateStep3Factors({ maxReligionWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.maxReligion && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.balanceMaximizeReligion" @change="store.updateStep3Factors({ balanceMaximizeReligion: $event.target.checked })"
+                  :disabled="!store.step3Factors.maxReligion"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMaximizeReligion && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Balance:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.balanceMaximizeReligionWeight" @input="store.updateStep3Factors({ balanceMaximizeReligionWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
             </div>
           </div>
-          <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.maxReligion && 'opacity-40 pointer-events-none'">
-            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
-              <input type="checkbox" :checked="store.step3Factors.balanceMaximizeReligion" @change="store.updateStep3Factors({ balanceMaximizeReligion: $event.target.checked })"
-                :disabled="!store.step3Factors.maxReligion"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Ponderar en el equipo</span>
-            </label>
-            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMaximizeReligion && 'opacity-40 pointer-events-none'">
-              <span class="text-xs text-gray-500">Balance:</span>
-              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-                :value="store.step3Factors.balanceMaximizeReligionWeight" @input="store.updateStep3Factors({ balanceMaximizeReligionWeight: Number($event.target.value) })"
-                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+          <!-- Homogéneo -->
+          <div class="space-y-3">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Homogéneo</p>
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.minReligion"
+                  @change="store.updateStep3Factors({ minReligion: $event.target.checked, ...($event.target.checked && { maxReligion: false }) })"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Homogéneo</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.minReligion && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Peso:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.minReligionWeight" @input="store.updateStep3Factors({ minReligionWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.minReligion && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.balanceMinimizeReligion" @change="store.updateStep3Factors({ balanceMinimizeReligion: $event.target.checked })"
+                  :disabled="!store.step3Factors.minReligion"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMinimizeReligion && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Balance:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.balanceMinimizeReligionWeight" @input="store.updateStep3Factors({ balanceMinimizeReligionWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
             </div>
           </div>
         </div>
@@ -1044,32 +1251,69 @@ watch(roleLoadOptions, (opts) => {
         <h3 class="text-base font-semibold text-gray-800">Rango de edades</h3>
       </div>
       <div class="p-6">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="flex items-center justify-between gap-3">
-            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
-              <input type="checkbox" :checked="store.step3Factors.maxAgeHeterogeneity" @change="store.updateStep3Factors({ maxAgeHeterogeneity: $event.target.checked })"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Tomar en consideración</span>
-            </label>
-            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxAgeHeterogeneity && 'opacity-40 pointer-events-none'">
-              <span class="text-xs text-gray-500">Peso:</span>
-              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-                :value="store.step3Factors.maxAgeHeterogeneityWeight" @input="store.updateStep3Factors({ maxAgeHeterogeneityWeight: Number($event.target.value) })"
-                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+        <div class="grid grid-cols-2 gap-6">
+          <!-- Heterogéneo -->
+          <div class="space-y-3">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Heterogéneo</p>
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.maxAgeHeterogeneity"
+                  @change="store.updateStep3Factors({ maxAgeHeterogeneity: $event.target.checked, ...($event.target.checked && { minAgeHomogeneity: false }) })"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Heterogéneo</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.maxAgeHeterogeneity && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Peso:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.maxAgeHeterogeneityWeight" @input="store.updateStep3Factors({ maxAgeHeterogeneityWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.maxAgeHeterogeneity && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.balanceMaximizeAgeHeterogeneity" @change="store.updateStep3Factors({ balanceMaximizeAgeHeterogeneity: $event.target.checked })"
+                  :disabled="!store.step3Factors.maxAgeHeterogeneity"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMaximizeAgeHeterogeneity && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Balance:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.balanceMaximizeAgeHeterogeneityWeight" @input="store.updateStep3Factors({ balanceMaximizeAgeHeterogeneityWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
             </div>
           </div>
-          <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.maxAgeHeterogeneity && 'opacity-40 pointer-events-none'">
-            <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
-              <input type="checkbox" :checked="store.step3Factors.balanceMaximizeAgeHeterogeneity" @change="store.updateStep3Factors({ balanceMaximizeAgeHeterogeneity: $event.target.checked })"
-                :disabled="!store.step3Factors.maxAgeHeterogeneity"
-                class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-700 select-none truncate">Ponderar en el equipo</span>
-            </label>
-            <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMaximizeAgeHeterogeneity && 'opacity-40 pointer-events-none'">
-              <span class="text-xs text-gray-500">Balance:</span>
-              <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
-                :value="store.step3Factors.balanceMaximizeAgeHeterogeneityWeight" @input="store.updateStep3Factors({ balanceMaximizeAgeHeterogeneityWeight: Number($event.target.value) })"
-                class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+          <!-- Homogéneo -->
+          <div class="space-y-3">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Homogéneo</p>
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.minAgeHomogeneity"
+                  @change="store.updateStep3Factors({ minAgeHomogeneity: $event.target.checked, ...($event.target.checked && { maxAgeHeterogeneity: false }) })"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Homogéneo</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.minAgeHomogeneity && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Peso:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.minAgeHomogeneityWeight" @input="store.updateStep3Factors({ minAgeHomogeneityWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3" :class="!store.step3Factors.minAgeHomogeneity && 'opacity-40 pointer-events-none'">
+              <label class="flex items-center gap-2.5 cursor-pointer min-w-0">
+                <input type="checkbox" :checked="store.step3Factors.balanceMinimizeAgeHomogeneity" @change="store.updateStep3Factors({ balanceMinimizeAgeHomogeneity: $event.target.checked })"
+                  :disabled="!store.step3Factors.minAgeHomogeneity"
+                  class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer flex-shrink-0" />
+                <span class="text-sm font-medium text-gray-700 select-none truncate">Balancear entre equipos</span>
+              </label>
+              <div class="flex items-center gap-1.5 flex-shrink-0" :class="!store.step3Factors.balanceMinimizeAgeHomogeneity && 'opacity-40 pointer-events-none'">
+                <span class="text-xs text-gray-500">Balance:</span>
+                <input type="number" min="0" max="1" step="0.01" placeholder="0.00"
+                  :value="store.step3Factors.balanceMinimizeAgeHomogeneityWeight" @input="store.updateStep3Factors({ balanceMinimizeAgeHomogeneityWeight: Number($event.target.value) })"
+                  class="w-16 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+              </div>
             </div>
           </div>
         </div>
