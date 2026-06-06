@@ -2,7 +2,7 @@ import { api } from '@/lib/api'
 
 const reportService = {
   async getPersonReport() {
-    return api.get('person/report').json()
+    return api.get('person').json()
   },
   async getFinishedProjects() {
     return api.get('project/finished').json()

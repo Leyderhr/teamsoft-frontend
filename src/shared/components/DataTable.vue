@@ -44,6 +44,18 @@
             <Upload class="w-4 h-4" />
             Importar
           </button>
+          <button
+            v-if="showImportButton"
+            @click="$emit('export')"
+            :disabled="!hasItems"
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium transition-colors"
+            :class="hasItems
+              ? 'text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+              : 'text-gray-300 cursor-not-allowed bg-gray-50'"
+          >
+            <Download class="w-4 h-4" />
+            Exportar
+          </button>
           <!-- Slot para botones adicionales -->
           <slot name="extraButtons"></slot>
         </div>
@@ -299,7 +311,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import {
-  Plus, Pencil, Trash2, Upload, Search,
+  Plus, Pencil, Trash2, Upload, Download, Search,
   ChevronUp, ChevronDown, ChevronsUpDown,
   ChevronLeft, ChevronRight,
   CheckCircle2, XCircle, Inbox, AlertTriangle,
@@ -317,7 +329,9 @@ const props = defineProps({
   defaultRows: { type: Number, default: 10 },
 })
 
-const emit = defineEmits(['create', 'edit', 'delete', 'import', 'row-select'])
+const emit = defineEmits(['create', 'edit', 'delete', 'import', 'export', 'row-select'])
+
+const hasItems = computed(() => props.items?.length > 0)
 
 // State
 const searchQuery = ref('')

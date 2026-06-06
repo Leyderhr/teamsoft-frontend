@@ -29,9 +29,5 @@ export const competenceConfig = {
     ],
 
     breadcrumb: [{ name: 'Competencias', disable: true }],
-    showImportButton: true,
-    onImport: () => {
-        console.log('Importar competencias')
-        // TODO: Implementar lógica de importación
-    }
+    showImportButton: true
 }

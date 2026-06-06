@@ -26,6 +26,7 @@ const props = defineProps({
   onCreateClick: { type: Function, required: true },
   onEditClick: { type: Function, default: null },
   onImportClick: { type: Function, default: null },
+  onExportClick: { type: Function, default: null },
 })
 
 const emit = defineEmits(['update:selectedItem'])
@@ -80,6 +81,13 @@ const handleImport = () => {
     props.onImportClick()
   }
 }
+
+// Export
+const handleExport = () => {
+  if (typeof props.onExportClick === 'function') {
+    props.onExportClick()
+  }
+}
 </script>
 
 <template>
@@ -97,6 +105,7 @@ const handleImport = () => {
       @edit="handleEdit"
       @delete="handleDelete"
       @import="handleImport"
+      @export="handleExport"
       @row-select="handleRowSelect"
     >
       <template #extraButtons>
