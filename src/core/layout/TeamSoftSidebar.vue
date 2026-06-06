@@ -15,19 +15,15 @@
   >
     <!-- ── Logo ── -->
     <div
-      class="flex-shrink-0 bg-brand-500 px-4"
+      class="flex-shrink-0"
       :class="[
         'flex items-center',
         !isExpanded && !isHovered ? 'lg:justify-center py-6' : 'justify-start py-5',
       ]"
     >
       <router-link to="/" class="flex items-center gap-2 min-w-0">
-        <span class="text-xl font-bold text-white whitespace-nowrap" v-if="isExpanded || isHovered || isMobileOpen">
-          TeamSoft<sup class="text-white/60 text-xs font-normal">+</sup>
-        </span>
-        <span class="text-xl font-bold text-white" v-else>
-          TS<sup class="text-white/60 text-xs font-normal">+</sup>
-        </span>
+        <img v-if="isExpanded || isHovered || isMobileOpen" src="/Teamsoft+.png" alt="TeamSoft" class="h-10" />
+        <img v-else src="/trabajo_en_equipo2.png" alt="TS" class="h-10" />
       </router-link>
     </div>
 
