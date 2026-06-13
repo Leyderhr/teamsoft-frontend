@@ -113,7 +113,7 @@ function checkWeights(factors, pairs) {
 function toWireFixedWorkers(fixedWorkers) {
   return fixedWorkers.map(fw => ({
     project: { id: fw.projectId },
-    ...(fw.isBoss ? {} : { role: { id: fw.roleId } }),
+    role: { id: fw.roleId },
     boss: { id: fw.personId },
   }))
 }
