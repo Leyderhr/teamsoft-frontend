@@ -9,7 +9,7 @@ import { useToast } from 'primevue/usetoast';
 import { useAuth } from '@/composables/useAuth';
 
 const toast = useToast();
-const { login, isLoggingIn, currentUser } = useAuth();
+const { loginAsync, isLoggingIn } = useAuth();
 
 const form = reactive({
   username: '',
@@ -20,11 +20,11 @@ const submitted = ref(false);
 
 const handleLogin = async () => {
   submitted.value = true;
-  
+
   if (!form.username || !form.password) {
     toast.add({
       severity: 'error',
-      summary: 'Error',
+      summary: 'Campos requeridos',
       detail: 'Por favor complete todos los campos requeridos',
       life: 3000,
       icon: 'pi pi-times-circle'
@@ -33,7 +33,7 @@ const handleLogin = async () => {
   }
 
   try {
-    await login({
+    await loginAsync({
       username: form.username,
       password: form.password
     });
@@ -46,30 +46,49 @@ const handleLogin = async () => {
       icon: 'pi pi-check-circle'
     });
   } catch (error) {
-    console.error('Error de autenticación', error);
+    const status = error.response?.status;
 
-    let errorDetail = 'Ocurrió un error inesperado';
-    let errorSummary = 'Error de autenticación';
-
-    if (error.message?.includes('Network Error') || error.message?.includes('ECONNREFUSED')) {
-      errorDetail = 'No se puede conectar con el servidor. Verifica que la API esté corriendo en http://localhost:8081.';
-      errorSummary = 'Error de Conexión';
-    } else if (error.status === 401 || error.message?.toLowerCase().includes('credencial')) {
-      errorDetail = 'Usuario o contraseña incorrectos';
-      errorSummary = 'Credenciales Inválidas';
-    } else if (error.status === 400) {
-      errorDetail = error.message || 'Solicitud incorrecta';
-    } else if (error.status === 500) {
-      errorDetail = 'Error interno del servidor. Por favor, intente más tarde.';
+    if (error.name === 'TypeError' || error.message?.includes('Failed to fetch') || error.message?.includes('Network Error')) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error de Conexión',
+        detail: 'No se puede conectar con el servidor. Verifica que la API esté disponible.',
+        life: 4000,
+        icon: 'pi pi-wifi'
+      });
+    } else if (status === 401) {
+      toast.add({
+        severity: 'error',
+        summary: 'Credenciales Inválidas',
+        detail: 'Usuario o contraseña incorrectos. Por favor, verifica tus datos.',
+        life: 4000,
+        icon: 'pi pi-lock'
+      });
+    } else if (status === 400) {
+      toast.add({
+        severity: 'error',
+        summary: 'Solicitud Incorrecta',
+        detail: 'Los datos ingresados no son válidos.',
+        life: 4000,
+        icon: 'pi pi-exclamation-triangle'
+      });
+    } else if (status === 500) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error del Servidor',
+        detail: 'Error interno del servidor. Por favor, intente más tarde.',
+        life: 4000,
+        icon: 'pi pi-exclamation-triangle'
+      });
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: 'Error de autenticación',
+        detail: 'Ocurrió un error inesperado. Por favor, intente de nuevo.',
+        life: 4000,
+        icon: 'pi pi-exclamation-triangle'
+      });
     }
-
-    toast.add({
-      severity: 'error',
-      summary: errorSummary,
-      detail: errorDetail,
-      life: 4000,
-      icon: 'pi pi-exclamation-triangle'
-    });
   }
 };
 </script>

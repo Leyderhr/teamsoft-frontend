@@ -32,60 +32,98 @@
           </span>
         </router-link>
 
-        <!-- Mobile three-dot menu toggle -->
-        <div class="flex items-center gap-2 lg:hidden">
+        <!-- Mobile: profile icon with combined dropdown -->
+        <div class="relative flex items-center lg:hidden" ref="mobileProfileRef">
           <button
-            @click="isApplicationMenuOpen = !isApplicationMenuOpen"
-            class="flex items-center justify-center w-10 h-10 text-gray-700 rounded-lg hover:bg-gray-100"
+            @click="toggleMobileProfileMenu"
+            class="flex items-center justify-center w-10 h-10 rounded-full bg-brand-500 hover:bg-brand-600 transition-colors"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path
-                fill-rule="evenodd" clip-rule="evenodd"
-                d="M5.99902 10.4951C6.82745 10.4951 7.49902 11.1667 7.49902 11.9951V12.0051C7.49902 12.8335 6.82745 13.5051 5.99902 13.5051C5.1706 13.5051 4.49902 12.8335 4.49902 12.0051V11.9951C4.49902 11.1667 5.1706 10.4951 5.99902 10.4951ZM17.999 10.4951C18.8275 10.4951 19.499 11.1667 19.499 11.9951V12.0051C19.499 12.8335 18.8275 13.5051 17.999 13.5051C17.1706 13.5051 16.499 12.8335 16.499 12.0051V11.9951C16.499 11.1667 17.1706 10.4951 17.999 10.4951ZM13.499 11.9951C13.499 11.1667 12.8275 10.4951 11.999 10.4951C11.1706 10.4951 10.499 11.1667 10.499 11.9951V12.0051C10.499 12.8335 11.1706 13.5051 11.999 13.5051C12.8275 13.5051 13.499 12.8335 13.499 12.0051V11.9951Z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Right actions (desktop always visible, mobile toggleable) -->
-      <div
-        class="lg:flex items-center justify-between w-full gap-4 px-5 py-4 shadow-md lg:justify-end lg:px-0 lg:shadow-none"
-        :class="isApplicationMenuOpen ? 'flex' : 'hidden'"
-      >
-        <!-- Language Selector -->
-        <div class="relative" ref="languageRef">
-          <button
-            @click="toggleLanguageMenu"
-            class="flex items-center gap-2 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
-          >
-            <Globe class="w-5 h-5" />
-            <span class="font-medium text-sm uppercase">{{ localeStore.currentLanguage }}</span>
+            <User class="w-5 h-5 text-white" />
           </button>
 
           <div
-            v-if="languageMenuOpen"
-            class="absolute right-0 mt-2 w-40 rounded-2xl border border-gray-200 bg-white p-2 shadow-theme-lg z-50"
+            v-if="mobileProfileMenuOpen"
+            class="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-gray-200 bg-white shadow-theme-lg z-50 overflow-hidden"
           >
-            <button
-              @click="() => { localeStore.setLanguage('es'); languageMenuOpen = false }"
-              class="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-gray-100"
-              :class="{ 'text-brand-500 font-medium': localeStore.currentLanguage === 'es' }"
-            >
-              <Check v-if="localeStore.currentLanguage === 'es'" class="w-4 h-4" />
-              <span :class="{ 'ml-4': localeStore.currentLanguage !== 'es' }">Español</span>
-            </button>
-            <button
-              @click="() => { localeStore.setLanguage('en'); languageMenuOpen = false }"
-              class="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-gray-100"
-              :class="{ 'text-brand-500 font-medium': localeStore.currentLanguage === 'en' }"
-            >
-              <Check v-if="localeStore.currentLanguage === 'en'" class="w-4 h-4" />
-              <span :class="{ 'ml-4': localeStore.currentLanguage !== 'en' }">English</span>
-            </button>
+            <!-- User info -->
+            <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <div class="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center flex-shrink-0">
+                <User class="w-5 h-5 text-white" />
+              </div>
+              <div class="min-w-0">
+                <span class="block font-semibold text-gray-800 text-sm truncate">
+                  {{ authStore.user?.username || 'Usuario' }}
+                </span>
+                <span
+                  class="block text-xs text-gray-500 mt-0.5 truncate"
+                  v-if="authStore.user?.authorities?.length > 0"
+                >
+                  {{ authStore.user.authorities[0].replace('ROLE_', '').replace(/_/g, ' ') }}
+                </span>
+              </div>
+            </div>
+
+            <!-- User actions -->
+            <ul class="flex flex-col gap-0.5 p-2 border-b border-gray-200">
+              <li>
+                <router-link
+                  to="/change-password"
+                  class="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 rounded-xl hover:bg-gray-100"
+                  @click="mobileProfileMenuOpen = false"
+                >
+                  <Key class="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  Cambiar contraseña
+                </router-link>
+              </li>
+              <li>
+                <button
+                  @click="handleLogout"
+                  class="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-gray-700 rounded-xl hover:bg-gray-100"
+                >
+                  <LogOut class="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  Cerrar sesión
+                </button>
+              </li>
+            </ul>
+
+            <!-- Language section (accordion) -->
+            <div>
+              <button
+                @click="mobileLanguageExpanded = !mobileLanguageExpanded"
+                class="flex items-center gap-2.5 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <FlagIcon :code="localeStore.currentLanguage" />
+                <span class="flex-1 text-left font-medium">
+                  {{ mobileLanguages.find(l => l.code === localeStore.currentLanguage)?.name }}
+                </span>
+                <ChevronDown
+                  class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                  :class="{ 'rotate-180': mobileLanguageExpanded }"
+                />
+              </button>
+
+              <div v-if="mobileLanguageExpanded" class="px-2 pb-2 bg-gray-50">
+                <button
+                  v-for="lang in mobileLanguages"
+                  :key="lang.code"
+                  @click="() => { localeStore.setLanguage(lang.code); mobileProfileMenuOpen = false; mobileLanguageExpanded = false }"
+                  class="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm rounded-xl hover:bg-gray-100"
+                  :class="localeStore.currentLanguage === lang.code ? 'text-brand-500 font-medium bg-brand-50' : 'text-gray-700'"
+                >
+                  <FlagIcon :code="lang.code" />
+                  <span class="flex-1 text-left">{{ lang.name }}</span>
+                  <Check v-if="localeStore.currentLanguage === lang.code" class="w-4 h-4 flex-shrink-0" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+
+      <!-- Right actions (desktop only) -->
+      <div class="hidden lg:flex items-center justify-end w-full gap-4">
+        <!-- Language Switcher -->
+        <LanguageSwitcher />
 
         <!-- User Profile -->
         <div class="relative" ref="profileRef">
@@ -96,7 +134,7 @@
             <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center">
               <User class="w-4 h-4 text-white" />
             </div>
-            <span class="font-medium hidden md:block text-sm">{{ authStore.user?.username || 'Usuario' }}</span>
+            <span class="font-medium text-sm">{{ authStore.user?.username || 'Usuario' }}</span>
             <ChevronDown
               class="w-4 h-4 transition-transform duration-200"
               :class="{ 'rotate-180': profileMenuOpen }"
@@ -111,7 +149,10 @@
               <span class="block font-semibold text-gray-800 text-sm">
                 {{ authStore.user?.username || 'Usuario' }}
               </span>
-              <span class="block text-xs text-gray-500 mt-0.5" v-if="authStore.user?.authorities && authStore.user.authorities.length > 0">
+              <span
+                class="block text-xs text-gray-500 mt-0.5"
+                v-if="authStore.user?.authorities?.length > 0"
+              >
                 {{ authStore.user.authorities[0].replace('ROLE_', '').replace(/_/g, ' ') }}
               </span>
             </div>
@@ -149,7 +190,9 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/lib/auth-store'
 import { useLocaleStore } from '@/core/store/locale.store.js'
 import { useSidebar } from '@/core/composables/useSidebar.js'
-import { Globe, User, ChevronDown, Key, LogOut, Check } from 'lucide-vue-next'
+import { User, ChevronDown, Key, LogOut, Check } from 'lucide-vue-next'
+import LanguageSwitcher from '@/core/layout/LanguageSwitcher.vue'
+import FlagIcon from '@/core/layout/FlagIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -157,10 +200,15 @@ const localeStore = useLocaleStore()
 const { toggleSidebar, toggleMobileSidebar, isMobileOpen, isMobile } = useSidebar()
 
 const profileRef = ref(null)
-const languageRef = ref(null)
+const mobileProfileRef = ref(null)
 const profileMenuOpen = ref(false)
-const languageMenuOpen = ref(false)
-const isApplicationMenuOpen = ref(false)
+const mobileProfileMenuOpen = ref(false)
+const mobileLanguageExpanded = ref(false)
+
+const mobileLanguages = [
+  { code: 'es', name: 'Español' },
+  { code: 'en', name: 'English' }
+]
 
 function handleHamburger() {
   if (isMobile.value) {
@@ -168,21 +216,19 @@ function handleHamburger() {
   } else {
     toggleSidebar()
   }
-  isApplicationMenuOpen.value = !isApplicationMenuOpen.value
 }
 
 const toggleProfileMenu = () => {
   profileMenuOpen.value = !profileMenuOpen.value
-  languageMenuOpen.value = false
 }
 
-const toggleLanguageMenu = () => {
-  languageMenuOpen.value = !languageMenuOpen.value
-  profileMenuOpen.value = false
+const toggleMobileProfileMenu = () => {
+  mobileProfileMenuOpen.value = !mobileProfileMenuOpen.value
 }
 
 const handleLogout = async () => {
   profileMenuOpen.value = false
+  mobileProfileMenuOpen.value = false
   authStore.clearAuth()
   router.push('/login')
 }
@@ -191,8 +237,9 @@ const handleClickOutside = (event) => {
   if (profileRef.value && !profileRef.value.contains(event.target)) {
     profileMenuOpen.value = false
   }
-  if (languageRef.value && !languageRef.value.contains(event.target)) {
-    languageMenuOpen.value = false
+  if (mobileProfileRef.value && !mobileProfileRef.value.contains(event.target)) {
+    mobileProfileMenuOpen.value = false
+    mobileLanguageExpanded.value = false
   }
 }
 

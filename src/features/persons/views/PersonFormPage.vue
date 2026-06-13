@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed, onMounted, defineComponent, h } from 'vue'
+import { ref, reactive, computed, onMounted, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle, ChevronRight } from 'lucide-vue-next'
+import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle, ChevronRight, AlertCircle } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppDatePicker from '@/components/ui/AppDatePicker.vue'
@@ -202,6 +202,33 @@ const personConflicts = ref([])
 const selectedConflicts = ref([])
 
 const saving = ref(false)
+const errors = reactive({})
+
+const ERROR_ES = {
+  'Person name is required': 'El nombre es obligatorio',
+  'Only letters and spaces are allowed': 'Solo se permiten letras y espacios',
+  'ID card is required': 'El CI es obligatorio',
+  'Card must contain at least 8 digits': 'El CI debe tener al menos 8 dígitos',
+  'Surname is required': 'Los apellidos son obligatorios',
+  'Address is required': 'La dirección es obligatoria',
+  'Phone is required': 'El teléfono es obligatorio',
+  'Phone must contain at least 8 digits': 'El teléfono debe tener al menos 8 dígitos',
+  'Sex is required': 'El sexo es obligatorio',
+  "Sex must be 'M' or 'F'": "El sexo debe ser 'M' o 'F'",
+  'Email is required': 'El correo es obligatorio',
+  'Email should be valid': 'El correo no es válido',
+  'In date is required': 'La fecha de ingreso es obligatoria',
+  'Experience is required': 'La experiencia es obligatoria',
+  'Birth date is required': 'La fecha de nacimiento es obligatoria',
+  'Birth date must be in the past': 'La fecha de nacimiento debe ser en el pasado',
+  'County ID is required': 'La provincia es obligatoria',
+  'Race ID is required': 'La raza es obligatoria',
+  'Person group ID is required': 'El grupo es obligatorio',
+  'Nacionality ID is required': 'La nacionalidad es obligatoria',
+  'Religion ID is required': 'La religión es obligatoria',
+  'Person test is required': 'El test psicológico es obligatorio',
+}
+const te = msg => ERROR_ES[msg] ?? msg
 const isEditMode = computed(() => props.mode === 'edit')
 const pageTitle = computed(() => isEditMode.value ? 'Editar Persona' : 'Crear Persona')
 
@@ -430,8 +457,25 @@ function removeConflicts() {
 }
 
 async function handleSave() {
-  if (!personName.value.trim() || !card.value.trim() || !surName.value.trim()) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'Complete los campos obligatorios: Nombre, CI y Apellidos', life: 3000 })
+  // Limpiar errores previos
+  Object.keys(errors).forEach(k => delete errors[k])
+
+  // Validación client-side de campos obligatorios
+  let hasErrors = false
+  if (!personName.value.trim()) {
+    errors.personName = 'El nombre es obligatorio'
+    hasErrors = true
+  }
+  if (!surName.value.trim()) {
+    errors.surName = 'Los apellidos son obligatorios'
+    hasErrors = true
+  }
+  if (!card.value.trim()) {
+    errors.card = 'El CI es obligatorio'
+    hasErrors = true
+  }
+
+  if (hasErrors) {
     activeTab.value = 'basic'
     return
   }
@@ -485,21 +529,53 @@ async function handleSave() {
       })),
     }
 
-    if (isEditMode.value) {
-      await api.put(`person/${route.params.id}`, { json: payload }).json()
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Persona actualizada correctamente', life: 3000 })
-    } else {
-      await api.post('person', { json: payload }).json()
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Persona creada correctamente', life: 3000 })
+    const response = isEditMode.value
+      ? await api.put(`person/${route.params.id}`, { json: payload, throwHttpErrors: false })
+      : await api.post('person', { json: payload, throwHttpErrors: false })
+
+    if (!response.ok) {
+      let detail = 'Error al guardar la persona'
+      try {
+        const body = await response.json()
+        if (body?.fieldErrors && typeof body.fieldErrors === 'object') {
+          Object.entries(body.fieldErrors).forEach(([field, msg]) => {
+            errors[field] = te(msg)
+          })
+          detail = 'Corrija los errores marcados en el formulario'
+        } else if (body?.message) {
+          detail = te(body.message)
+          const msg = body.message.toLowerCase()
+          if (msg.includes('ci') || msg.includes('carnet') || msg.includes('card') || msg.includes('duplicad') || msg.includes('ya exist')) {
+            errors.card = te(body.message)
+          } else if (msg.includes('email') || msg.includes('correo')) {
+            errors.email = te(body.message)
+          } else if (msg.includes('nombre') || msg.includes('name')) {
+            errors.personName = te(body.message)
+          } else if (msg.includes('apellido') || msg.includes('surname')) {
+            errors.surName = te(body.message)
+          } else if (msg.includes('tel') || msg.includes('phone')) {
+            errors.phone = te(body.message)
+          }
+        }
+        if (errors.personName || errors.surName || errors.card || errors.email || errors.phone || errors.address) {
+          activeTab.value = 'basic'
+        }
+      } catch {}
+      toast.add({ severity: 'error', summary: 'Error al guardar', detail, life: 4000 })
+      return
     }
+
+    toast.add({
+      severity: 'success',
+      summary: 'Éxito',
+      detail: isEditMode.value ? 'Persona actualizada correctamente' : 'Persona creada correctamente',
+      life: 3000
+    })
     router.push('/person')
   } catch (e) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: e?.response?.data?.message ?? 'Error al guardar',
-      life: 3000,
-    })
+    let detail = 'Error al guardar la persona'
+    if (e?.name === 'TypeError') detail = 'Sin conexión con el servidor'
+    toast.add({ severity: 'error', summary: 'Error al guardar', detail, life: 4000 })
   } finally {
     saving.value = false
   }
@@ -543,27 +619,87 @@ async function handleSave() {
         <div v-show="activeTab === 'basic'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Nombre <span class="text-error-500">*</span></label>
-            <input v-model="personName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Nombre" />
+            <input
+              v-model="personName"
+              @input="delete errors.personName"
+              type="text"
+              :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
+                errors.personName ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
+              placeholder="Nombre"
+            />
+            <p v-if="errors.personName" class="flex items-center gap-1 text-xs text-error-600">
+              <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.personName }}
+            </p>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Apellidos <span class="text-error-500">*</span></label>
-            <input v-model="surName" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Apellidos" />
+            <input
+              v-model="surName"
+              @input="delete errors.surName"
+              type="text"
+              :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
+                errors.surName ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
+              placeholder="Apellidos"
+            />
+            <p v-if="errors.surName" class="flex items-center gap-1 text-xs text-error-600">
+              <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.surName }}
+            </p>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">CI <span class="text-error-500">*</span></label>
-            <input v-model="card" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Carnet de identidad" />
+            <input
+              v-model="card"
+              @input="delete errors.card"
+              type="text"
+              :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
+                errors.card ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
+              placeholder="Carnet de identidad"
+            />
+            <p v-if="errors.card" class="flex items-center gap-1 text-xs text-error-600">
+              <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.card }}
+            </p>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Dirección</label>
-            <input v-model="address" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Dirección" />
+            <input
+              v-model="address"
+              @input="delete errors.address"
+              type="text"
+              :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
+                errors.address ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
+              placeholder="Dirección"
+            />
+            <p v-if="errors.address" class="flex items-center gap-1 text-xs text-error-600">
+              <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.address }}
+            </p>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-            <input v-model="phone" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Teléfono" />
+            <input
+              v-model="phone"
+              @input="delete errors.phone"
+              type="text"
+              :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
+                errors.phone ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
+              placeholder="Teléfono"
+            />
+            <p v-if="errors.phone" class="flex items-center gap-1 text-xs text-error-600">
+              <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.phone }}
+            </p>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Correo</label>
-            <input v-model="email" type="email" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="Correo electrónico" />
+            <input
+              v-model="email"
+              @input="delete errors.email"
+              type="email"
+              :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
+                errors.email ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
+              placeholder="Correo electrónico"
+            />
+            <p v-if="errors.email" class="flex items-center gap-1 text-xs text-error-600">
+              <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.email }}
+            </p>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Sexo</label>

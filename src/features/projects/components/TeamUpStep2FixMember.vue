@@ -170,11 +170,13 @@ const memberProposalRoleId    = ref(null)
 // ──────────────────────────────────────────────
 // Project-scoped queries (non-boss roles + boss competitions)
 // ──────────────────────────────────────────────
-const nonBossRolesIds    = computed(() => memberProposalProjectId.value ? [memberProposalProjectId.value] : [])
-const bossCompetitionIds = computed(() => competenceProjectId.value      ? [competenceProjectId.value]      : [])
+const nonBossRolesIds       = computed(() => memberProposalProjectId.value ? [memberProposalProjectId.value] : [])
+const bossCompetitionIds    = computed(() => competenceProjectId.value      ? [competenceProjectId.value]      : [])
+const bossProposalProjectIds = computed(() => bossTree.value.map(p => p.projectId))
 
 const { data: nonBossRolesData     } = useNonBossRoles(nonBossRolesIds)
 const { data: bossCompetitionsData } = useBossCompetitions(bossCompetitionIds)
+const { data: bossNonBossRolesData } = useNonBossRoles(bossProposalProjectIds)
 
 const nonBossRoleOptions = computed(() => {
   const list = nonBossRolesData.value
@@ -236,6 +238,17 @@ function getPersonName(person) {
     || `${person.id}`
 }
 
+// Calcula el rol de jefe para un proyecto dado:
+// rol de jefe = primer rol que NO está en la lista de nonBossRoles del proyecto
+function getBossRoleForProject(projectId) {
+  const allRoles = rolesData.value ?? []
+  const nonBossRolesForProjects = bossNonBossRolesData.value ?? []
+  const projectEntry = nonBossRolesForProjects.find(p => p.id === projectId)
+  if (!projectEntry) return null
+  const nonBossIds = new Set((projectEntry.nonBossRoles ?? []).map(r => r.id))
+  return allRoles.find(r => !nonBossIds.has(r.id)) ?? null
+}
+
 function toggleTreeProject(projectId) {
   const item = proposalsTree.value.find(p => p.projectId === projectId)
   if (item) item.expanded = !item.expanded
@@ -248,7 +261,15 @@ function selectTreePerson(person, project) {
     return
   }
   selectedTreePerson.value = { ...person, projectId: project.projectId, projectName: project.projectName }
-  assignRoleId.value = project.roleId ?? null
+  if (project.type === 'boss') {
+    // Para boss-proposals: resolvemos el rol de jefe automáticamente
+    // (rol de jefe = primer rol que no es non-boss-role del proyecto)
+    const bossRole = getBossRoleForProject(project.projectId)
+    assignRoleId.value = bossRole?.id ?? null
+  } else {
+    // Para member-proposals: el rol viene del response de la propuesta
+    assignRoleId.value = project.roleId ?? null
+  }
 }
 
 function assignAsBoss() {
@@ -256,11 +277,16 @@ function assignAsBoss() {
     toast.add({ severity: 'warn', summary: 'Sin selección', detail: 'Selecciona una persona', life: 3000 })
     return
   }
+  if (!assignRoleId.value) {
+    toast.add({ severity: 'warn', summary: 'Rol requerido', detail: 'Selecciona el rol de jefe para fijar a esta persona', life: 3000 })
+    return
+  }
+  const role = rolesData.value?.find(r => r.id === assignRoleId.value)
   store.addFixedWorker({
     personId:    selectedTreePerson.value.id,
     personName:  selectedTreePerson.value.name,
-    roleId:      null,
-    roleName:    null,
+    roleId:      assignRoleId.value,
+    roleName:    role?.roleName ?? `Rol ${assignRoleId.value}`,
     projectId:   selectedTreePerson.value.projectId,
     projectName: selectedTreePerson.value.projectName,
     isBoss:      true,
@@ -308,7 +334,8 @@ function generateBossProposals() {
           projectName: item.project.projectName,
           expanded:    true,
           type:        'boss',
-          roleId:      null,
+          roleId:      item.role?.id ?? null,
+          roleName:    item.role?.roleName ?? null,
           persons:     (item.candidates ?? []).map(c => ({
             id:         c.person.id,
             name:       getPersonName(c.person),
