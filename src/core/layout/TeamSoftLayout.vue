@@ -8,7 +8,7 @@
 
     <!-- Main Content Area -->
     <div
-      class="flex-1 min-w-0 overflow-x-hidden transition-all duration-300 ease-in-out"
+      class="flex-1 min-w-0 [overflow-x:clip] transition-all duration-300 ease-in-out"
       :class="isExpanded || isHovered ? 'lg:ml-[290px]' : 'lg:ml-[90px]'"
     >
       <!-- Header -->

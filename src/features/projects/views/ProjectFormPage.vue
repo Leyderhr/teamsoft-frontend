@@ -40,15 +40,12 @@
             <label class="block text-sm font-medium text-gray-700">
               Cliente <span class="text-error-500">*</span>
             </label>
-            <select
+            <AppSelect
               v-model="selectedClient"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-            >
-              <option value="" disabled>Seleccione...</option>
-              <option v-for="c in clientOptions" :key="c.value" :value="c.value">
-                {{ c.label }}
-              </option>
-            </select>
+              :options="clientOptions"
+              placeholder="Seleccione..."
+              searchable
+            />
           </div>
 
           <!-- Provincia -->
@@ -56,15 +53,12 @@
             <label class="block text-sm font-medium text-gray-700">
               Provincia <span class="text-error-500">*</span>
             </label>
-            <select
+            <AppSelect
               v-model="selectedProvince"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-            >
-              <option value="" disabled>Seleccione...</option>
-              <option v-for="p in provinceOptions" :key="p.value" :value="p.value">
-                {{ p.label }}
-              </option>
-            </select>
+              :options="provinceOptions"
+              placeholder="Seleccione..."
+              searchable
+            />
           </div>
         </div>
 
@@ -73,15 +67,11 @@
           <label class="block text-sm font-medium text-gray-700">
             Estructura del Proyecto <span class="text-error-500">*</span>
           </label>
-          <select
+          <AppSelect
             v-model="selectedProjectStructure"
-            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-          >
-            <option value="" disabled>Seleccione una estructura...</option>
-            <option v-for="s in projectStructureOptions" :key="s.value" :value="s.value">
-              {{ s.label }}
-            </option>
-          </select>
+            :options="projectStructureOptions"
+            placeholder="Seleccione una estructura..."
+          />
         </div>
 
         <!-- Add project button (create mode only) -->
@@ -178,6 +168,7 @@ import { useToast } from 'primevue/usetoast'
 import { Plus, Trash2, Save, Loader2 } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import AppDatePicker from '@/components/ui/AppDatePicker.vue'
+import AppSelect from '@/components/ui/AppSelect.vue'
 import clientService from '@/features/nomenclatives/services/clientService.js'
 import countyService from '@/features/nomenclatives/services/countyService.js'
 import projectStructureService from '@/features/nomenclatives/services/projectStructureService.js'
