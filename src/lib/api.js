@@ -41,35 +41,60 @@ function isPublicEndpoint(url) {
   return PUBLIC_ENDPOINTS.some(endpoint => url.includes(endpoint))
 }
 
+function bearerToken(authorizationHeader) {
+  return (authorizationHeader || '').replace(/^Bearer\s+/i, '')
+}
+
+// Sesión expirada y sin refresh válido: limpiar y mandar al login (evitando bucle si ya estamos ahí)
+function forceLogin() {
+  const authStore = useAuthStore()
+  authStore.clearAuth()
+  queryClient.clear()
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login'
+  }
+}
+
 // Base ky instance
 const _baseApi = ky.create({
   prefix: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
   timeout: 100000,
   hooks: {
     afterResponse: [
-      // ky v2: el hook recibe { request, options, response, retryCount }
-      async ({ response }) => {
+      // El hook recibe { request, options, response, retryCount }
+      async ({ request, response }) => {
         const url = response.url || ''
 
         if (response.status === 401 && !isPublicEndpoint(url)) {
           const authStore = useAuthStore()
+          const failedToken = bearerToken(request.headers.get('Authorization'))
+          const currentToken = authStore.getAccessToken()
 
+          // Otra petición concurrente ya refrescó el token: reintentar con el vigente
+          if (currentToken && currentToken !== failedToken) {
+            request.headers.set('Authorization', `Bearer ${currentToken}`)
+            return _baseApi(request)
+          }
+
+          // El token que falló es el vigente: coordinar un único refresh entre peticiones
           if (!isRefreshing) {
             isRefreshing = true
-            refreshPromise = refreshTokenAndGetNew()
+            refreshPromise = refreshTokenAndGetNew().finally(() => {
+              isRefreshing = false
+              refreshPromise = null
+            })
           }
-
           const newToken = await refreshPromise
-          isRefreshing = false
-          refreshPromise = null
 
-          if (!newToken) {
-            // Refresh falló — limpiar sesión y redirigir
-            authStore.clearAuth()
-            queryClient.clear()
-            window.location.href = '/login'
+          if (newToken && newToken !== failedToken) {
+            // Reintentar la petición original con el token nuevo (transparente para el usuario)
+            request.headers.set('Authorization', `Bearer ${newToken}`)
+            return _baseApi(request)
           }
-          // Si se obtuvo nuevo token, TanStack Query reintentará y withAuth() lo inyectará
+
+          // No se pudo refrescar (refresh token vencido/ausente): cerrar sesión y redirigir
+          forceLogin()
+          return response
         }
 
         if (response.status === 403 && !isPublicEndpoint(url)) {

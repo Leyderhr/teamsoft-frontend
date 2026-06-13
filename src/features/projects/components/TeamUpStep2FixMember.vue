@@ -12,6 +12,7 @@ import { useRoles } from '@/services/roles/queries'
 import { useNonBossRoles, useBossCompetitions } from '@/services/projects/queries'
 import { useBossProposals, useMemberProposals } from '@/services/team-formation/mutations'
 import { useTeamFormationStore } from '@/stores/teamFormation'
+import { parseApiError } from '@/lib/apiError'
 
 const props = defineProps({
   availableProjects: { type: Array, default: () => [] },
@@ -139,19 +140,6 @@ watch(roleLoadOptions, (opts) => {
 }, { immediate: true })
 
 // ──────────────────────────────────────────────
-// Error helper (ky HTTPError → readable message)
-// ──────────────────────────────────────────────
-async function parseApiError(e) {
-  try {
-    if (e?.response) {
-      const body = await e.response.json()
-      return body?.message || body?.error || body?.detail || e.message || 'Error en el servidor'
-    }
-  } catch { /* ignore parse failure */ }
-  return e?.message || 'Error en el servidor'
-}
-
-// ──────────────────────────────────────────────
 // Proposals
 // ──────────────────────────────────────────────
 const proposalMode       = ref('boss')
@@ -262,10 +250,9 @@ function selectTreePerson(person, project) {
   }
   selectedTreePerson.value = { ...person, projectId: project.projectId, projectName: project.projectName }
   if (project.type === 'boss') {
-    // Para boss-proposals: resolvemos el rol de jefe automáticamente
-    // (rol de jefe = primer rol que no es non-boss-role del proyecto)
-    const bossRole = getBossRoleForProject(project.projectId)
-    assignRoleId.value = bossRole?.id ?? null
+    // El backend ya indica el rol de jefe en la propuesta (project.roleId).
+    // Usamos la heurística local solo como respaldo si no viniera.
+    assignRoleId.value = project.roleId ?? getBossRoleForProject(project.projectId)?.id ?? null
   } else {
     // Para member-proposals: el rol viene del response de la propuesta
     assignRoleId.value = project.roleId ?? null
@@ -349,7 +336,8 @@ function generateBossProposals() {
         }
       },
       onError: async (e) => {
-        const detail = await parseApiError(e)
+        const detail = await parseApiError(e, 'No se pudieron generar las propuestas')
+        weightError.value = detail
         toast.add({ severity: 'error', summary: 'Error al generar propuestas', detail, life: 6000 })
       },
     }
@@ -394,7 +382,8 @@ function generateMemberProposals() {
         }
       },
       onError: async (e) => {
-        const detail = await parseApiError(e)
+        const detail = await parseApiError(e, 'No se pudieron generar las propuestas')
+        weightError.value = detail
         toast.add({ severity: 'error', summary: 'Error al generar propuestas', detail, life: 6000 })
       },
     }
