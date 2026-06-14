@@ -13,7 +13,7 @@ export const projectConfig = {
         { field: 'id', header: 'ID', width: '80px', sortable: true },
         { field: 'projectName', header: 'Nombre', width: '250px', sortable: true, filterable: true },
         { field: 'initialDate', header: 'Fecha Inicial', width: '150px', sortable: true, type: 'date' },
-        { field: 'close', header: 'Cerrado', width: '100px', sortable: true, type: 'boolean' }
+        { field: 'state', header: 'Estado', width: '100px', sortable: true, type: 'badge' }
     ],
     useCustomDialog: true,
     customDialogComponent: 'ProjectFormDialog',

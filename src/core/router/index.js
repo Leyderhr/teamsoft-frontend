@@ -130,6 +130,38 @@ const routes = [
                 }
             },
             {
+                path: 'manage-projects/finalize-team',
+                name: 'FinalizeTeam',
+                component: () => import('@/features/projects/views/FinalizeTeam.vue'),
+                meta: {
+                    breadcrumb: [{ name: 'Finalizar Equipo', disable: true }]
+                }
+            },
+            {
+                path: 'manage-projects/finalize-team/:projectId/members',
+                name: 'FinalizeTeamMembers',
+                component: () => import('@/features/projects/views/FinalizeTeamMembers.vue'),
+                props: true,
+                meta: {
+                    breadcrumb: [
+                        { name: 'Finalizar Equipo', path: '/manage-projects/finalize-team' },
+                        { name: 'Evaluar Miembros', disable: true },
+                    ]
+                }
+            },
+            {
+                path: 'manage-projects/finalize-team/:projectId/member/:personId',
+                name: 'FinalizeMemberCompetences',
+                component: () => import('@/features/projects/views/FinalizeMemberCompetences.vue'),
+                props: true,
+                meta: {
+                    breadcrumb: [
+                        { name: 'Finalizar Equipo', path: '/manage-projects/finalize-team' },
+                        { name: 'Editar Competencias', disable: true },
+                    ]
+                }
+            },
+            {
                 path: 'manage-projects/member-evaluation',
                 name: 'MemberEvaluation',
                 component: () => import('@/features/experiments/views/MemberEvaluation.vue'),

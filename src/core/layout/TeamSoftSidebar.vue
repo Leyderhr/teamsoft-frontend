@@ -458,6 +458,7 @@ const proyectosItems = computed(() => {
     items.push(
       { name: 'Proyectos', path: '/manage-projects/project' },
       { name: 'Formar equipo', path: '/manage-projects/team-formation' },
+      { name: 'Finalizar equipo', path: '/manage-projects/finalize-team' },
     )
   }
   if (securityStore.isJefeEquipo || securityStore.isDirectivoTecnico) {

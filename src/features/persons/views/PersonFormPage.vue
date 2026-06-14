@@ -356,7 +356,8 @@ onMounted(async () => {
       const rawConflicts = p.personConflicts ?? p.workerConflicts ?? []
       personConflicts.value = rawConflicts.map(pc => {
         const ciId = pc.conflictIndexId ?? pc.conflictIndex?.id
-        const conflictWorker = pc.conflictPerson ?? pc.workersFk ?? pc.workerFk ?? pc.worker
+        // El backend devuelve la persona incompatible en `personConflict`
+        const conflictWorker = pc.personConflict ?? pc.conflictPerson ?? pc.workersFk ?? pc.workerFk ?? pc.worker
         const pcId = pc.personConflictId ?? pc.conflictPersonId ?? conflictWorker?.id
         const fallbackName = conflictWorker
           ? `${conflictWorker.personName ?? ''} ${conflictWorker.surName ?? ''}`.trim()

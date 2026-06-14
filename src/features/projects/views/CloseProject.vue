@@ -33,9 +33,7 @@ const filteredProjects = computed(() => {
   const q = searchQuery.value.toLowerCase()
   if (!q) return projects.value
   return projects.value.filter(p =>
-    p.projectName?.toLowerCase().includes(q) ||
-    p.client?.entityName?.toLowerCase().includes(q) ||
-    p.county?.countyName?.toLowerCase().includes(q)
+    p.projectName?.toLowerCase().includes(q)
   )
 })
 
@@ -132,8 +130,6 @@ async function doClose() {
             <tr>
               <th class="w-10 px-4 py-3"></th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provincia</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Inicio</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
             </tr>
@@ -141,7 +137,7 @@ async function doClose() {
           <tbody class="divide-y divide-gray-100">
             <!-- Loading -->
             <tr v-if="loading">
-              <td colspan="6" class="px-4 py-10 text-center">
+              <td colspan="4" class="px-4 py-10 text-center">
                 <div class="flex items-center justify-center gap-2 text-sm text-gray-400">
                   <Loader2 class="w-5 h-5 animate-spin" />
                   Cargando proyectos...
@@ -150,7 +146,7 @@ async function doClose() {
             </tr>
             <!-- Sin resultados -->
             <tr v-else-if="!filteredProjects.length">
-              <td colspan="6" class="px-4 py-10 text-center text-sm text-gray-400">
+              <td colspan="4" class="px-4 py-10 text-center text-sm text-gray-400">
                 Sin proyectos para mostrar
               </td>
             </tr>
@@ -173,8 +169,6 @@ async function doClose() {
                 />
               </td>
               <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ p.projectName }}</td>
-              <td class="px-4 py-3 text-sm text-gray-600">{{ p.client?.entityName || '—' }}</td>
-              <td class="px-4 py-3 text-sm text-gray-600">{{ p.county?.countyName || '—' }}</td>
               <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(p.initialDate) }}</td>
               <td class="px-4 py-3">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="statusClass(p)">

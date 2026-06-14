@@ -15,6 +15,10 @@ const personService = {
   },
   async delete(id) {
     return api.delete(`person/${id}`).text()
+  },
+  // Edición parcial: solo competencias e incompatibilidades
+  async patchCompetencesConflicts(id, data) {
+    return api.patch(`person/${id}/competences-conflicts`, { json: data }).json()
   }
 }
 
