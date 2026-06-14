@@ -14,23 +14,27 @@ const router = useRouter()
 const authStore = useAuthStore()
 const securityStore = useSecurityStore()
 
-const projects = ref([])
+const createdProjects   = ref([])
+const formedProjects    = ref([])
+const finalizedProjects = ref([])
+const closedProjects    = ref([])
 const groups = ref([])
 const loading = ref(true)
 
-const stats = computed(() => {
-  const all = projects.value
-  const active = all.filter(p => !p.close && !p.finalize)
-  const finalized = all.filter(p => p.finalize && !p.close)
-  const closed = all.filter(p => p.close)
-  return {
-    total: all.length,
-    active: active.length,
-    finalized: finalized.length,
-    closed: closed.length,
-    groups: groups.value.length
-  }
-})
+const projects = computed(() => [
+  ...createdProjects.value,
+  ...formedProjects.value,
+  ...finalizedProjects.value,
+  ...closedProjects.value,
+])
+
+const stats = computed(() => ({
+  total: projects.value.length,
+  active: createdProjects.value.length + formedProjects.value.length,
+  finalized: finalizedProjects.value.length,
+  closed: closedProjects.value.length,
+  groups: groups.value.length,
+}))
 
 const statCards = computed(() => [
   {
@@ -92,25 +96,37 @@ const quickActions = computed(() => {
 })
 
 function getBadgeClass(project) {
-  if (project.close) return 'bg-gray-100 text-gray-600'
-  if (project.finalize) return 'bg-blue-light-50 text-blue-light-700'
-  return 'bg-success-50 text-success-700'
+  switch (project.state) {
+    case 'CLOSED':    return 'bg-gray-100 text-gray-600'
+    case 'FINALIZED': return 'bg-blue-light-50 text-blue-light-700'
+    case 'FORMED':    return 'bg-brand-50 text-brand-700'
+    default:          return 'bg-success-50 text-success-700' // CREATED
+  }
 }
 
 function getBadgeLabel(project) {
-  if (project.close) return 'Cerrado'
-  if (project.finalize) return 'Finalizado'
-  return 'Activo'
+  switch (project.state) {
+    case 'CLOSED':    return 'Cerrado'
+    case 'FINALIZED': return 'Finalizado'
+    case 'FORMED':    return 'Formado'
+    default:          return 'Creado'
+  }
 }
 
 const loadData = async () => {
   loading.value = true
   try {
-    const [projectData, groupData] = await Promise.all([
-      projectService.getAll().catch(() => []),
+    const [created, formed, finalized, closed, groupData] = await Promise.all([
+      projectService.getByState('CREATED').catch(() => []),
+      projectService.getByState('FORMED').catch(() => []),
+      projectService.getByState('FINALIZED').catch(() => []),
+      projectService.getByState('CLOSED').catch(() => []),
       personGroupService.getAll().catch(() => [])
     ])
-    projects.value = projectData
+    createdProjects.value   = created
+    formedProjects.value    = formed
+    finalizedProjects.value = finalized
+    closedProjects.value    = closed
     groups.value = groupData
   } finally {
     loading.value = false

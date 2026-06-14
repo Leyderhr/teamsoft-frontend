@@ -17,9 +17,8 @@ const teamMembers = ref([])
 
 const projectColumns = [
   { field: 'projectName', header: 'Nombre del Proyecto', sortable: true },
-  { field: 'beginDate', header: 'Fecha Inicio', sortable: true },
-  { field: 'endDate', header: 'Fecha Fin', sortable: true },
-  { field: 'status', header: 'Estado', type: 'badge', sortable: true },
+  { field: 'initialDate', header: 'Fecha Inicio', sortable: true },
+  { field: 'state', header: 'Estado', type: 'badge', sortable: true },
 ]
 
 const teamColumns = [
@@ -32,16 +31,10 @@ const teamColumns = [
 const loadFinishedProjects = async () => {
   loading.value = true
   try {
-    finishedProjects.value = await reportService.getFinishedProjects()
-  } catch (error) {
-    console.error('Error cargando proyectos finalizados:', error)
-    try {
-      const { default: projectService } = await import('@/features/projects/services/projectService.js')
-      const all = await projectService.getAll()
-      finishedProjects.value = all.filter(p => p.finalize === true || p.status === 'Finalizado' || p.status === 'Cerrado')
-    } catch (e) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los proyectos finalizados', life: 3000 })
-    }
+    const { default: projectService } = await import('@/features/projects/services/projectService.js')
+    finishedProjects.value = await projectService.getByState('CLOSED')
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los equipos cerrados', life: 3000 })
   } finally {
     loading.value = false
   }
@@ -83,15 +76,15 @@ onMounted(loadFinishedProjects)
 <template>
   <div>
     <PageBreadcrumb
-      :page-title="showReport ? 'Equipo del Proyecto' : 'Equipos Finalizados'"
-      :items="showReport ? [{ label: 'Equipos Finalizados' }] : []"
+      :page-title="showReport ? 'Equipo del Proyecto' : 'Equipos Cerrados'"
+      :items="showReport ? [{ label: 'Equipos Cerrados' }] : []"
     />
 
     <!-- Step 1: selección de proyecto finalizado -->
     <div v-if="!showReport" class="space-y-4">
       <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-base font-semibold text-gray-800">Proyectos Finalizados</h3>
+          <h3 class="text-base font-semibold text-gray-800">Equipos Cerrados</h3>
         </div>
         <div class="p-6">
           <DataTable

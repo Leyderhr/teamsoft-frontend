@@ -98,12 +98,9 @@ const tabs = [
 
 // Static options
 const sexOptions = [
+  { label: 'Prefiero no decirlo', value: '' },
   { label: 'Masculino', value: 'M' },
   { label: 'Femenino', value: 'F' },
-]
-const statusOptions = [
-  { label: 'Activo', value: 'Activo' },
-  { label: 'Inactivo', value: 'Inactivo' },
 ]
 const mbtiValues = [
   'ESTJ','ENTJ','ESFJ','ENFJ','ESTP','ENTP','ESFP','ENFP',
@@ -126,7 +123,7 @@ const sex = ref('')
 const email = ref('')
 const inDate = ref('')
 const experience = ref(0)
-const status = ref('')
+const enabled = ref(true) // estado: true = ACTIVE, false = INACTIVE
 const birthDate = ref('')
 
 // References
@@ -257,10 +254,10 @@ onMounted(async () => {
       ])
 
     countyOptions.value = counties.map(c => ({ label: c.countyName, value: c.id }))
-    raceOptions.value = races.map(r => ({ label: r.raceName, value: r.id }))
+    raceOptions.value = [{ label: 'Prefiero no decirlo', value: '' }, ...races.map(r => ({ label: r.raceName, value: r.id }))]
     groupOptions.value = groups.map(g => ({ label: g.name, value: g.id }))
     nacionalityOptions.value = nats.map(n => ({ label: n.paisNac, value: n.id }))
-    religionOptions.value = rels.map(r => ({ label: r.religionName, value: r.id }))
+    religionOptions.value = [{ label: 'Prefiero no decirlo', value: '' }, ...rels.map(r => ({ label: r.religionName, value: r.id }))]
     competenceOptions.value = competences.map(c => ({ label: c.competitionName, value: c.id }))
     levelOptions.value = levels.map(l => ({ label: l.significance, value: l.id }))
     roleOptions.value = roles.map(r => ({ label: r.roleName, value: r.id }))
@@ -285,14 +282,8 @@ onMounted(async () => {
       inDate.value = p.inDate ? p.inDate.split('T')[0] : ''
       birthDate.value = p.birthDate ? p.birthDate.split('T')[0] : ''
       experience.value = p.experience ?? 0
-      const rawStatus = p.status
-      if (rawStatus === true || rawStatus === 'active' || String(rawStatus).toLowerCase() === 'activo') {
-        status.value = 'Activo'
-      } else if (rawStatus === false || rawStatus === 'inactive' || String(rawStatus).toLowerCase() === 'inactivo') {
-        status.value = 'Inactivo'
-      } else {
-        status.value = rawStatus ?? ''
-      }
+      // El estado llega como 'ACTIVE'/'INACTIVE' (o variantes); el toggle queda activo salvo que sea inactivo
+      enabled.value = !(p.status === false || String(p.status ?? '').toUpperCase().includes('INACT'))
       selectedCounty.value = p.county?.id ?? p.county ?? ''
       selectedRace.value = p.race?.id ?? p.race ?? ''
       selectedGroup.value = p.group?.id ?? p.group ?? ''
@@ -356,7 +347,8 @@ onMounted(async () => {
       const rawConflicts = p.personConflicts ?? p.workerConflicts ?? []
       personConflicts.value = rawConflicts.map(pc => {
         const ciId = pc.conflictIndexId ?? pc.conflictIndex?.id
-        const conflictWorker = pc.conflictPerson ?? pc.workersFk ?? pc.workerFk ?? pc.worker
+        // El backend devuelve la persona incompatible en `personConflict`
+        const conflictWorker = pc.personConflict ?? pc.conflictPerson ?? pc.workersFk ?? pc.workerFk ?? pc.worker
         const pcId = pc.personConflictId ?? pc.conflictPersonId ?? conflictWorker?.id
         const fallbackName = conflictWorker
           ? `${conflictWorker.personName ?? ''} ${conflictWorker.surName ?? ''}`.trim()
@@ -474,6 +466,37 @@ async function handleSave() {
     errors.card = 'El CI es obligatorio'
     hasErrors = true
   }
+  if (!address.value.trim()) {
+    errors.address = 'La dirección es obligatoria'
+    hasErrors = true
+  }
+  if (!phone.value.trim()) {
+    errors.phone = 'El teléfono es obligatorio'
+    hasErrors = true
+  }
+  if (!email.value.trim()) {
+    errors.email = 'El correo electrónico es obligatorio'
+    hasErrors = true
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+    errors.email = 'El correo electrónico no es válido'
+    hasErrors = true
+  }
+  if (!inDate.value.trim()) {
+    errors.inDate = 'La fecha de ingreso es obligatoria'
+    hasErrors = true
+  }
+  if (experience.value === '' || experience.value === null || experience.value === undefined || Number.isNaN(experience.value)) {
+    errors.experience = 'La experiencia es obligatoria'
+    hasErrors = true
+  }
+  if (!birthDate.value.trim()) {
+    errors.birthDate = 'La fecha de nacimiento es obligatoria'
+    hasErrors = true
+  }
+  if (!selectedGroup.value) {
+    errors.group = 'El grupo es obligatorio'
+    hasErrors = true
+  }
 
   if (hasErrors) {
     activeTab.value = 'basic'
@@ -492,7 +515,7 @@ async function handleSave() {
       email: email.value,
       inDate: inDate.value || null,
       experience: experience.value,
-      status: status.value,
+      status: enabled.value ? 'ACTIVE' : 'INACTIVE',
       birthDate: birthDate.value || null,
       county: selectedCounty.value || null,
       race: selectedRace.value || null,
@@ -591,8 +614,26 @@ async function handleSave() {
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
       <!-- Header -->
-      <div class="px-6 py-4 border-b border-gray-200">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4">
         <h2 class="text-base font-semibold text-gray-800">{{ pageTitle }}</h2>
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <span class="text-sm font-medium" :class="enabled ? 'text-success-600' : 'text-gray-400'">
+            {{ enabled ? 'Activo' : 'Inactivo' }}
+          </span>
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="enabled"
+            @click="enabled = !enabled"
+            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            :class="enabled ? 'bg-success-500' : 'bg-gray-300'"
+          >
+            <span
+              class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200"
+              :class="enabled ? 'translate-x-5' : 'translate-x-0'"
+            />
+          </button>
+        </div>
       </div>
 
       <!-- Tabs Navigation -->
@@ -660,7 +701,7 @@ async function handleSave() {
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Dirección</label>
+            <label class="block text-sm font-medium text-gray-700">Dirección <span class="text-error-500">*</span></label>
             <input
               v-model="address"
               @input="delete errors.address"
@@ -674,7 +715,7 @@ async function handleSave() {
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+            <label class="block text-sm font-medium text-gray-700">Teléfono <span class="text-error-500">*</span></label>
             <input
               v-model="phone"
               @input="delete errors.phone"
@@ -688,7 +729,7 @@ async function handleSave() {
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Correo</label>
+            <label class="block text-sm font-medium text-gray-700">Correo <span class="text-error-500">*</span></label>
             <input
               v-model="email"
               @input="delete errors.email"
@@ -706,11 +747,7 @@ async function handleSave() {
             <AppSelect v-model="sex" :options="sexOptions" />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Estado</label>
-            <AppSelect v-model="status" :options="statusOptions" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha de ingreso</label>
+            <label class="block text-sm font-medium text-gray-700">Fecha de ingreso <span class="text-error-500">*</span></label>
             <AppDatePicker v-model="inDate" placeholder="dd/mm/aaaa" />
           </div>
           <div class="space-y-1">
@@ -718,7 +755,7 @@ async function handleSave() {
             <AppDatePicker v-model="birthDate" placeholder="dd/mm/aaaa" />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Experiencia (años)</label>
+            <label class="block text-sm font-medium text-gray-700">Experiencia (años) <span class="text-error-500">*</span></label>
             <input v-model.number="experience" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
           </div>
           <div class="space-y-1">
@@ -730,8 +767,11 @@ async function handleSave() {
             <AppSelect v-model="selectedRace" :options="raceOptions" searchable />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Grupo</label>
-            <AppSelect v-model="selectedGroup" :options="groupOptions" searchable />
+            <label class="block text-sm font-medium text-gray-700">Grupo <span class="text-error-500">*</span></label>
+            <AppSelect v-model="selectedGroup" :options="groupOptions" searchable @update:model-value="delete errors.group" />
+            <p v-if="errors.group" class="flex items-center gap-1 text-xs text-error-600">
+              <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.group }}
+            </p>
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Nacionalidad</label>

@@ -9,6 +9,7 @@ import {
 import { useTeamFormationStore } from '@/stores/teamFormation'
 import { useTeamFormation } from '@/services/team-formation/queries'
 import { useSaveTeams } from '@/services/team-formation/mutations'
+import { parseApiError } from '@/lib/apiError'
 
 // Remove all defineProps and defineEmits
 const store = useTeamFormationStore()
@@ -31,6 +32,9 @@ const saving = computed(() => saveTeamsMutation.isPending.value)
 // ──────────────────────────────────────────────
 const panelOpen = ref(false)
 const weightError = ref(null)
+
+// Índice de la propuesta seleccionada para guardar
+const selectedProposalIdx = ref(null)
 
 watch(panelOpen, (open) => { if (!open) weightError.value = null })
 
@@ -61,33 +65,37 @@ async function handleGenerate() {
     weightError.value = validation.error
     return
   }
+  selectedProposalIdx.value = null
   const result = await generateTeams()
   if (result?.isError) {
-    let detail = 'Error al generar equipos en el servidor'
-    try {
-      const body = await result.error?.response?.json()
-      const code = body?.['Error: '] || body?.error || body?.message
-      if (code === 'fo_weights_most_sum_one') {
-        detail = 'Los pesos de todos los factores habilitados deben sumar exactamente 1.0'
-      } else if (code) {
-        detail = code
-      }
-    } catch {}
+    const detail = await parseApiError(result.error, 'No se pudieron generar los equipos')
     weightError.value = detail
+    toast.add({ severity: 'error', summary: 'Error al generar equipos', detail, life: 6000 })
+  } else if (!result?.data?.length) {
+    toast.add({ severity: 'info', summary: 'Sin propuestas',
+      detail: 'No se encontraron equipos para la configuración indicada', life: 4000 })
   }
 }
 
 function handleSave() {
-  if (!proposal.value) return
-  saveTeamsMutation.mutate(proposal.value, {
+  if (selectedProposalIdx.value === null) {
+    toast.add({ severity: 'warn', summary: 'Selecciona una propuesta',
+      detail: 'Marca la propuesta de equipo que deseas guardar', life: 3000 })
+    return
+  }
+  const selected = proposal.value?.[selectedProposalIdx.value]
+  if (!selected) return
+  saveTeamsMutation.mutate(selected, {
     onSuccess: () => {
-      toast.add({ severity: 'success', summary: 'Equipos guardados',
-        detail: 'Los equipos han sido persistidos correctamente', life: 4000 })
+      toast.add({ severity: 'success', summary: 'Equipo guardado',
+        detail: 'La propuesta seleccionada se guardó correctamente', life: 4000 })
       store.reset()
+      selectedProposalIdx.value = null
+      panelOpen.value = false
     },
-    onError: (e) => {
-      toast.add({ severity: 'error', summary: 'Error al guardar',
-        detail: e?.message || 'Error en el servidor', life: 5000 })
+    onError: async (e) => {
+      const detail = await parseApiError(e, 'No se pudo guardar el equipo')
+      toast.add({ severity: 'error', summary: 'Error al guardar', detail, life: 6000 })
     },
   })
 }
@@ -211,13 +219,16 @@ function removeFixedMember(idx) {
           <button
             type="button"
             @click="handleSave"
-            :disabled="saving || !proposal?.length"
+            :disabled="saving || selectedProposalIdx === null"
             class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
             <Save v-else class="w-4 h-4" />
-            Salvar equipo
+            Guardar propuesta seleccionada
           </button>
+          <p v-if="proposal?.length && selectedProposalIdx === null" class="text-xs text-gray-400 text-center">
+            Marca una propuesta del listado para poder guardarla.
+          </p>
           <button
             type="button"
             @click="fixSelectedMember"
@@ -280,21 +291,36 @@ function removeFixedMember(idx) {
           </div>
 
           <div v-else class="px-2 py-3 space-y-1">
-            <div v-for="(prop, pIdx) in proposal" :key="pIdx">
-              <!-- Propuesta -->
-              <button
-                type="button"
-                @click="toggleProposal(pIdx)"
-                class="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                <ChevronRight
-                  class="w-4 h-4 text-gray-400 transition-transform duration-150 flex-shrink-0"
-                  :class="expandedProposals.has(pIdx) ? 'rotate-90' : ''"
+            <div
+              v-for="(prop, pIdx) in proposal"
+              :key="pIdx"
+              class="rounded-lg transition-colors"
+              :class="selectedProposalIdx === pIdx ? 'bg-brand-50/60 ring-1 ring-brand-200' : ''"
+            >
+              <!-- Propuesta (radio para guardar + toggle de expansión) -->
+              <div class="w-full flex items-center gap-2 px-2 py-2">
+                <input
+                  type="radio"
+                  name="proposal-to-save"
+                  :checked="selectedProposalIdx === pIdx"
+                  @change="selectedProposalIdx = pIdx"
+                  class="w-3.5 h-3.5 text-brand-500 border-gray-300 focus:ring-brand-500/20 cursor-pointer flex-shrink-0"
+                  title="Seleccionar esta propuesta para guardar"
                 />
-                <Folder class="w-4 h-4 text-brand-400 flex-shrink-0" />
-                <span class="text-sm font-semibold text-gray-700 truncate flex-1">Propuesta {{ pIdx + 1 }}</span>
-                <span class="text-xs font-medium text-brand-500 flex-shrink-0 tabular-nums">{{ prop.formattedEval }}</span>
-              </button>
+                <button
+                  type="button"
+                  @click="toggleProposal(pIdx)"
+                  class="flex-1 min-w-0 flex items-center gap-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <ChevronRight
+                    class="w-4 h-4 text-gray-400 transition-transform duration-150 flex-shrink-0"
+                    :class="expandedProposals.has(pIdx) ? 'rotate-90' : ''"
+                  />
+                  <Folder class="w-4 h-4 text-brand-400 flex-shrink-0" />
+                  <span class="text-sm font-semibold text-gray-700 truncate flex-1 text-left">Propuesta {{ pIdx + 1 }}</span>
+                  <span class="text-xs font-medium text-brand-500 flex-shrink-0 tabular-nums">{{ prop.formattedEval }}</span>
+                </button>
+              </div>
 
               <!-- Proyectos -->
               <div v-if="expandedProposals.has(pIdx)" class="ml-5 space-y-0.5">

@@ -365,9 +365,11 @@ function getNestedValue(obj, field) {
 function getBadgeClass(value) {
   if (!value) return 'bg-gray-100 text-gray-600'
   const v = String(value).toLowerCase()
-  if (['active', 'activo', 'activa', 'abierto', 'open'].includes(v))
+  if (['active', 'activo', 'activa', 'abierto', 'open', 'created', 'creado'].includes(v))
     return 'bg-success-50 text-success-700'
-  if (['pending', 'pendiente'].includes(v))
+  if (['formed', 'formado'].includes(v))
+    return 'bg-brand-50 text-brand-700'
+  if (['finalized', 'finalizado', 'pending', 'pendiente'].includes(v))
     return 'bg-warning-50 text-warning-700'
   if (['closed', 'cerrado', 'inactive', 'inactivo', 'cancelado', 'cancelled'].includes(v))
     return 'bg-error-50 text-error-700'
