@@ -10,6 +10,10 @@ async function fetchProject(id) {
   return api.get(`project/${id}`).json()
 }
 
+async function fetchProjectsByState(state) {
+  return api.get(`project/state/${state}`).json()
+}
+
 function buildIdsParams(ids) {
   const params = new URLSearchParams()
   ids.forEach(id => params.append('ids', id))
@@ -36,6 +40,13 @@ export function useProject(id) {
     queryKey: ['projects', id],
     queryFn: () => fetchProject(id),
     enabled: !!id,
+  })
+}
+
+export function useProjectsByState(state) {
+  return useQuery({
+    queryKey: ['projects', 'state', state],
+    queryFn: () => fetchProjectsByState(toValue(state)),
   })
 }
 

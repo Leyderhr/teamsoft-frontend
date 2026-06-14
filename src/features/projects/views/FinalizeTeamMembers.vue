@@ -18,19 +18,23 @@ const router = useRouter()
 const toast = useToast()
 const store = useFinalizeTeamStore()
 
-const loading          = ref(false)
-const finalizing       = ref(false)
-const showConfirm      = ref(false)
-const selectedPersonId = ref(null)
+const loading     = ref(false)
+const finalizing  = ref(false)
+const showConfirm = ref(false)
+// Clave compuesta persona-rol (una persona puede tener varios roles no jefe)
+const selectedKey = ref(null)
 
 const { data: roleEvalData } = useRoleEvaluation()
 const roleEvaluationOptions = computed(() =>
   roleEvalData.value?.map(r => ({ label: r.significance, value: r.id })) ?? []
 )
 
-const members         = computed(() => store.members)
-const selectedMember  = computed(() => store.members.find(m => m.personId === selectedPersonId.value) ?? null)
-const allEvaluated    = computed(() => store.allEvaluated)
+const members        = computed(() => store.members)
+const allEvaluated   = computed(() => store.allEvaluated)
+
+const rowKey = (m) => `${m.personId}-${m.roleId}`
+const isSelected = (m) => selectedKey.value === rowKey(m)
+const selectedMember = computed(() => store.members.find(m => rowKey(m) === selectedKey.value) ?? null)
 
 async function loadMembers() {
   store.setProject(Number(props.projectId), store.projectName)
@@ -69,7 +73,8 @@ function onEvaluationChange(member, value) {
 }
 
 function selectRow(member) {
-  selectedPersonId.value = member.personId
+  // Toggle: seleccionar/deseleccionar al hacer click
+  selectedKey.value = isSelected(member) ? null : rowKey(member)
 }
 
 function goEditCompetences() {
@@ -134,12 +139,13 @@ async function doFinalize() {
               <th class="w-10 px-4 py-3"></th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellidos</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-72">Evaluación</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
             <tr v-if="loading">
-              <td colspan="4" class="px-4 py-10 text-center">
+              <td colspan="5" class="px-4 py-10 text-center">
                 <div class="flex items-center justify-center gap-2 text-sm text-gray-400">
                   <Loader2 class="w-5 h-5 animate-spin" />
                   Cargando miembros...
@@ -147,28 +153,30 @@ async function doFinalize() {
               </td>
             </tr>
             <tr v-else-if="!members.length">
-              <td colspan="4" class="px-4 py-10 text-center text-sm text-gray-400">
+              <td colspan="5" class="px-4 py-10 text-center text-sm text-gray-400">
                 Este equipo no tiene miembros con roles no jefe
               </td>
             </tr>
             <tr
               v-else
               v-for="m in members"
-              :key="`${m.personId}-${m.roleId}`"
-              class="hover:bg-gray-50 transition-colors"
-              :class="selectedPersonId === m.personId ? 'bg-brand-50' : ''"
+              :key="rowKey(m)"
+              class="hover:bg-gray-50 transition-colors cursor-pointer"
+              :class="isSelected(m) ? 'bg-brand-50' : ''"
+              @click="selectRow(m)"
             >
               <td class="px-4 py-3">
                 <input
                   type="radio"
-                  :checked="selectedPersonId === m.personId"
-                  @change="selectRow(m)"
+                  :checked="isSelected(m)"
+                  @click.stop.prevent="selectRow(m)"
                   class="w-4 h-4 text-brand-500 border-gray-300 focus:ring-brand-500/20 cursor-pointer"
                 />
               </td>
-              <td class="px-4 py-3 text-sm font-medium text-gray-800 cursor-pointer" @click="selectRow(m)">{{ m.personName }}</td>
-              <td class="px-4 py-3 text-sm text-gray-600 cursor-pointer" @click="selectRow(m)">{{ m.surName }}</td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ m.personName }}</td>
+              <td class="px-4 py-3 text-sm text-gray-600">{{ m.surName }}</td>
+              <td class="px-4 py-3 text-sm text-gray-600">{{ m.roleName }}</td>
+              <td class="px-4 py-3" @click.stop>
                 <AppSelect
                   :model-value="m.roleEvaluationId"
                   @update:model-value="onEvaluationChange(m, $event)"

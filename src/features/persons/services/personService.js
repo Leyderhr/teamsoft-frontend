@@ -18,7 +18,7 @@ const personService = {
   },
   // Edición parcial: solo competencias e incompatibilidades
   async patchCompetencesConflicts(id, data) {
-    return api.patch(`person/${id}/competences-conflicts`, { json: data }).json()
+    return api.patch(`person/${id}`, { json: data }).json()
   }
 }
 

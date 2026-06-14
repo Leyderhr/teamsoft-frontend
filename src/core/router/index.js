@@ -122,11 +122,23 @@ const routes = [
                 }
             },
             {
-                path: 'manage-projects/close-project',
-                name: 'CloseProject',
-                component: () => import('@/features/projects/views/CloseProject.vue'),
+                path: 'manage-projects/close-team',
+                name: 'CloseTeam',
+                component: () => import('@/features/projects/views/CloseTeam.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Cerrar Proyecto', disable: true }]
+                    breadcrumb: [{ name: 'Cerrar Equipo', disable: true }]
+                }
+            },
+            {
+                path: 'manage-projects/close-team/:projectId/evaluate',
+                name: 'CloseTeamEvaluate',
+                component: () => import('@/features/projects/views/CloseTeamEvaluate.vue'),
+                props: true,
+                meta: {
+                    breadcrumb: [
+                        { name: 'Cerrar Equipo', path: '/manage-projects/close-team' },
+                        { name: 'Evaluar Jefe', disable: true },
+                    ]
                 }
             },
             {
@@ -159,15 +171,6 @@ const routes = [
                         { name: 'Finalizar Equipo', path: '/manage-projects/finalize-team' },
                         { name: 'Editar Competencias', disable: true },
                     ]
-                }
-            },
-            {
-                path: 'manage-projects/member-evaluation',
-                name: 'MemberEvaluation',
-                component: () => import('@/features/experiments/views/MemberEvaluation.vue'),
-                meta: {
-                    breadcrumb: [{ name: 'Evaluación de Miembros', disable: true }],
-                    roles: ['ROLE_JEFE_DE_EQUIPO', 'ROLE_EXPERIMENTADOR']
                 }
             },
             {
@@ -212,7 +215,7 @@ const routes = [
                 name: 'FinishedTeams',
                 component: () => import('@/features/reports/views/FinishedTeams.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Equipos Finalizados', disable: true }],
+                    breadcrumb: [{ name: 'Equipos Cerrados', disable: true }],
                     roles: ['ROLE_ADMIN']
                 }
             },

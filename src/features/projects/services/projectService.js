@@ -28,6 +28,12 @@ const projectService = {
   },
   async finalize(id, evaluations) {
     return api.put(`project/finalize/${id}`, { json: evaluations }).json()
+  },
+  async getBossAssignedRole(id) {
+    return api.get(`project/${id}/boss-assigned-role`).json()
+  },
+  async closeTeam(id, data) {
+    return api.put(`project/close/${id}`, { json: data }).json()
   }
 }
 

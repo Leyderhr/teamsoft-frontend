@@ -6,23 +6,26 @@ import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import TeamUpStep1Configure from '@/features/projects/components/TeamUpStep1Configure.vue'
 import TeamUpStep2FixMember from '@/features/projects/components/TeamUpStep2FixMember.vue'
 import TeamUpStep3FormTeam from '@/features/projects/components/TeamUpStep3FormTeam.vue'
-import { useProjects } from '@/services/projects/queries'
+import { useProjectsByState } from '@/services/projects/queries'
 import { usePersonGroups } from '@/services/nomenclatives/queries'
 import { useTeamFormationStore } from '@/stores/teamFormation'
 
 const toast  = useToast()
 const store  = useTeamFormationStore()
 
-// Wizard navigation
-const currentStep  = ref(1)
+// Wizard navigation (en el store, para volver al paso 1 tras guardar via reset())
+const currentStep = computed({
+  get: () => store.currentStep,
+  set: (v) => { store.currentStep = v },
+})
 const stepLabels   = ['Configurar', 'Fijar Miembro', 'Formar Equipo']
 
-// Shared queries (still owned by parent; passed as props to Step1)
-const { data: projectsData, isLoading: loadingProjects } = useProjects()
+// Solo proyectos en estado CREATED pueden formar equipo
+const { data: projectsData, isLoading: loadingProjects } = useProjectsByState('CREATED')
 const { data: groupsData,   isLoading: loadingGroups   } = usePersonGroups()
 
 const availableProjects = computed(() =>
-  projectsData.value?.filter(p => !p.close).map(p => ({ label: p.projectName, value: p.id })) || []
+  projectsData.value?.map(p => ({ label: p.projectName, value: p.id })) || []
 )
 const availableGroups = computed(() =>
   groupsData.value?.map(g => ({ label: g.name, value: g.id })) || []
