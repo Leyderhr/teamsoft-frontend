@@ -134,6 +134,8 @@ function confFormMode(step1) {
 
 export const useTeamFormationStore = defineStore('teamFormation', {
   state: () => ({
+    // Paso actual del asistente (1..3); al hacer reset() vuelve a 1
+    currentStep: 1,
     step1: {
       selectedProjectIds: [],
       selectedGroupIds: [],

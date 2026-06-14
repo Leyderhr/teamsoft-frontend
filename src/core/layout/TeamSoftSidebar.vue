@@ -320,7 +320,7 @@
                     </li>
                     <li>
                       <router-link to="/reports/finished-teams" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive('/reports/finished-teams') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        Equipos finalizados
+                        Equipos Cerrados
                       </router-link>
                     </li>
                     <li>
@@ -458,13 +458,11 @@ const proyectosItems = computed(() => {
     items.push(
       { name: 'Proyectos', path: '/manage-projects/project' },
       { name: 'Formar equipo', path: '/manage-projects/team-formation' },
+      { name: 'Finalizar equipo', path: '/manage-projects/finalize-team' },
     )
   }
   if (securityStore.isJefeEquipo || securityStore.isDirectivoTecnico) {
-    items.push({ name: 'Cerrar proyecto', path: '/manage-projects/close-project' })
-  }
-  if (securityStore.isJefeEquipo || securityStore.isExperimentador) {
-    items.push({ name: 'Evaluación miembros', path: '/manage-projects/member-evaluation' })
+    items.push({ name: 'Cerrar equipo', path: '/manage-projects/close-team' })
   }
   return items
 })
