@@ -1,24 +1,18 @@
 import { api } from '@/lib/api'
 
 const reportService = {
+  // Listado de personas (tabla principal del reporte de personas)
   async getPersonReport() {
     return api.get('person').json()
   },
-  async getFinishedProjects() {
-    return api.get('project/finished').json()
+  // Reporte de una persona: sus datos + proyectos/roles/evaluaciones
+  async getPersonDetail(personId) {
+    return api.get(`person/${personId}/report`).json()
   },
-  async getFinishedTeamByProject(projectId) {
-    return api.get(`assigned-role/project/${projectId}`).json()
+  // Reporte de un equipo/proyecto: datos + miembros con rol y evaluación
+  async getProjectDetail(projectId) {
+    return api.get(`project/${projectId}/report`).json()
   },
-  async getFilteredWorkers(filters) {
-    return api.post('api/filter', { json: filters }).json()
-  },
-  async getPersonProjects(personId) {
-    return api.get(`assigned-role/person/${personId}/projects`).json()
-  },
-  async getPersonRolesInProject(personId, projectId) {
-    return api.get(`assigned-role/person/${personId}/project/${projectId}`).json()
-  }
 }
 
 export default reportService

@@ -59,8 +59,18 @@
           <!-- Slot para botones adicionales -->
           <slot name="extraButtons"></slot>
         </div>
-        <!-- Spacer when no actions shown -->
-        <div v-else></div>
+        <!-- Botón de reporte / spacer cuando no hay acciones -->
+        <div v-else class="flex items-center gap-2">
+          <button
+            v-if="showReportButton"
+            @click="$emit('report', selectedRow)"
+            :disabled="!selectedRow"
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <FileText class="w-4 h-4" />
+            {{ reportButtonLabel }}
+          </button>
+        </div>
 
         <!-- Search -->
         <div v-if="searchable" class="relative">
@@ -314,7 +324,7 @@ import {
   Plus, Pencil, Trash2, Upload, Download, Search,
   ChevronUp, ChevronDown, ChevronsUpDown,
   ChevronLeft, ChevronRight,
-  CheckCircle2, XCircle, Inbox, AlertTriangle,
+  CheckCircle2, XCircle, Inbox, AlertTriangle, FileText,
 } from 'lucide-vue-next'
 import AppSelect from '@/components/ui/AppSelect.vue'
 
@@ -325,11 +335,13 @@ const props = defineProps({
   searchable: { type: Boolean, default: true },
   showActions: { type: Boolean, default: true },
   showImportButton: { type: Boolean, default: false },
+  showReportButton: { type: Boolean, default: false },
+  reportButtonLabel: { type: String, default: 'Ver Reporte' },
   rowsPerPageOptions: { type: Array, default: () => [10, 20, 30, 50] },
   defaultRows: { type: Number, default: 10 },
 })
 
-const emit = defineEmits(['create', 'edit', 'delete', 'import', 'export', 'row-select'])
+const emit = defineEmits(['create', 'edit', 'delete', 'import', 'export', 'row-select', 'report'])
 
 const hasItems = computed(() => props.items?.length > 0)
 

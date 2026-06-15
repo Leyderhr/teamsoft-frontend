@@ -28,10 +28,10 @@ const workerColumns = [
   { field: 'workload', header: 'Carga' },
   { field: 'experience', header: 'Experiencia' },
   { field: 'status', header: 'Estado', type: 'badge', sortable: true },
-  { field: 'countyFk.countyName', header: 'Provincia', sortable: true },
-  { field: 'groupFk.name', header: 'Grupo', sortable: true },
-  { field: 'raceFk.raceName', header: 'Raza', sortable: true },
-  { field: 'nacionalityFk.gentilicioNac', header: 'Nacionalidad', sortable: true },
+  { field: 'county.countyName', header: 'Provincia', sortable: true },
+  { field: 'group.name', header: 'Grupo', sortable: true },
+  { field: 'race.raceName', header: 'Raza', sortable: true },
+  { field: 'nacionality.gentilicioNac', header: 'Nacionalidad', sortable: true },
 ]
 
 const loadWorkers = async () => {
@@ -51,7 +51,9 @@ const loadWorkers = async () => {
   }
 }
 
-const handleWorkerSelect = async (item) => {
+const report = ref(null)
+
+const handleSeeReport = async (item) => {
   if (!item) return
   selectedWorker.value = item
   selectedProject.value = null
@@ -59,24 +61,29 @@ const handleWorkerSelect = async (item) => {
   showDetail.value = true
   loadingDetail.value = true
   try {
-    workerProjects.value = await reportService.getPersonProjects(item.id)
+    report.value = await reportService.getPersonDetail(item.id)
+    if (report.value?.person) selectedWorker.value = report.value.person
+    // Proyectos distintos en los que ha participado
+    const byProject = new Map()
+    for (const p of report.value?.participations ?? []) {
+      if (p.project && !byProject.has(p.project.id)) byProject.set(p.project.id, p.project)
+    }
+    workerProjects.value = [...byProject.values()]
   } catch {
+    report.value = null
     workerProjects.value = []
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el reporte de la persona', life: 3000 })
   } finally {
     loadingDetail.value = false
   }
 }
 
-const handleProjectSelect = async (project) => {
+const handleProjectSelect = (project) => {
   selectedProject.value = project
-  loadingDetail.value = true
-  try {
-    rolesInProject.value = await reportService.getPersonRolesInProject(selectedWorker.value.id, project.id)
-  } catch {
-    rolesInProject.value = []
-  } finally {
-    loadingDetail.value = false
-  }
+  // Roles desempeñados por la persona en el proyecto seleccionado
+  rolesInProject.value = (report.value?.participations ?? [])
+    .filter(p => p.project?.id === project.id)
+    .map(p => ({ roleName: p.role?.roleName, roleEvaluation: p.evaluation }))
 }
 
 const goBack = () => {
@@ -106,8 +113,9 @@ onMounted(loadWorkers)
         :items="workers"
         :loading="loading"
         :show-actions="false"
+        :show-report-button="true"
         :default-rows="10"
-        @row-select="handleWorkerSelect"
+        @report="handleSeeReport"
       />
     </div>
 

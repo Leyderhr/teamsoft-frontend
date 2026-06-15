@@ -23,9 +23,8 @@ const projectColumns = [
 
 const teamColumns = [
   { field: 'fullName', header: 'Nombre', sortable: true },
-  { field: 'rolesFk.roleName', header: 'Rol', sortable: true },
-  { field: 'rolEvalFk.significance', header: 'Evaluación', sortable: true },
-  { field: 'status', header: 'Estado', type: 'badge', sortable: true },
+  { field: 'roleName', header: 'Rol', sortable: true },
+  { field: 'evaluation', header: 'Evaluación', sortable: true },
 ]
 
 const loadFinishedProjects = async () => {
@@ -40,21 +39,21 @@ const loadFinishedProjects = async () => {
   }
 }
 
-const handleProjectSelect = (item) => {
-  selectedProject.value = item
-}
-
-const handleSeeReport = async () => {
-  if (!selectedProject.value) {
-    toast.add({ severity: 'warn', summary: 'Aviso', detail: 'Seleccione un proyecto para ver el reporte', life: 3000 })
+const handleSeeReport = async (project) => {
+  if (!project) {
+    toast.add({ severity: 'warn', summary: 'Aviso', detail: 'Seleccione un equipo para ver el reporte', life: 3000 })
     return
   }
+  selectedProject.value = project
   showReport.value = true
   loadingTeam.value = true
   try {
-    teamMembers.value = (await reportService.getFinishedTeamByProject(selectedProject.value.id)).map(m => ({
-      ...m,
-      fullName: `${m.workersFk?.personName || ''} ${m.workersFk?.surName || ''}`.trim()
+    const data = await reportService.getProjectDetail(project.id)
+    selectedProject.value = data
+    teamMembers.value = (data.members ?? []).map(m => ({
+      fullName: `${m.person?.personName ?? ''} ${m.person?.surName ?? ''}`.trim(),
+      roleName: m.role?.roleName ?? '—',
+      evaluation: m.evaluation ?? '—',
     }))
   } catch (error) {
     console.error('Error cargando equipo:', error)
@@ -82,31 +81,16 @@ onMounted(loadFinishedProjects)
 
     <!-- Step 1: selección de proyecto finalizado -->
     <div v-if="!showReport" class="space-y-4">
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-base font-semibold text-gray-800">Equipos Cerrados</h3>
-        </div>
-        <div class="p-6">
-          <DataTable
-            :columns="projectColumns"
-            :items="finishedProjects"
-            :loading="loading"
-            :show-actions="false"
-            :default-rows="10"
-            @row-select="handleProjectSelect"
-          />
-        </div>
-      </div>
-
-      <div class="flex justify-end">
-        <button
-          @click="handleSeeReport"
-          :disabled="!selectedProject"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <BarChart2 class="w-4 h-4" />
-          Ver Reporte
-        </button>
+      <div>
+        <DataTable
+          :columns="projectColumns"
+          :items="finishedProjects"
+          :loading="loading"
+          :show-actions="false"
+          :show-report-button="true"
+          :default-rows="10"
+          @report="handleSeeReport"
+        />
       </div>
     </div>
 
@@ -126,15 +110,15 @@ onMounted(loadFinishedProjects)
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-700">
             <div>
               <span class="font-medium text-gray-500 block mb-0.5">Fecha Inicio</span>
-              <span>{{ selectedProject.beginDate }}</span>
+              <span>{{ selectedProject.initialDate || '—' }}</span>
             </div>
             <div>
               <span class="font-medium text-gray-500 block mb-0.5">Fecha Fin</span>
-              <span>{{ selectedProject.endDate }}</span>
+              <span>{{ selectedProject.endDate || '—' }}</span>
             </div>
-            <div v-if="selectedProject.clientFk">
-              <span class="font-medium text-gray-500 block mb-0.5">Cliente</span>
-              <span>{{ selectedProject.clientFk?.entityName }}</span>
+            <div>
+              <span class="font-medium text-gray-500 block mb-0.5">Estado</span>
+              <span>{{ selectedProject.state || '—' }}</span>
             </div>
           </div>
         </div>
