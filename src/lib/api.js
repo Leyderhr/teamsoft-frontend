@@ -60,7 +60,7 @@ const _baseApi = ky.create({
   prefix: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
   timeout: 100000,
   headers: {
-    'Accept': 'application/json'   // <-- agrega esta línea
+    'Accept': 'application/json'
   },
   hooks: {
     afterResponse: [
