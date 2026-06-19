@@ -1,6 +1,6 @@
 <script setup>
 import ConfirmDialog from 'primevue/confirmdialog'
-import Toast from 'primevue/toast' // <--- IMPORTAR TOAST
+import Toast from 'primevue/toast'
 import { provide } from 'vue'
 import { useToast } from 'primevue/usetoast'
 
