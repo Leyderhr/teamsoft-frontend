@@ -13,44 +13,46 @@ export async function parseApiError(error, fallback = 'Ocurrió un error en el s
     try {
       const body = await response.json()
 
-      // === ESTRUCTURAS NUEVAS DEL BACKEND ===
+      // === NUEVAS ESTRUCTURAS DEL BACKEND ===
       if (body.errorCode) {
         
         // 1. Errores de Validación (DTO)
-        if (body.errorCode === 'VALIDATION_FAILED' && body.parameters && typeof body.parameters === 'object') {
-          // Extraemos los códigos de error (ej: "ERR_VAL_PERSON_NAME", "ERR_VAL_PERSON_ADDRESS")
-          const fieldCodes = Object.values(body.parameters)
+        if (body.errorCode === 'VALIDATION_FAILED' && body.parameters) {
+          let fieldCodes = []
           
-          return fieldCodes
-            .filter(Boolean)
-            .map(code => i18n.global.t(`errors.${code}`))
-            .join(' · ')
+          if (Array.isArray(body.parameters)) {
+             // Es un array: ["ERR_VAL_COST_DISTANCE_COUNTIES_SAME"]
+             fieldCodes = body.parameters
+          } else if (typeof body.parameters === 'object') {
+             // Es un objeto de campos: {"personName": "ERR_VAL_PERSON_NAME"}
+             fieldCodes = Object.values(body.parameters)
+          }
+
+          if (fieldCodes.length > 0) {
+            return fieldCodes
+              .filter(Boolean)
+              .map(code => i18n.global.t(`errors.${code}`))
+              .join(' · ')
+          }
         }
 
         // 2. Errores de Negocio (Service)
-        // body.parameters puede ser [2] para interpolar en el texto (ej: "No encontrado {0}")
         const params = Array.isArray(body.parameters) ? body.parameters : []
         return i18n.global.t(`errors.${body.errorCode}`, params)
       }
 
-      // === ESTRUCTURA LEGACY Y POR DEFECTO (Compatibilidad) ===
+      // === ESTRUCTURA LEGACY Y POR DEFECTO ===
       const raw = body.error ?? body.message ?? body['Error: ']
       
-      // Intentar primero traducir el error heredado
       if (typeof raw === 'string' && CODE_MESSAGES[raw]) {
-         const tKey = `errors.${raw}`
-         const translation = i18n.global.t(tKey)
-         if (translation !== tKey) return translation
          return CODE_MESSAGES[raw]
       }
 
-      // Validaciones de Spring Boot nativas (fieldErrors)
       if (body.fieldErrors && typeof body.fieldErrors === 'object') {
         const parts = Object.values(body.fieldErrors).filter(Boolean)
         if (parts.length) return parts.join(' · ')
       }
 
-      // Validaciones en listado (messages)
       if (Array.isArray(body.messages) && body.messages.length) {
         return body.messages.filter(Boolean).join(' · ')
       }

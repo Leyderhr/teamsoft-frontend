@@ -108,6 +108,7 @@ import { useToast } from 'primevue/usetoast'
 import { AlertCircle, Save, Loader2 } from 'lucide-vue-next'
 import PageBreadcrumb from './PageBreadcrumb.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
+import { parseApiError } from '@/lib/apiError' 
 
 const props = defineProps({
   mode: { type: String, default: 'create' },
@@ -134,24 +135,20 @@ const breadcrumbItems = computed(() => [
   { label: props.title, path: props.listRoute }
 ])
 
-// Support both field.key and field.name as the form data key
 function fieldKey(f) {
   return f.key ?? f.name
 }
 
 onMounted(async () => {
-  // Initialize formData with defaults
   props.fields.forEach(f => {
     formData[fieldKey(f)] = f.type === 'boolean' ? false : (f.defaultValue ?? f.default ?? '')
   })
 
-  // Load existing data in edit mode
   if (props.mode === 'edit' && route.params.id) {
     try {
       const res = await props.service.getById(route.params.id)
       const data = res?.data ?? res
       Object.assign(formData, data)
-      // Sobrescribir campos select que usen editKey para extraer IDs de objetos anidados
       props.fields.forEach(f => {
         if (f.editKey) {
           const fk = fieldKey(f)
@@ -164,7 +161,6 @@ onMounted(async () => {
     }
   }
 
-  // Load select options — supports optionsService as a service object (with .getAll()) or a plain function
   for (const field of props.fields) {
     const fk = fieldKey(field)
     if (field.type === 'select') {
@@ -177,7 +173,6 @@ onMounted(async () => {
           } else {
             items = await field.optionsService.getAll()
           }
-          // Map using optionLabel/optionValue if provided
           if (field.optionLabel && field.optionValue) {
             fieldOptions.value[fk] = items.map(i => ({ label: i[field.optionLabel], value: i[field.optionValue] }))
           } else {
@@ -195,10 +190,8 @@ onMounted(async () => {
 })
 
 async function handleSave() {
-  // Clear errors
   Object.keys(errors).forEach(k => delete errors[k])
 
-  // Basic required validation
   let valid = true
   props.fields.forEach(f => {
     const fk = fieldKey(f)
@@ -220,11 +213,13 @@ async function handleSave() {
     }
     router.push(props.listRoute)
   } catch (e) {
+    // REEMPLAZAMOS LA LÓGICA ANTERIOR POR EL TRADUCTOR MÁGICO:
+    const detail = await parseApiError(e, 'Error al guardar')
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: e?.response?.data?.message ?? e?.message ?? 'Error al guardar',
-      life: 3000,
+      detail,
+      life: 5000, // Le damos 5 segundos para que sea legible
     })
   } finally {
     saving.value = false
