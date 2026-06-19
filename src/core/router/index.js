@@ -34,6 +34,18 @@ const routes = [
             ...nomenclativesRoutes,
             ...subEntitiesRoutes,
             {
+                path: '/nomenclatives/project-structure/create',
+                name: 'ProjectStructureCreate',
+                component: () => import('@/features/projects/views/ProjectStructureFormPage.vue'),
+                meta: { title: 'Crear Estructura de Proyecto' }
+            },
+            {
+                path: '/nomenclatives/project-structure/edit/:id',
+                name: 'ProjectStructureEdit',
+                component: () => import('@/features/projects/views/ProjectStructureFormPage.vue'),
+                meta: { title: 'Editar Estructura de Proyecto' }
+            },
+            {
                 path: 'manage-competences/competence',
                 name: 'Competence',
                 component: () => import('@/features/competences/views/Competence.vue'),

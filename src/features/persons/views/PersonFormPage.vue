@@ -6,78 +6,9 @@ import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle, ChevronRight, Alert
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppDatePicker from '@/components/ui/AppDatePicker.vue'
+import MiniTable from '@/components/common/MiniTable.vue'
 import { api } from '@/lib/api'
 
-// Inline mini-table component for sub-collections
-const MiniTable = defineComponent({
-  name: 'MiniTable',
-  props: {
-    rows: { type: Array, default: () => [] },
-    columns: { type: Array, required: true },
-    selected: { type: Array, default: () => [] },
-  },
-  emits: ['update:selected', 'remove'],
-  setup(props, { emit }) {
-    function toggleRow(row) {
-      const idx = props.selected.indexOf(row)
-      const next = [...props.selected]
-      if (idx >= 0) next.splice(idx, 1)
-      else next.push(row)
-      emit('update:selected', next)
-    }
-    return () => {
-      if (!props.rows.length) {
-        return h('div', { class: 'text-sm text-gray-400 p-4 text-center bg-gray-50 rounded-lg' }, 'Sin registros')
-      }
-      return h('div', { class: 'overflow-hidden rounded-lg border border-gray-200' }, [
-        h('div', { class: 'flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200' }, [
-          h('span', { class: 'text-xs font-medium text-gray-500' }, `${props.rows.length} registro(s)`),
-          props.selected.length
-            ? h('button', {
-                class: 'inline-flex items-center gap-1 px-2 py-1 rounded text-xs text-error-600 hover:bg-error-50 transition-colors',
-                onClick: () => emit('remove'),
-              }, 'Eliminar seleccionados')
-            : null,
-        ]),
-        h('table', { class: 'min-w-full' }, [
-          h('thead', {}, [
-            h('tr', { class: 'border-b border-gray-200' }, [
-              h('th', { class: 'w-8 px-3 py-2' }),
-              ...props.columns.map(col =>
-                h('th', { class: 'px-3 py-2 text-left text-xs font-medium text-gray-500' }, col.header)
-              ),
-            ])
-          ]),
-          h('tbody', { class: 'divide-y divide-gray-100' }, props.rows.map((row, i) =>
-            h('tr', {
-              key: i,
-              class: 'hover:bg-gray-50 cursor-pointer ' + (props.selected.includes(row) ? 'bg-brand-50' : ''),
-              onClick: () => toggleRow(row),
-            }, [
-              h('td', { class: 'w-8 px-3 py-2' }, [
-                h('input', {
-                  type: 'checkbox',
-                  checked: props.selected.includes(row),
-                  class: 'w-3.5 h-3.5 rounded border-gray-300 text-brand-500',
-                  onChange: () => toggleRow(row),
-                })
-              ]),
-              ...props.columns.map(col =>
-                h('td', { class: 'px-3 py-2 text-sm text-gray-700' },
-                  col.type === 'boolean'
-                    ? h(row[col.field] ? CheckCircle2 : XCircle, {
-                        class: row[col.field] ? 'w-4 h-4 text-success-500' : 'w-4 h-4 text-gray-300'
-                      })
-                    : String(row[col.field] ?? '—')
-                )
-              ),
-            ])
-          ))
-        ])
-      ])
-    }
-  }
-})
 
 const props = defineProps({
   mode: { type: String, default: 'create' },

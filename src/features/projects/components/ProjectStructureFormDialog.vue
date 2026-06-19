@@ -1,14 +1,12 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
-import MultiSelect from 'primevue/multiselect'
-import InputNumber from 'primevue/inputnumber'
-import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useToast } from 'primevue/usetoast'
+import { Plus, Trash2, AlertCircle } from 'lucide-vue-next'
+import AppSelect from '@/components/ui/AppSelect.vue'
+
 import roleService from '@/features/roles/services/roleService.js'
 import roleLoadService from '@/features/nomenclatives/services/roleLoadService.js'
 
@@ -22,22 +20,30 @@ const emit = defineEmits(['update:visible', 'save', 'cancel'])
 const toast = useToast()
 
 const structureName = ref('')
-const selectedRoles = ref([])
-const selectedRoleLoad = ref(null)
-const workersAmount = ref(0)
-const projectRoles = ref([])
+const selectedRoleId = ref(null)
+const selectedRoleLoadId = ref(null)
+const workersAmount = ref(1)
 
+const projectRoles = ref([])
 const roleOptions = ref([])
 const roleLoadOptions = ref([])
+const selectedRolesToDelete = ref([])
 
 const dialogTitle = computed(() => {
   return props.mode === 'create' ? 'Crear Estructura de Proyecto' : 'Editar Estructura de Proyecto'
 })
 
 const canAddRole = computed(() => {
-  return selectedRoles.value.length > 0 && 
-         selectedRoleLoad.value !== null && 
-         workersAmount.value > 0
+  return selectedRoleId.value !== null &&
+         selectedRoleLoadId.value !== null &&
+         workersAmount.value >= 1
+})
+
+const hasBoss = computed(() => {
+  return projectRoles.value.some(pr => {
+    const role = roleOptions.value.find(r => r.value === pr.roleId)
+    return role?.isBoss
+  })
 })
 
 const loadOptions = async () => {
@@ -46,13 +52,14 @@ const loadOptions = async () => {
       roleService.getAll(),
       roleLoadService.getAll()
     ])
-    
+
     roleOptions.value = roles.map(r => ({
       label: r.roleName,
       value: r.id,
+      isBoss: r.isBoss, // Necesario para la validación del jefe
       description: r.roleDesc
     }))
-    
+
     roleLoadOptions.value = roleLoads.map(rl => ({
       label: `${rl.value} -> ${rl.significance}`,
       value: rl.id
@@ -68,11 +75,13 @@ const loadOptions = async () => {
   }
 }
 
+const getRoleName = (roleId) => roleOptions.value.find(r => r.value === roleId)?.label || ''
+const getRoleLoadLabel = (roleLoadId) => roleLoadOptions.value.find(rl => rl.value === roleLoadId)?.label || ''
+
 const initializeForm = () => {
   if (props.mode === 'edit' && props.initialData) {
     structureName.value = props.initialData.name || ''
-    
-    // Esperar a que las opciones estén cargadas
+
     if (roleOptions.value.length > 0 && roleLoadOptions.value.length > 0) {
       projectRoles.value = props.initialData.projectRoles?.map(pr => ({
         roleId: pr.role?.id || pr.role,
@@ -81,56 +90,45 @@ const initializeForm = () => {
         roleLoadLabel: getRoleLoadLabel(pr.roleLoad?.id || pr.roleLoad),
         amountWorkersRole: pr.amountWorkersRole
       })) || []
-    } else {
-      // Guardar temporalmente si las opciones no están cargadas
-      projectRoles.value = props.initialData.projectRoles?.map(pr => ({
-        roleId: pr.role?.id || pr.role,
-        roleName: `Rol ${pr.role?.id || pr.role}`,
-        roleLoadId: pr.roleLoad?.id || pr.roleLoad,
-        roleLoadLabel: `Carga ${pr.roleLoad?.id || pr.roleLoad}`,
-        amountWorkersRole: pr.amountWorkersRole
-      })) || []
     }
   } else {
     structureName.value = ''
     projectRoles.value = []
   }
   
-  selectedRoles.value = []
-  selectedRoleLoad.value = null
-  workersAmount.value = 0
+  selectedRoleId.value = null
+  selectedRoleLoadId.value = null
+  workersAmount.value = 1
+  selectedRolesToDelete.value = []
 }
 
-const getRoleName = (roleId) => {
-  return roleOptions.value.find(r => r.value === roleId)?.label || ''
-}
-
-const getRoleLoadLabel = (roleLoadId) => {
-  return roleLoadOptions.value.find(rl => rl.value === roleLoadId)?.label || ''
-}
-
-const addRoles = () => {
+const addRole = () => {
   if (!canAddRole.value) return
+
+  const exists = projectRoles.value.some(pr => pr.roleId === selectedRoleId.value)
   
-  selectedRoles.value.forEach(roleId => {
-    const exists = projectRoles.value.some(pr => pr.roleId === roleId)
-    if (!exists) {
-      projectRoles.value.push({
-        roleId: roleId,
-        roleName: getRoleName(roleId),
-        roleLoadId: selectedRoleLoad.value,
-        roleLoadLabel: getRoleLoadLabel(selectedRoleLoad.value),
-        amountWorkersRole: workersAmount.value
-      })
-    }
-  })
-  
-  selectedRoles.value = []
-  selectedRoleLoad.value = null
-  workersAmount.value = 0
+  if (!exists) {
+    projectRoles.value.push({
+      roleId: selectedRoleId.value,
+      roleName: getRoleName(selectedRoleId.value),
+      roleLoadId: selectedRoleLoadId.value,
+      roleLoadLabel: getRoleLoadLabel(selectedRoleLoadId.value),
+      amountWorkersRole: workersAmount.value
+    })
+  } else {
+    toast.add({
+      severity: 'info',
+      summary: 'Aviso',
+      detail: 'Este rol ya ha sido agregado a la estructura',
+      life: 3000
+    })
+  }
+
+  selectedRoleId.value = null
+  selectedRoleLoadId.value = null
+  workersAmount.value = 1
 }
 
-const selectedRolesToDelete = ref([])
 const deleteSelectedRoles = () => {
   projectRoles.value = projectRoles.value.filter(
     pr => !selectedRolesToDelete.value.includes(pr)
@@ -140,31 +138,22 @@ const deleteSelectedRoles = () => {
 
 const validate = () => {
   if (!structureName.value.trim()) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Validación',
-      detail: 'El nombre de la estructura es requerido',
-      life: 3000
-    })
+    toast.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre de la estructura es requerido', life: 3000 })
     return false
   }
-  
   if (projectRoles.value.length === 0) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Validación',
-      detail: 'Debe agregar al menos un rol',
-      life: 3000
-    })
+    toast.add({ severity: 'warn', summary: 'Validación', detail: 'Debe agregar al menos un rol', life: 3000 })
     return false
   }
-  
+  if (!hasBoss.value) {
+    toast.add({ severity: 'warn', summary: 'Validación', detail: 'La estructura debe contener al menos un rol de tipo Jefe', life: 4000 })
+    return false
+  }
   return true
 }
 
 const handleSave = () => {
   if (!validate()) return
-  
   const data = {
     name: structureName.value,
     projectRoles: projectRoles.value.map(pr => ({
@@ -173,7 +162,6 @@ const handleSave = () => {
       amountWorkersRole: pr.amountWorkersRole
     }))
   }
-  
   emit('save', data)
 }
 
@@ -182,22 +170,9 @@ const handleCancel = () => {
   emit('update:visible', false)
 }
 
-watch([roleOptions, roleLoadOptions], () => {
-  // Actualizar nombres de roles y cargas si ya hay roles en projectRoles
-  if (projectRoles.value.length > 0 && roleOptions.value.length > 0 && roleLoadOptions.value.length > 0) {
-    projectRoles.value = projectRoles.value.map(pr => ({
-      ...pr,
-      roleName: getRoleName(pr.roleId),
-      roleLoadLabel: getRoleLoadLabel(pr.roleLoadId)
-    }))
-  }
-})
-
 watch(() => props.visible, async (newVal) => {
   if (newVal) {
     await loadOptions()
-    // Pequeña espera para asegurar que las opciones estén cargadas
-    await new Promise(resolve => setTimeout(resolve, 100))
     initializeForm()
   }
 })
@@ -210,127 +185,134 @@ watch(() => props.visible, async (newVal) => {
     :closable="true"
     :style="{ width: '900px', maxHeight: '90vh' }"
     @update:visible="$emit('update:visible', $event)"
+    @hide="handleCancel"
   >
     <template #header>
-      <h3 class="text-xl font-bold">{{ dialogTitle }}</h3>
+      <h3 class="text-xl font-bold text-gray-800">{{ dialogTitle }}</h3>
     </template>
 
-    <div class="form-container overflow-y-auto" style="max-height: calc(90vh - 200px)">
-      <div class="field mb-4">
-        <label for="structureName" class="block mb-2 font-semibold">
-          Nombre de la Estructura <span class="text-red-500">*</span>
+    <div class="py-4 space-y-6 overflow-y-auto custom-scrollbar" style="max-height: calc(90vh - 200px)">
+      <!-- Nombre de la estructura -->
+      <div class="space-y-1.5">
+        <label for="structureName" class="block text-sm font-medium text-gray-700">
+          Nombre de la Estructura <span class="text-error-500">*</span>
         </label>
-        <InputText
+        <input
           id="structureName"
           v-model="structureName"
-          class="w-full"
+          type="text"
           placeholder="Ingrese el nombre de la estructura"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
         />
       </div>
 
-      <div class="bg-gray-50 p-4 rounded mb-4">
-        <h4 class="font-semibold mb-3">Agregar Roles</h4>
-        
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div class="field">
-            <label for="roles" class="block mb-2 text-sm">Roles</label>
-            <MultiSelect
-              id="roles"
-              v-model="selectedRoles"
+      <!-- Agregar Roles -->
+      <div class="bg-blue-light-50 border border-blue-light-100 p-5 rounded-xl space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700">Roles</label>
+            <AppSelect
+              v-model="selectedRoleId"
               :options="roleOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Seleccione roles"
-              class="w-full"
-              :filter="true"
+              placeholder="-Seleccione-"
+              searchable
             />
           </div>
 
-          <div class="field">
-            <label for="roleLoad" class="block mb-2 text-sm">Carga del Rol</label>
-            <Dropdown
-              id="roleLoad"
-              v-model="selectedRoleLoad"
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700">Carga del Rol</label>
+            <AppSelect
+              v-model="selectedRoleLoadId"
               :options="roleLoadOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Seleccione carga"
-              class="w-full"
-              :disabled="selectedRoles.length === 0"
+              placeholder="-Seleccione-"
             />
           </div>
 
-          <div class="field">
-            <label for="workers" class="block mb-2 text-sm">Cantidad</label>
-            <InputNumber
-              id="workers"
-              v-model="workersAmount"
-              :min="0"
-              class="w-full"
-              :disabled="selectedRoles.length === 0"
-            />
-          </div>
-
-          <div class="field flex items-end">
-            <Button
-              label="Agregar"
-              icon="pi pi-plus"
-              @click="addRoles"
-              :disabled="!canAddRole"
-              class="w-full"
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700">Cantidad Trabajadores</label>
+            <input
+              type="number"
+              v-model.number="workersAmount"
+              min="1"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
             />
           </div>
         </div>
+
+        <div class="flex pt-2">
+          <button
+            type="button"
+            @click="addRole"
+            :disabled="!canAddRole"
+            class="inline-flex items-center gap-2 px-4 py-2 w-full justify-center rounded-lg bg-blue-light-300 text-white text-sm font-medium hover:bg-blue-light-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Plus class="w-4 h-4" />
+            Agregar Rol
+          </button>
+        </div>
       </div>
 
-      <div class="field">
-        <DataTable
-          v-model:selection="selectedRolesToDelete"
-          :value="projectRoles"
-          dataKey="roleId"
-          selectionMode="multiple"
-          class="p-datatable-sm"
-        >
-          <template #header>
-            <div class="flex justify-between items-center">
-              <span class="font-semibold">Roles de la Estructura</span>
-              <Button
-                label="Eliminar Seleccionados"
-                icon="pi pi-trash"
-                severity="danger"
-                size="small"
-                @click="deleteSelectedRoles"
-                :disabled="selectedRolesToDelete.length === 0"
-              />
-            </div>
-          </template>
+      <!-- DataTable -->
+      <div class="space-y-3">
+        <div v-if="!hasBoss && projectRoles.length > 0" class="flex items-center gap-2 text-warning-700 bg-warning-50 p-3 rounded-lg border border-warning-200">
+          <AlertCircle class="w-4 h-4 flex-shrink-0" />
+          <p class="text-xs font-medium">Recuerde que debe agregar al menos un rol de tipo Jefe para poder guardar la estructura.</p>
+        </div>
 
-          <Column field="roleName" header="Rol" />
-          <Column field="amountWorkersRole" header="Cantidad" style="width: 100px" />
-          <Column field="roleLoadLabel" header="Carga del Rol" />
-
-          <template #empty>
-            <div class="text-center py-4 text-gray-500">
-              No hay roles agregados
-            </div>
-          </template>
-        </DataTable>
+        <div class="border border-gray-200 rounded-xl overflow-hidden">
+          <DataTable
+            v-model:selection="selectedRolesToDelete"
+            :value="projectRoles"
+            dataKey="roleId"
+            class="p-datatable-sm"
+          >
+            <template #header>
+              <div class="flex justify-between items-center bg-brand-500 text-white -m-3 p-3">
+                <span class="font-semibold text-sm">Estructura del Equipo</span>
+                <button
+                  v-if="selectedRolesToDelete.length > 0"
+                  @click="deleteSelectedRoles"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-error-500 text-white text-xs font-medium hover:bg-error-600 transition-colors"
+                >
+                  <Trash2 class="w-3.5 h-3.5" />
+                  Quitar seleccionado
+                </button>
+              </div>
+            </template>
+            
+            <Column selectionMode="multiple" style="width: 3rem"></Column>
+            <Column field="roleName" header="Roles"></Column>
+            <Column field="amountWorkersRole" header="Cantidad Trabajadores"></Column>
+            <Column field="roleLoadLabel" header="Carga del Rol"></Column>
+            
+            <template #empty>
+              <div class="text-center py-6 text-gray-500 text-sm">
+                No records found.
+              </div>
+            </template>
+          </DataTable>
+        </div>
       </div>
     </div>
 
     <template #footer>
-      <Button label="Cancelar" icon="pi pi-times" @click="handleCancel" class="p-button-text" />
-      <Button label="Guardar" icon="pi pi-check" @click="handleSave" />
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 mt-2">
+        <button
+          type="button"
+          @click="handleCancel"
+          class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
+        >
+          Atrás
+        </button>
+        <button
+          type="button"
+          @click="handleSave"
+          :disabled="!hasBoss"
+          class="px-4 py-2 rounded-lg bg-blue-light-400 text-white text-sm font-medium hover:bg-blue-light-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Siguiente
+        </button>
+      </div>
     </template>
   </Dialog>
 </template>
-
-<style scoped>
-.form-container {
-  padding: 1rem 0;
-}
-
-.field {
-  margin-bottom: 0.5rem;
-}
-</style>
