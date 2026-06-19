@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { i18n } from '@/i18n' // <--- Importamos la instancia
 
 export const useLocaleStore = defineStore('locale', () => {
-    const currentLanguage = ref('es')
+    const currentLanguage = ref(localStorage.getItem('locale') || 'es')
     const availableLanguages = [
         { code: 'es', name: 'Español' },
         { code: 'en', name: 'English' }
@@ -12,7 +13,9 @@ export const useLocaleStore = defineStore('locale', () => {
         if (availableLanguages.some(lang => lang.code === langCode)) {
             currentLanguage.value = langCode
             localStorage.setItem('locale', langCode)
-            // Aquí podrías cargar los mensajes de idioma
+            
+            // Sincroniza la librería i18n con la nueva selección
+            i18n.global.locale.value = langCode 
         }
     }
 

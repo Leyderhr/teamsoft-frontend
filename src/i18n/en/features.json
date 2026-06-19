@@ -1,0 +1,76 @@
+{
+  "nomenclatives": {
+    "religion": "Religions",
+    "race": "Races",
+    "ageGroup": "Age Groups",
+    "nacionality": "Nationalities",
+    "county": "Counties",
+    "conflictIndex": "Conflict Indexes",
+    "roleEvaluation": "Role Evaluations",
+    "personGroup": "Person Groups",
+    "costDistance": "Cost Distances",
+    "roleLoad": "Role Loads",
+    "client": "Clients",
+    "competenceImportance": "Competence Importances",
+    "levels": "Competency Levels",
+    "projectStructure": "Project Structures"
+  },
+  "persons": {
+    "title": "Persons",
+    "createTitle": "Create Person",
+    "editTitle": "Edit Person",
+    "tabs": {
+      "basic": "Basic Data",
+      "competences": "Competences",
+      "interests": "Interests",
+      "test": "Psychological Test",
+      "conflicts": "Incompatibilities"
+    },
+    "fields": {
+      "name": "Name",
+      "surname": "Surname",
+      "card": "ID Card",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "sex": "Sex",
+      "inDate": "Entry Date",
+      "birthDate": "Birth Date",
+      "experience": "Experience (years)",
+      "county": "County",
+      "race": "Race",
+      "group": "Group",
+      "nacionality": "Nationality",
+      "religion": "Religion",
+      "mbtiType": "MBTI Type"
+    },
+    "sexOptions": {
+      "preferNotToSay": "Prefer not to say",
+      "male": "Male",
+      "female": "Female"
+    },
+    "belbinOptions": {
+      "preferred": "Preferred",
+      "avoided": "Avoided",
+      "indifferent": "Indifferent"
+    }
+  },
+  "projects": {
+    "structure": {
+      "title": "Project Structures",
+      "createTitle": "Create Project Structure",
+      "editTitle": "Edit Project Structure",
+      "tabs": {
+        "roles": "Team Structure",
+        "competences": "Technical Competences"
+      },
+      "role": "Role",
+      "roleLoad": "Role Load",
+      "workersAmount": "Workers Amount",
+      "competence": "Technical Competence",
+      "level": "Required Level",
+      "importance": "Importance",
+      "bossAlert": "You must add at least one Boss role to the structure."
+    }
+  }
+}

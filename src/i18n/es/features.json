@@ -1,0 +1,76 @@
+{
+  "nomenclatives": {
+    "religion": "Religiones",
+    "race": "Razas",
+    "ageGroup": "Grupos de Edad",
+    "nacionality": "Nacionalidades",
+    "county": "Provincias",
+    "conflictIndex": "Índices de Conflicto",
+    "roleEvaluation": "Evaluación en el Rol",
+    "personGroup": "Grupos de Personas",
+    "costDistance": "Costo de Distancia",
+    "roleLoad": "Carga del Rol",
+    "client": "Clientes",
+    "competenceImportance": "Importancia de Competencias",
+    "levels": "Niveles de Competencias",
+    "projectStructure": "Estructuras de Proyecto"
+  },
+  "persons": {
+    "title": "Personas",
+    "createTitle": "Crear Persona",
+    "editTitle": "Editar Persona",
+    "tabs": {
+      "basic": "Datos Básicos",
+      "competences": "Competencias",
+      "interests": "Intereses",
+      "test": "Test Psicológico",
+      "conflicts": "Incompatibilidades"
+    },
+    "fields": {
+      "name": "Nombre",
+      "surname": "Apellidos",
+      "card": "CI",
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "email": "Correo",
+      "sex": "Sexo",
+      "inDate": "Fecha de ingreso",
+      "birthDate": "Fecha de nacimiento",
+      "experience": "Experiencia (años)",
+      "county": "Provincia",
+      "race": "Raza",
+      "group": "Grupo",
+      "nacionality": "Nacionalidad",
+      "religion": "Religión",
+      "mbtiType": "Tipo MBTI"
+    },
+    "sexOptions": {
+      "preferNotToSay": "Prefiero no decirlo",
+      "male": "Masculino",
+      "female": "Femenino"
+    },
+    "belbinOptions": {
+      "preferred": "Preferido",
+      "avoided": "Evitado",
+      "indifferent": "Indiferente"
+    }
+  },
+  "projects": {
+    "structure": {
+      "title": "Estructuras de Proyecto",
+      "createTitle": "Crear Estructura de Proyecto",
+      "editTitle": "Editar Estructura de Proyecto",
+      "tabs": {
+        "roles": "Estructura del Equipo",
+        "competences": "Competencias Técnicas"
+      },
+      "role": "Rol",
+      "roleLoad": "Carga del Rol",
+      "workersAmount": "Cantidad Trabajadores",
+      "competence": "Competencia Técnica",
+      "level": "Nivel Exigido",
+      "importance": "Importancia",
+      "bossAlert": "Debe agregar al menos un rol de tipo Jefe a la estructura."
+    }
+  }
+}

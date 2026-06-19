@@ -1,10 +1,4 @@
-// Traduce errores de la API (ky HTTPError) a un mensaje legible para el usuario.
-// Cubre las formas que produce el GlobalExceptionHandler del backend:
-//   { status, error }                              -> regla de negocio / no encontrado
-//   { status, error: 'Validation failed', fieldErrors }
-//   { status, error: 'Validation failed', messages }
-//   { status, error: 'Malformed JSON request', message, details }
-// y la forma antigua { 'Error: ': code } por compatibilidad.
+import { i18n } from '@/i18n'
 
 const CODE_MESSAGES = {
   fo_weights_most_sum_one:
@@ -13,39 +7,55 @@ const CODE_MESSAGES = {
     'No fue posible generar una propuesta con la configuración y las personas fijadas actuales. Ajusta los factores o revisa los miembros fijados.',
 }
 
-function messageFromBody(body, fallback) {
-  if (!body || typeof body !== 'object') return fallback
-
-  const raw = body.error ?? body.message ?? body['Error: ']
-
-  // Código de negocio conocido -> mensaje amigable
-  if (typeof raw === 'string' && CODE_MESSAGES[raw]) return CODE_MESSAGES[raw]
-
-  // Errores de validación por campo (@Valid)
-  if (body.fieldErrors && typeof body.fieldErrors === 'object') {
-    const parts = Object.values(body.fieldErrors).filter(Boolean)
-    if (parts.length) return parts.join(' · ')
-  }
-
-  // Errores de validación de parámetros
-  if (Array.isArray(body.messages) && body.messages.length) {
-    return body.messages.filter(Boolean).join(' · ')
-  }
-
-  return (typeof raw === 'string' && raw) || body.detail || fallback
-}
-
-/**
- * Extrae un mensaje legible de un error de la API.
- * @param {unknown} error  Error lanzado por ky (HTTPError con .response) u otro.
- * @param {string} fallback Mensaje por defecto si no se puede parsear.
- * @returns {Promise<string>}
- */
 export async function parseApiError(error, fallback = 'Ocurrió un error en el servidor') {
   const response = error?.response
   if (response && typeof response.json === 'function') {
     try {
-      return messageFromBody(await response.json(), fallback)
+      const body = await response.json()
+
+      // === ESTRUCTURAS NUEVAS DEL BACKEND ===
+      if (body.errorCode) {
+        
+        // 1. Errores de Validación (DTO)
+        if (body.errorCode === 'VALIDATION_FAILED' && body.parameters && typeof body.parameters === 'object') {
+          // Extraemos los códigos de error (ej: "ERR_VAL_PERSON_NAME", "ERR_VAL_PERSON_ADDRESS")
+          const fieldCodes = Object.values(body.parameters)
+          
+          return fieldCodes
+            .filter(Boolean)
+            .map(code => i18n.global.t(`errors.${code}`))
+            .join(' · ')
+        }
+
+        // 2. Errores de Negocio (Service)
+        // body.parameters puede ser [2] para interpolar en el texto (ej: "No encontrado {0}")
+        const params = Array.isArray(body.parameters) ? body.parameters : []
+        return i18n.global.t(`errors.${body.errorCode}`, params)
+      }
+
+      // === ESTRUCTURA LEGACY Y POR DEFECTO (Compatibilidad) ===
+      const raw = body.error ?? body.message ?? body['Error: ']
+      
+      // Intentar primero traducir el error heredado
+      if (typeof raw === 'string' && CODE_MESSAGES[raw]) {
+         const tKey = `errors.${raw}`
+         const translation = i18n.global.t(tKey)
+         if (translation !== tKey) return translation
+         return CODE_MESSAGES[raw]
+      }
+
+      // Validaciones de Spring Boot nativas (fieldErrors)
+      if (body.fieldErrors && typeof body.fieldErrors === 'object') {
+        const parts = Object.values(body.fieldErrors).filter(Boolean)
+        if (parts.length) return parts.join(' · ')
+      }
+
+      // Validaciones en listado (messages)
+      if (Array.isArray(body.messages) && body.messages.length) {
+        return body.messages.filter(Boolean).join(' · ')
+      }
+
+      return (typeof raw === 'string' && raw) || body.detail || fallback
     } catch {
       /* cuerpo no-JSON o ya consumido */
     }
