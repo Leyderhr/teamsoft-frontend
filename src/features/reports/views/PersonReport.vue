@@ -1,11 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { ArrowLeft, User, Mail, CreditCard, Activity, Loader2 } from 'lucide-vue-next'
 import reportService from '@/features/reports/services/reportService.js'
 import DataTable from '@/shared/components/DataTable.vue'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 
+const { t } = useI18n()
 const toast = useToast()
 const loading = ref(false)
 const loadingDetail = ref(false)
@@ -18,20 +20,20 @@ const showDetail = ref(false)
 
 // Columnas para la tabla de trabajadores
 const workerColumns = [
-  { field: 'personName', header: 'Nombre', sortable: true },
-  { field: 'surName', header: 'Apellidos', sortable: true },
-  { field: 'card', header: 'Carné', sortable: true },
-  { field: 'email', header: 'Correo', sortable: true },
-  { field: 'phone', header: 'Teléfono' },
-  { field: 'sex', header: 'Sexo' },
-  { field: 'inDate', header: 'Fecha Entrada', sortable: true },
+  { field: 'personName', header: t('features.persons.fields.name'), sortable: true },
+  { field: 'surName', header: t('features.persons.fields.surname'), sortable: true },
+  { field: 'card', header: t('features.persons.fields.card'), sortable: true },
+  { field: 'email', header: t('features.persons.fields.email'), sortable: true },
+  { field: 'phone', header: t('features.persons.fields.phone') },
+  { field: 'sex', header: t('features.persons.fields.sex') },
+  { field: 'inDate', header: t('features.persons.fields.inDate'), sortable: true },
   { field: 'workload', header: 'Carga' },
-  { field: 'experience', header: 'Experiencia' },
+  { field: 'experience', header: t('features.persons.fields.experience') },
   { field: 'status', header: 'Estado', type: 'badge', sortable: true },
-  { field: 'county.countyName', header: 'Provincia', sortable: true },
-  { field: 'group.name', header: 'Grupo', sortable: true },
-  { field: 'race.raceName', header: 'Raza', sortable: true },
-  { field: 'nacionality.gentilicioNac', header: 'Nacionalidad', sortable: true },
+  { field: 'county.countyName', header: t('features.persons.fields.county'), sortable: true },
+  { field: 'group.name', header: t('features.persons.fields.group'), sortable: true },
+  { field: 'race.raceName', header: t('features.persons.fields.race'), sortable: true },
+  { field: 'nacionality.gentilicioNac', header: t('features.persons.fields.nacionality'), sortable: true },
 ]
 
 const loadWorkers = async () => {
@@ -44,7 +46,7 @@ const loadWorkers = async () => {
       const { default: personService } = await import('@/features/persons/services/personService.js')
       workers.value = await personService.getAll()
     } catch {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el reporte de personas', life: 3000 })
+      toast.add({ severity: 'error', summary: t('common.error'), detail: t('common.loadError'), life: 3000 })
     }
   } finally {
     loading.value = false
@@ -72,7 +74,7 @@ const handleSeeReport = async (item) => {
   } catch {
     report.value = null
     workerProjects.value = []
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el reporte de la persona', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('common.loadError'), life: 3000 })
   } finally {
     loadingDetail.value = false
   }
@@ -150,14 +152,14 @@ onMounted(loadWorkers)
           <div class="flex items-center gap-2">
             <CreditCard class="w-4 h-4 text-gray-400 flex-shrink-0" />
             <div>
-              <p class="text-xs text-gray-400">Carné</p>
+              <p class="text-xs text-gray-400">{{ t('features.persons.fields.card') }}</p>
               <p class="text-sm font-medium text-gray-700">{{ selectedWorker.card || '—' }}</p>
             </div>
           </div>
           <div class="flex items-center gap-2">
             <Mail class="w-4 h-4 text-gray-400 flex-shrink-0" />
             <div>
-              <p class="text-xs text-gray-400">Correo</p>
+              <p class="text-xs text-gray-400">{{ t('features.persons.fields.email') }}</p>
               <p class="text-sm font-medium text-gray-700">{{ selectedWorker.email || '—' }}</p>
             </div>
           </div>

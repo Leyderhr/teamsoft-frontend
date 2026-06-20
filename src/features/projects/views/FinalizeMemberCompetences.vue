@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import {
   Loader2, Save, ArrowLeft, Award, Cpu, ShieldAlert, Trash2, Plus,
 } from 'lucide-vue-next'
@@ -20,6 +21,7 @@ const props = defineProps({
 
 const router = useRouter()
 const toast = useToast()
+const { t } = useI18n()
 
 const activeTab = ref('competences')
 
@@ -27,23 +29,19 @@ const loading = ref(false)
 const saving  = ref(false)
 const personName = ref('')
 
-// Filas editables
-const techCompetences = ref([]) // { competenceId, name, levelsId }
-const genCompetences  = ref([]) // { competenceId, name, levelsId }
-const conflicts       = ref([]) // { personConflictId, name, surName, card, conflictIndexId }
+const techCompetences = ref([])
+const genCompetences  = ref([])
+const conflicts       = ref([])
 
-// Formularios de "agregar competencia"
 const techNewCompetence = ref(null)
 const techNewLevel      = ref(null)
 const genNewCompetence  = ref(null)
 const genNewLevel       = ref(null)
 
-// Incompatibilidades: lista de personas y formulario de "agregar"
 const personsList       = ref([])
 const newConflictPerson = ref(null)
 const newConflictIndex  = ref(null)
 
-// ── Nomencladores ──
 const { data: levelsData }       = useLevels()
 const { data: competencesData }  = useCompetences()
 const { data: conflictIndexData } = useConflictIndex()
@@ -55,7 +53,6 @@ const conflictIndexOptions = computed(() =>
   conflictIndexData.value?.map(c => ({ label: c.description, value: c.id })) ?? []
 )
 
-// Personas disponibles para agregar como incompatibles (excluye a la propia y a las ya agregadas)
 const conflictPersonOptions = computed(() =>
   personsList.value
     .filter(p => p.id !== Number(props.personId) && !conflicts.value.some(c => c.personConflictId === p.id))
@@ -73,7 +70,11 @@ const availableGenCompetences = computed(() =>
     .map(c => ({ label: c.competitionName, value: c.id }))
 )
 
-// ── Carga de la persona ──
+const tabs = computed(() => [
+  { id: 'competences', label: t('features.projects.finalizeTeam.competencesTab'), icon: Award },
+  { id: 'compatibility', label: t('features.projects.finalizeTeam.compatibilityTab'), icon: ShieldAlert },
+])
+
 async function loadPerson() {
   loading.value = true
   try {
@@ -96,13 +97,12 @@ async function loadPerson() {
       conflictIndexId: pc.conflictIndex?.id ?? null,
     }))
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la persona', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.projects.finalizeTeam.memberLoadError'), life: 3000 })
   } finally {
     loading.value = false
   }
 }
 
-// Solo los miembros NO jefe del mismo equipo (excluyendo a la persona editada)
 async function loadPersons() {
   try {
     const data = await projectService.getNonBossAssignedRoles(props.projectId)
@@ -114,7 +114,7 @@ async function loadPersons() {
     }
     personsList.value = [...byId.values()]
   } catch {
-    // Si falla, no se podrán agregar nuevas incompatibilidades
+    // failures here only disable adding new conflicts
   }
 }
 
@@ -123,11 +123,10 @@ onMounted(() => {
   loadPersons()
 })
 
-// ── Acciones de incompatibilidades ──
 function addConflict() {
   if (!newConflictPerson.value || !newConflictIndex.value) return
   if (conflicts.value.some(c => c.personConflictId === newConflictPerson.value)) {
-    toast.add({ severity: 'warn', summary: 'Duplicado', detail: 'Esa persona ya está en la lista', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.finalizeTeam.duplicateConflictSummary'), detail: t('features.projects.finalizeTeam.duplicateConflictDetail'), life: 3000 })
     return
   }
   const person = personsList.value.find(p => p.id === newConflictPerson.value)
@@ -146,7 +145,6 @@ function removeConflict(index) {
   conflicts.value.splice(index, 1)
 }
 
-// ── Acciones de competencias ──
 function addCompetence(kind) {
   const compId = kind === 'tech' ? techNewCompetence.value : genNewCompetence.value
   const levelId = kind === 'tech' ? techNewLevel.value : genNewLevel.value
@@ -171,15 +169,14 @@ function removeCompetence(kind, index) {
   else genCompetences.value.splice(index, 1)
 }
 
-// ── Guardar (PATCH) ──
 async function handleSave() {
   const allCompetences = [...techCompetences.value, ...genCompetences.value]
   if (allCompetences.some(c => c.levelsId == null)) {
-    toast.add({ severity: 'warn', summary: 'Falta nivel', detail: 'Todas las competencias deben tener un nivel asignado', life: 4000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.finalizeTeam.missingLevel'), detail: t('features.projects.finalizeTeam.missingLevelDetail'), life: 4000 })
     return
   }
   if (conflicts.value.some(c => c.conflictIndexId == null)) {
-    toast.add({ severity: 'warn', summary: 'Falta nivel de conflicto', detail: 'Todas las incompatibilidades deben tener un nivel de conflicto', life: 4000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.finalizeTeam.missingConflictLevel'), detail: t('features.projects.finalizeTeam.missingConflictLevelDetail'), life: 4000 })
     return
   }
 
@@ -191,11 +188,11 @@ async function handleSave() {
   saving.value = true
   try {
     await personService.patchCompetencesConflicts(props.personId, payload)
-    toast.add({ severity: 'success', summary: 'Guardado', detail: 'Competencias e incompatibilidades actualizadas', life: 4000 })
+    toast.add({ severity: 'success', summary: t('features.projects.finalizeTeam.savedSummary'), detail: t('features.projects.finalizeTeam.savedDetail'), life: 4000 })
     router.push({ name: 'FinalizeTeamMembers', params: { projectId: props.projectId } })
   } catch (e) {
-    const detail = await parseApiError(e, 'No se pudieron guardar los cambios')
-    toast.add({ severity: 'error', summary: 'Error al guardar', detail, life: 6000 })
+    const detail = await parseApiError(e, t('common.saveError'))
+    toast.add({ severity: 'error', summary: t('features.projects.finalizeTeam.saveErrorSummary'), detail, life: 6000 })
   } finally {
     saving.value = false
   }
@@ -204,20 +201,15 @@ async function handleSave() {
 function goBack() {
   router.push({ name: 'FinalizeTeamMembers', params: { projectId: props.projectId } })
 }
-
-const tabs = [
-  { id: 'competences', label: 'Competencias', icon: Award },
-  { id: 'compatibility', label: 'Nivel de compatibilidad', icon: ShieldAlert },
-]
 </script>
 
 <template>
   <div class="space-y-6">
     <PageBreadcrumb
-      :page-title="personName || 'Editar competencias'"
+      :page-title="personName || t('features.projects.finalizeTeam.editCompetences')"
       :items="[
-        { label: 'Finalizar Equipo', path: '/manage-projects/finalize-team' },
-        { label: 'Evaluar Miembros', path: `/manage-projects/finalize-team/${projectId}/members` },
+        { label: t('features.projects.finalizeTeam.title'), path: '/manage-projects/finalize-team' },
+        { label: t('features.projects.finalizeTeam.evaluateTitle'), path: `/manage-projects/finalize-team/${projectId}/members` },
       ]"
     />
 
@@ -225,29 +217,29 @@ const tabs = [
       <!-- Header + tabs -->
       <div class="px-6 pt-4 border-b border-gray-200">
         <div class="flex items-center justify-between gap-4 flex-wrap mb-3">
-          <h2 class="text-base font-semibold text-gray-800">{{ personName || 'Miembro' }}</h2>
+          <h2 class="text-base font-semibold text-gray-800">{{ personName || t('features.projects.finalizeTeam.membersTitle') }}</h2>
           <button
             type="button"
             @click="goBack"
             class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft class="w-4 h-4" />
-            Volver
+            {{ t('common.back') }}
           </button>
         </div>
         <nav class="flex gap-6 -mb-px">
           <button
-            v-for="t in tabs"
-            :key="t.id"
+            v-for="tab in tabs"
+            :key="tab.id"
             type="button"
-            @click="activeTab = t.id"
+            @click="activeTab = tab.id"
             class="inline-flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors cursor-pointer"
-            :class="activeTab === t.id
+            :class="activeTab === tab.id
               ? 'border-brand-500 text-brand-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'"
           >
-            <component :is="t.icon" class="w-4 h-4" />
-            {{ t.label }}
+            <component :is="tab.icon" class="w-4 h-4" />
+            {{ tab.label }}
           </button>
         </nav>
       </div>
@@ -255,7 +247,7 @@ const tabs = [
       <!-- Loading -->
       <div v-if="loading" class="py-16 flex items-center justify-center gap-2 text-sm text-gray-400">
         <Loader2 class="w-5 h-5 animate-spin" />
-        Cargando datos del miembro...
+        {{ t('features.projects.finalizeTeam.loadingMemberData') }}
       </div>
 
       <template v-else>
@@ -266,18 +258,17 @@ const tabs = [
           <section class="space-y-3">
             <div class="flex items-center gap-2">
               <Cpu class="w-4 h-4 text-brand-500" />
-              <h3 class="text-sm font-semibold text-gray-700">Competencias Técnicas</h3>
+              <h3 class="text-sm font-semibold text-gray-700">{{ t('features.projects.finalizeTeam.techCompetences') }}</h3>
             </div>
 
-            <!-- Agregar -->
             <div class="flex flex-col sm:flex-row sm:items-end gap-3 rounded-xl bg-gray-50 border border-gray-100 p-4">
               <div class="flex-1 min-w-[200px] space-y-1.5">
-                <label class="text-xs font-medium text-gray-600">Competencia</label>
-                <AppSelect v-model="techNewCompetence" :options="availableTechCompetences" placeholder="Seleccionar competencia..." :searchable="true" />
+                <label class="text-xs font-medium text-gray-600">{{ t('features.projects.finalizeTeam.competenceLabel') }}</label>
+                <AppSelect v-model="techNewCompetence" :options="availableTechCompetences" :placeholder="t('common.select')" :searchable="true" />
               </div>
               <div class="w-full sm:w-56 space-y-1.5">
-                <label class="text-xs font-medium text-gray-600">Nivel</label>
-                <AppSelect v-model="techNewLevel" :options="levelOptions" placeholder="Seleccionar nivel..." />
+                <label class="text-xs font-medium text-gray-600">{{ t('features.projects.finalizeTeam.levelLabel') }}</label>
+                <AppSelect v-model="techNewLevel" :options="levelOptions" :placeholder="t('common.select')" />
               </div>
               <button
                 type="button"
@@ -286,17 +277,16 @@ const tabs = [
                 class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <Plus class="w-4 h-4" />
-                Agregar
+                {{ t('common.add') }}
               </button>
             </div>
 
-            <!-- Tabla -->
             <div class="overflow-hidden rounded-xl border border-gray-200">
               <table class="min-w-full text-sm">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-56">Nivel</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.finalizeTeam.nameHeader') }}</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-56">{{ t('features.projects.finalizeTeam.levelLabel') }}</th>
                     <th class="px-2 py-2.5 w-10"></th>
                   </tr>
                 </thead>
@@ -304,7 +294,7 @@ const tabs = [
                   <tr v-for="(c, idx) in techCompetences" :key="c.competenceId" class="hover:bg-gray-50/60">
                     <td class="px-4 py-2 text-gray-700">{{ c.name }}</td>
                     <td class="px-4 py-2">
-                      <AppSelect v-model="c.levelsId" :options="levelOptions" size="sm" placeholder="Nivel..." />
+                      <AppSelect v-model="c.levelsId" :options="levelOptions" size="sm" :placeholder="t('common.select')" />
                     </td>
                     <td class="px-2 py-2 text-right">
                       <button type="button" @click="removeCompetence('tech', idx)"
@@ -314,7 +304,7 @@ const tabs = [
                     </td>
                   </tr>
                   <tr v-if="!techCompetences.length">
-                    <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Sin competencias técnicas</td>
+                    <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">{{ t('features.projects.finalizeTeam.noTechCompetences') }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -327,17 +317,17 @@ const tabs = [
           <section class="space-y-3">
             <div class="flex items-center gap-2">
               <Award class="w-4 h-4 text-brand-500" />
-              <h3 class="text-sm font-semibold text-gray-700">Competencias Genéricas</h3>
+              <h3 class="text-sm font-semibold text-gray-700">{{ t('features.projects.finalizeTeam.genericCompetences') }}</h3>
             </div>
 
             <div class="flex flex-col sm:flex-row sm:items-end gap-3 rounded-xl bg-gray-50 border border-gray-100 p-4">
               <div class="flex-1 min-w-[200px] space-y-1.5">
-                <label class="text-xs font-medium text-gray-600">Competencia</label>
-                <AppSelect v-model="genNewCompetence" :options="availableGenCompetences" placeholder="Seleccionar competencia..." :searchable="true" />
+                <label class="text-xs font-medium text-gray-600">{{ t('features.projects.finalizeTeam.competenceLabel') }}</label>
+                <AppSelect v-model="genNewCompetence" :options="availableGenCompetences" :placeholder="t('common.select')" :searchable="true" />
               </div>
               <div class="w-full sm:w-56 space-y-1.5">
-                <label class="text-xs font-medium text-gray-600">Nivel</label>
-                <AppSelect v-model="genNewLevel" :options="levelOptions" placeholder="Seleccionar nivel..." />
+                <label class="text-xs font-medium text-gray-600">{{ t('features.projects.finalizeTeam.levelLabel') }}</label>
+                <AppSelect v-model="genNewLevel" :options="levelOptions" :placeholder="t('common.select')" />
               </div>
               <button
                 type="button"
@@ -346,7 +336,7 @@ const tabs = [
                 class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <Plus class="w-4 h-4" />
-                Agregar
+                {{ t('common.add') }}
               </button>
             </div>
 
@@ -354,8 +344,8 @@ const tabs = [
               <table class="min-w-full text-sm">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-56">Nivel</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.finalizeTeam.nameHeader') }}</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-56">{{ t('features.projects.finalizeTeam.levelLabel') }}</th>
                     <th class="px-2 py-2.5 w-10"></th>
                   </tr>
                 </thead>
@@ -363,7 +353,7 @@ const tabs = [
                   <tr v-for="(c, idx) in genCompetences" :key="c.competenceId" class="hover:bg-gray-50/60">
                     <td class="px-4 py-2 text-gray-700">{{ c.name }}</td>
                     <td class="px-4 py-2">
-                      <AppSelect v-model="c.levelsId" :options="levelOptions" size="sm" placeholder="Nivel..." />
+                      <AppSelect v-model="c.levelsId" :options="levelOptions" size="sm" :placeholder="t('common.select')" />
                     </td>
                     <td class="px-2 py-2 text-right">
                       <button type="button" @click="removeCompetence('gen', idx)"
@@ -373,7 +363,7 @@ const tabs = [
                     </td>
                   </tr>
                   <tr v-if="!genCompetences.length">
-                    <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Sin competencias genéricas</td>
+                    <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">{{ t('features.projects.finalizeTeam.noGenericCompetences') }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -383,15 +373,14 @@ const tabs = [
 
         <!-- ════════ TAB NIVEL DE COMPATIBILIDAD ════════ -->
         <div v-show="activeTab === 'compatibility'" class="p-6 space-y-4">
-          <!-- Agregar incompatibilidad -->
           <div class="flex flex-col sm:flex-row sm:items-end gap-3 rounded-xl bg-gray-50 border border-gray-100 p-4">
             <div class="flex-1 min-w-[200px] space-y-1.5">
-              <label class="text-xs font-medium text-gray-600">Persona</label>
-              <AppSelect v-model="newConflictPerson" :options="conflictPersonOptions" placeholder="Seleccionar persona..." :searchable="true" search-placeholder="Buscar persona..." />
+              <label class="text-xs font-medium text-gray-600">{{ t('features.projects.finalizeTeam.personLabel') }}</label>
+              <AppSelect v-model="newConflictPerson" :options="conflictPersonOptions" :placeholder="t('common.select')" :searchable="true" />
             </div>
             <div class="w-full sm:w-64 space-y-1.5">
-              <label class="text-xs font-medium text-gray-600">Nivel de conflicto</label>
-              <AppSelect v-model="newConflictIndex" :options="conflictIndexOptions" placeholder="Nivel de conflicto..." />
+              <label class="text-xs font-medium text-gray-600">{{ t('features.projects.finalizeTeam.conflictLevelLabel') }}</label>
+              <AppSelect v-model="newConflictIndex" :options="conflictIndexOptions" :placeholder="t('common.select')" />
             </div>
             <button
               type="button"
@@ -400,7 +389,7 @@ const tabs = [
               class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <Plus class="w-4 h-4" />
-              Agregar
+              {{ t('common.add') }}
             </button>
           </div>
 
@@ -408,10 +397,10 @@ const tabs = [
             <table class="min-w-full text-sm">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Apellidos</th>
-                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">DNI</th>
-                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-64">Nivel de conflicto</th>
+                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.finalizeTeam.nameHeader') }}</th>
+                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.finalizeTeam.surnameHeader') }}</th>
+                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.finalizeTeam.dniHeader') }}</th>
+                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-64">{{ t('features.projects.finalizeTeam.conflictLevelLabel') }}</th>
                   <th class="px-2 py-2.5 w-10"></th>
                 </tr>
               </thead>
@@ -421,7 +410,7 @@ const tabs = [
                   <td class="px-4 py-2 text-gray-600">{{ c.surName }}</td>
                   <td class="px-4 py-2 text-gray-500">{{ c.card }}</td>
                   <td class="px-4 py-2">
-                    <AppSelect v-model="c.conflictIndexId" :options="conflictIndexOptions" size="sm" placeholder="Nivel de conflicto..." />
+                    <AppSelect v-model="c.conflictIndexId" :options="conflictIndexOptions" size="sm" :placeholder="t('common.select')" />
                   </td>
                   <td class="px-2 py-2 text-right">
                     <button type="button" @click="removeConflict(idx)"
@@ -432,7 +421,7 @@ const tabs = [
                 </tr>
                 <tr v-if="!conflicts.length">
                   <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">
-                    Esta persona no tiene incompatibilidades registradas
+                    {{ t('features.projects.finalizeTeam.noPersonConflicts') }}
                   </td>
                 </tr>
               </tbody>
@@ -447,7 +436,7 @@ const tabs = [
             @click="goBack"
             class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Cancelar
+            {{ t('common.cancel') }}
           </button>
           <button
             type="button"
@@ -457,7 +446,7 @@ const tabs = [
           >
             <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
             <Save v-else class="w-4 h-4" />
-            Salvar
+            {{ t('common.save') }}
           </button>
         </div>
       </template>

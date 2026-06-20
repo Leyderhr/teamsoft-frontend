@@ -246,5 +246,26 @@
   "ERR_TEAM_FORMATION_ITERATIONS_MISMATCH": "Las iteraciones no coinciden.",
 
   "ERR_VAL_COMP_DIMENSION_NAME": "El nombre de la dimensión es obligatorio.",
-  "ERR_VAL_FILTER_FIELD_REQUIRED": "El campo a filtrar es obligatorio."
+  "ERR_VAL_FILTER_FIELD_REQUIRED": "El campo a filtrar es obligatorio.",
+
+  "common": {
+    "errorLabel": "ERROR"
+  },
+  "forbidden": {
+    "subtitle": "403 — Acceso Denegado",
+    "message": "No tienes los permisos necesarios para acceder a esta página. Contacta al administrador si crees que esto es un error."
+  },
+  "notFound": {
+    "subtitle": "404 — Página no encontrada",
+    "message": "No podemos encontrar la página que buscas. Verifica la URL o regresa al inicio."
+  },
+  "serverError": {
+    "subtitle": "500 — Error del Servidor",
+    "message": "Ha ocurrido un error interno en el servidor. Intenta recargar la página o vuelve más tarde. Si el problema persiste, contacta al administrador."
+  },
+  "sessionExpired": {
+    "label": "SESIÓN",
+    "subtitle": "Sesión Expirada",
+    "message": "Tu sesión ha caducado por inactividad. Por favor, inicia sesión nuevamente para continuar."
+  }
 }

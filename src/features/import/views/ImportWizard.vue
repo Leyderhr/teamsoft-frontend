@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { useRouter } from 'vue-router'
 import { Upload, FileText, ChevronRight, Trash2, Plus, Check, Loader2, ArrowLeft, ArrowRight } from 'lucide-vue-next'
@@ -9,6 +10,7 @@ import competenceService from '@/features/competences/services/competenceService
 import roleService from '@/features/roles/services/roleService.js'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 
+const { t } = useI18n()
 const toast = useToast()
 const router = useRouter()
 
@@ -187,7 +189,7 @@ const handleImport = async () => {
         toast.add({ severity: 'success', summary: 'Importación exitosa', detail: `Se importaron los datos correctamente`, life: 5000 })
     } catch (error) {
         console.error('Error importando:', error)
-        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo completar la importación', life: 4000 })
+        toast.add({ severity: 'error', summary: t('common.error'), detail: 'No se pudo completar la importación', life: 4000 })
     } finally {
         importing.value = false
     }
@@ -706,7 +708,7 @@ onMounted(loadOptions)
           :disabled="!canNext"
           @click="goNext"
         >
-          Siguiente
+          {{ t('common.next') }}
           <ArrowRight class="w-4 h-4" />
         </button>
 

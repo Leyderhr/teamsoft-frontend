@@ -2,7 +2,7 @@
   <div>
     <PageBreadcrumb
       :page-title="pageTitle"
-      :items="[{ label: 'Proyectos', path: '/manage-projects/project' }]"
+      :items="[{ label: t('features.projects.formTitle'), path: '/manage-projects/project' }]"
     />
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
@@ -17,12 +17,12 @@
           <!-- Nombre -->
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">
-              Nombre del Proyecto <span class="text-error-500">*</span>
+              {{ t('features.projects.nameLabel') }} <span class="text-error-500">*</span>
             </label>
             <input
               v-model="projectName"
               type="text"
-              placeholder="Nombre"
+              :placeholder="t('features.projects.nameLabel')"
               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
             />
           </div>
@@ -30,7 +30,7 @@
           <!-- Fecha inicial -->
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">
-              Fecha Inicial <span class="text-error-500">*</span>
+              {{ t('features.projects.startDateLabel') }} <span class="text-error-500">*</span>
             </label>
             <AppDatePicker v-model="initialDate" placeholder="dd/mm/aaaa" />
           </div>
@@ -38,7 +38,7 @@
           <!-- Cliente -->
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">
-              Cliente <span class="text-error-500">*</span>
+              {{ t('features.projects.clientLabel') }} <span class="text-error-500">*</span>
             </label>
             <AppSelect
               v-model="selectedClient"
@@ -51,7 +51,7 @@
           <!-- Provincia -->
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">
-              Provincia <span class="text-error-500">*</span>
+              {{ t('features.projects.countyLabel') }} <span class="text-error-500">*</span>
             </label>
             <AppSelect
               v-model="selectedProvince"
@@ -65,7 +65,7 @@
         <!-- Estructura del proyecto -->
         <div class="space-y-1 mb-6">
           <label class="block text-sm font-medium text-gray-700">
-            Estructura del Proyecto <span class="text-error-500">*</span>
+            {{ t('features.projects.structureLabel') }} <span class="text-error-500">*</span>
           </label>
           <AppSelect
             v-model="selectedProjectStructure"
@@ -82,7 +82,7 @@
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <Plus class="w-4 h-4" />
-            Agregar Proyecto
+            {{ t('features.projects.addProject') }}
           </button>
         </div>
 
@@ -91,7 +91,7 @@
           <div class="overflow-hidden rounded-xl border border-gray-200">
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
               <span class="text-sm font-medium text-gray-700">
-                Proyectos a crear ({{ projectsList.length }})
+                {{ t('features.projects.projectsToCreate') }} ({{ projectsList.length }})
               </span>
               <button
                 v-if="selectedProjects.length"
@@ -106,10 +106,10 @@
               <thead class="bg-gray-50">
                 <tr>
                   <th class="w-10 px-4 py-2"></th>
-                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
-                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Provincia</th>
-                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ t('features.projects.nameHeader') }}</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ t('features.projects.clientHeader') }}</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ t('features.projects.countyHeader') }}</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ t('features.projects.dateHeader') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
@@ -144,7 +144,7 @@
           @click="router.push('/manage-projects/project')"
           class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
-          Cancelar
+          {{ t('common.cancel') }}
         </button>
         <button
           type="button"
@@ -154,7 +154,7 @@
         >
           <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
           <Save v-else class="w-4 h-4" />
-          {{ saving ? 'Guardando...' : 'Guardar' }}
+          {{ saving ? t('common.saving') : t('common.save') }}
         </button>
       </div>
     </div>
@@ -165,6 +165,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import { Plus, Trash2, Save, Loader2 } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import AppDatePicker from '@/components/ui/AppDatePicker.vue'
@@ -172,6 +173,7 @@ import AppSelect from '@/components/ui/AppSelect.vue'
 import clientService from '@/features/nomenclatives/services/clientService.js'
 import countyService from '@/features/nomenclatives/services/countyService.js'
 import projectStructureService from '@/features/nomenclatives/services/projectStructureService.js'
+import { parseApiError } from '@/lib/apiError'
 
 const props = defineProps({
   mode: { type: String, default: 'create' },
@@ -180,6 +182,7 @@ const props = defineProps({
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
+const { t } = useI18n()
 
 // Form fields
 const projectName = ref('')
@@ -200,7 +203,7 @@ const selectedProjects = ref([])
 const saving = ref(false)
 
 const isCreateMode = computed(() => props.mode === 'create')
-const pageTitle = computed(() => isCreateMode.value ? 'Crear Proyectos' : 'Editar Proyecto')
+const pageTitle = computed(() => isCreateMode.value ? t('features.projects.createTitle') : t('features.projects.editTitle'))
 
 const canAddProject = computed(() =>
   projectName.value.trim() &&
@@ -255,7 +258,7 @@ onMounted(async () => {
     provinceOptions.value = provinces.map(p => ({ label: p.countyName, value: p.id }))
     projectStructureOptions.value = structures.map(s => ({ label: s.name, value: s.id }))
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las opciones', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.projects.optionsLoadError'), life: 3000 })
   }
 
   if (!isCreateMode.value && route.params.id) {
@@ -270,7 +273,7 @@ onMounted(async () => {
       selectedProvince.value = p.county?.id ?? p.province ?? ''
       selectedProjectStructure.value = p.projectStructure?.id ?? p.projectStructure ?? ''
     } catch {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el proyecto', life: 3000 })
+      toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.projects.optionsLoadError'), life: 3000 })
     }
   }
 })
@@ -283,7 +286,7 @@ async function handleSave() {
     if (!isCreateMode.value) {
       // Edit: single project
       if (!canAddProject.value) {
-        toast.add({ severity: 'warn', summary: 'Validación', detail: 'Complete todos los campos requeridos', life: 3000 })
+        toast.add({ severity: 'warn', summary: t('features.projects.validationSummary'), detail: t('features.projects.completeRequiredFields'), life: 3000 })
         saving.value = false
         return
       }
@@ -294,11 +297,11 @@ async function handleSave() {
         province: selectedProvince.value,
         projectStructure: selectedProjectStructure.value,
       })
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto actualizado correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.projects.updated'), life: 3000 })
     } else {
       // Create: batch list
       if (!projectsList.value.length) {
-        toast.add({ severity: 'warn', summary: 'Validación', detail: 'Debe agregar al menos un proyecto', life: 3000 })
+        toast.add({ severity: 'warn', summary: t('features.projects.validationSummary'), detail: t('features.projects.addAtLeastOne'), life: 3000 })
         saving.value = false
         return
       }
@@ -310,14 +313,14 @@ async function handleSave() {
         projectStructure: p.projectStructure,
       }))
       await projectService.create(projects)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Proyectos creados correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.projects.created'), life: 3000 })
     }
     router.push('/manage-projects/project')
   } catch (e) {
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: e?.response?.data?.message ?? 'Error al guardar',
+      summary: t('common.error'),
+      detail: await parseApiError(e, t('common.saveError')),
       life: 3000,
     })
   } finally {

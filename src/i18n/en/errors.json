@@ -246,5 +246,26 @@
   "ERR_TEAM_FORMATION_ITERATIONS_MISMATCH": "Iterations mismatch.",
 
   "ERR_VAL_COMP_DIMENSION_NAME": "Competence Dimension name is required.",
-  "ERR_VAL_FILTER_FIELD_REQUIRED": "Field to filter is required."
+  "ERR_VAL_FILTER_FIELD_REQUIRED": "Field to filter is required.",
+
+  "common": {
+    "errorLabel": "ERROR"
+  },
+  "forbidden": {
+    "subtitle": "403 — Access Denied",
+    "message": "You don't have the required permissions to access this page. Contact the administrator if you believe this is an error."
+  },
+  "notFound": {
+    "subtitle": "404 — Page not found",
+    "message": "We can't find the page you're looking for. Check the URL or go back home."
+  },
+  "serverError": {
+    "subtitle": "500 — Server Error",
+    "message": "An internal server error has occurred. Try reloading the page or come back later. If the problem persists, contact the administrator."
+  },
+  "sessionExpired": {
+    "label": "SESSION",
+    "subtitle": "Session Expired",
+    "message": "Your session has expired due to inactivity. Please log in again to continue."
+  }
 }

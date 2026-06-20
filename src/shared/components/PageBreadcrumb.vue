@@ -18,7 +18,7 @@
                 stroke-linejoin="round"
               />
             </svg>
-            Inicio
+            {{ t('menu.home') }}
           </router-link>
         </li>
 
@@ -47,6 +47,9 @@
 
 <script setup>
 import { ChevronRight } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 defineProps({
   pageTitle: { type: String, required: true },

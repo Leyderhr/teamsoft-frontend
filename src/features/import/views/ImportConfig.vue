@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import InputNumber from 'primevue/inputnumber'
 import RadioButton from 'primevue/radiobutton'
@@ -7,6 +8,7 @@ import Button from 'primevue/button'
 import Card from 'primevue/card'
 import importService from '@/features/import/services/importService.js'
 
+const { t } = useI18n()
 const toast = useToast()
 const loading = ref(false)
 const saving = ref(false)
@@ -42,10 +44,10 @@ const handleSave = async () => {
             updateIfExists: updateIfExists.value,
             oldValuesAction: oldValuesAction.value
         })
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Configuración guardada correctamente', life: 3000 })
+        toast.add({ severity: 'success', summary: t('common.success'), detail: 'Configuración guardada correctamente', life: 3000 })
     } catch (error) {
         console.error('Error guardando config:', error)
-        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración', life: 3000 })
+        toast.add({ severity: 'error', summary: t('common.error'), detail: 'No se pudo guardar la configuración', life: 3000 })
     } finally {
         saving.value = false
     }
@@ -135,8 +137,8 @@ onMounted(loadConfig)
 
             <!-- Botones -->
             <div class="flex justify-end gap-2 pt-2 border-t border-[var(--ts-border)]">
-              <Button label="Cancelar" icon="pi pi-times" severity="secondary" outlined @click="handleCancel" />
-              <Button label="Guardar" icon="pi pi-check" :loading="saving" @click="handleSave" />
+              <Button :label="t('common.cancel')" icon="pi pi-times" severity="secondary" outlined @click="handleCancel" />
+              <Button :label="t('common.save')" icon="pi pi-check" :loading="saving" @click="handleSave" />
             </div>
           </div>
         </template>

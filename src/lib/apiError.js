@@ -6,12 +6,15 @@ export async function parseApiError(error, fallback = 'Ocurrió un error en el s
 
   let body;
   try {
-    // Leemos el error como texto puro primero (es la forma más segura para no crashear)
-    // y luego lo parseamos a JSON. 
-    const text = await error.response.text();
-    body = JSON.parse(text);
+    // ky v2 pre-reads the response body into error.data before throwing HTTPError,
+    // so error.response.text() would fail (body already consumed). Use error.data directly.
+    if (error.data !== undefined) {
+      body = typeof error.data === 'string' ? JSON.parse(error.data) : error.data;
+    } else {
+      const text = await error.response.text();
+      body = JSON.parse(text);
+    }
   } catch (err) {
-    // Si el backend mandó un error sin JSON (ej. fallo de servidor 500), devolvemos el texto base
     return error.message || fallback;
   }
 

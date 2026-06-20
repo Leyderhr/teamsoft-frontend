@@ -1,11 +1,13 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useToast } from 'primevue/usetoast'
 import { Plus, Trash2, AlertCircle } from 'lucide-vue-next'
 import AppSelect from '@/components/ui/AppSelect.vue'
+import { parseApiError } from '@/lib/apiError'
 
 import roleService from '@/features/roles/services/roleService.js'
 import roleLoadService from '@/features/nomenclatives/services/roleLoadService.js'
@@ -18,6 +20,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'save', 'cancel'])
 const toast = useToast()
+const { t } = useI18n()
 
 const structureName = ref('')
 const selectedRoleId = ref(null)
@@ -30,7 +33,9 @@ const roleLoadOptions = ref([])
 const selectedRolesToDelete = ref([])
 
 const dialogTitle = computed(() => {
-  return props.mode === 'create' ? 'Crear Estructura de Proyecto' : 'Editar Estructura de Proyecto'
+  return props.mode === 'create'
+    ? t('features.projects.structure.dialogCreateTitle')
+    : t('features.projects.structure.dialogEditTitle')
 })
 
 const canAddRole = computed(() => {
@@ -56,7 +61,7 @@ const loadOptions = async () => {
     roleOptions.value = roles.map(r => ({
       label: r.roleName,
       value: r.id,
-      isBoss: r.isBoss, // Necesario para la validación del jefe
+      isBoss: r.isBoss,
       description: r.roleDesc
     }))
 
@@ -64,12 +69,12 @@ const loadOptions = async () => {
       label: `${rl.value} -> ${rl.significance}`,
       value: rl.id
     }))
-  } catch (error) {
-    console.error('Error loading options:', error)
+  } catch (e) {
+    console.error('Error loading options:', e)
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: 'No se pudieron cargar las opciones',
+      summary: t('common.error'),
+      detail: await parseApiError(e, t('features.projects.structure.optionsLoadError')),
       life: 3000
     })
   }
@@ -95,7 +100,7 @@ const initializeForm = () => {
     structureName.value = ''
     projectRoles.value = []
   }
-  
+
   selectedRoleId.value = null
   selectedRoleLoadId.value = null
   workersAmount.value = 1
@@ -106,7 +111,7 @@ const addRole = () => {
   if (!canAddRole.value) return
 
   const exists = projectRoles.value.some(pr => pr.roleId === selectedRoleId.value)
-  
+
   if (!exists) {
     projectRoles.value.push({
       roleId: selectedRoleId.value,
@@ -118,8 +123,8 @@ const addRole = () => {
   } else {
     toast.add({
       severity: 'info',
-      summary: 'Aviso',
-      detail: 'Este rol ya ha sido agregado a la estructura',
+      summary: t('features.projects.structure.aviso'),
+      detail: t('features.projects.structure.roleAlreadyAdded'),
       life: 3000
     })
   }
@@ -138,15 +143,15 @@ const deleteSelectedRoles = () => {
 
 const validate = () => {
   if (!structureName.value.trim()) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre de la estructura es requerido', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.structure.validationSummary'), detail: t('features.projects.structure.nameRequired'), life: 3000 })
     return false
   }
   if (projectRoles.value.length === 0) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'Debe agregar al menos un rol', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.structure.validationSummary'), detail: t('features.projects.structure.minOneRole'), life: 3000 })
     return false
   }
   if (!hasBoss.value) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'La estructura debe contener al menos un rol de tipo Jefe', life: 4000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.structure.validationSummary'), detail: t('features.projects.structure.bossRoleRequired'), life: 4000 })
     return false
   }
   return true
@@ -195,13 +200,13 @@ watch(() => props.visible, async (newVal) => {
       <!-- Nombre de la estructura -->
       <div class="space-y-1.5">
         <label for="structureName" class="block text-sm font-medium text-gray-700">
-          Nombre de la Estructura <span class="text-error-500">*</span>
+          {{ t('features.projects.structure.nameLabel') }} <span class="text-error-500">*</span>
         </label>
         <input
           id="structureName"
           v-model="structureName"
           type="text"
-          placeholder="Ingrese el nombre de la estructura"
+          :placeholder="t('features.projects.structure.nameLabel')"
           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
         />
       </div>
@@ -210,26 +215,26 @@ watch(() => props.visible, async (newVal) => {
       <div class="bg-blue-light-50 border border-blue-light-100 p-5 rounded-xl space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="space-y-1.5">
-            <label class="block text-sm font-medium text-gray-700">Roles</label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.role') }}</label>
             <AppSelect
               v-model="selectedRoleId"
               :options="roleOptions"
-              placeholder="-Seleccione-"
+              :placeholder="t('common.select')"
               searchable
             />
           </div>
 
           <div class="space-y-1.5">
-            <label class="block text-sm font-medium text-gray-700">Carga del Rol</label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.roleLoad') }}</label>
             <AppSelect
               v-model="selectedRoleLoadId"
               :options="roleLoadOptions"
-              placeholder="-Seleccione-"
+              :placeholder="t('common.select')"
             />
           </div>
 
           <div class="space-y-1.5">
-            <label class="block text-sm font-medium text-gray-700">Cantidad Trabajadores</label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.workersAmount') }}</label>
             <input
               type="number"
               v-model.number="workersAmount"
@@ -247,7 +252,7 @@ watch(() => props.visible, async (newVal) => {
             class="inline-flex items-center gap-2 px-4 py-2 w-full justify-center rounded-lg bg-blue-light-300 text-white text-sm font-medium hover:bg-blue-light-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Plus class="w-4 h-4" />
-            Agregar Rol
+            {{ t('features.projects.structure.addRole') }}
           </button>
         </div>
       </div>
@@ -256,7 +261,7 @@ watch(() => props.visible, async (newVal) => {
       <div class="space-y-3">
         <div v-if="!hasBoss && projectRoles.length > 0" class="flex items-center gap-2 text-warning-700 bg-warning-50 p-3 rounded-lg border border-warning-200">
           <AlertCircle class="w-4 h-4 flex-shrink-0" />
-          <p class="text-xs font-medium">Recuerde que debe agregar al menos un rol de tipo Jefe para poder guardar la estructura.</p>
+          <p class="text-xs font-medium">{{ t('features.projects.structure.bossReminder') }}</p>
         </div>
 
         <div class="border border-gray-200 rounded-xl overflow-hidden">
@@ -268,26 +273,26 @@ watch(() => props.visible, async (newVal) => {
           >
             <template #header>
               <div class="flex justify-between items-center bg-brand-500 text-white -m-3 p-3">
-                <span class="font-semibold text-sm">Estructura del Equipo</span>
+                <span class="font-semibold text-sm">{{ t('features.projects.structure.teamStructure') }}</span>
                 <button
                   v-if="selectedRolesToDelete.length > 0"
                   @click="deleteSelectedRoles"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-error-500 text-white text-xs font-medium hover:bg-error-600 transition-colors"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
-                  Quitar seleccionado
+                  {{ t('features.projects.structure.removeSelected') }}
                 </button>
               </div>
             </template>
-            
+
             <Column selectionMode="multiple" style="width: 3rem"></Column>
-            <Column field="roleName" header="Roles"></Column>
-            <Column field="amountWorkersRole" header="Cantidad Trabajadores"></Column>
-            <Column field="roleLoadLabel" header="Carga del Rol"></Column>
-            
+            <Column field="roleName" :header="t('features.projects.structure.role')"></Column>
+            <Column field="amountWorkersRole" :header="t('features.projects.structure.workersAmount')"></Column>
+            <Column field="roleLoadLabel" :header="t('features.projects.structure.roleLoad')"></Column>
+
             <template #empty>
               <div class="text-center py-6 text-gray-500 text-sm">
-                No records found.
+                {{ t('common.noData') }}
               </div>
             </template>
           </DataTable>
@@ -302,7 +307,7 @@ watch(() => props.visible, async (newVal) => {
           @click="handleCancel"
           class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
         >
-          Atrás
+          {{ t('common.cancel') }}
         </button>
         <button
           type="button"
@@ -310,7 +315,7 @@ watch(() => props.visible, async (newVal) => {
           :disabled="!hasBoss"
           class="px-4 py-2 rounded-lg bg-blue-light-400 text-white text-sm font-medium hover:bg-blue-light-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Siguiente
+          {{ t('common.save') }}
         </button>
       </div>
     </template>

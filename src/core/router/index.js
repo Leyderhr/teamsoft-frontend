@@ -26,7 +26,7 @@ const routes = [
                 meta: {
                     breadcrumb: [
                         {
-                            name: 'Dashboard', disable: true
+                            name: 'menu.dashboard', disable: true
                         }
                     ]
                 }
@@ -37,100 +37,100 @@ const routes = [
                 path: '/nomenclatives/project-structure/create',
                 name: 'ProjectStructureCreate',
                 component: () => import('@/features/projects/views/ProjectStructureFormPage.vue'),
-                meta: { title: 'Crear Estructura de Proyecto' }
+                meta: { title: 'features.projects.structure.createTitle' }
             },
             {
                 path: '/nomenclatives/project-structure/edit/:id',
                 name: 'ProjectStructureEdit',
                 component: () => import('@/features/projects/views/ProjectStructureFormPage.vue'),
-                meta: { title: 'Editar Estructura de Proyecto' }
+                meta: { title: 'features.projects.structure.editTitle' }
             },
             {
                 path: 'manage-competences/competence',
                 name: 'Competence',
                 component: () => import('@/features/competences/views/Competence.vue'),
-                meta: { breadcrumb: [{ name: 'Competencias', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.competences', disable: true }] }
             },
             {
                 path: 'manage-competences/competence/create',
                 name: 'CompetenceCreate',
                 component: () => import('@/features/competences/views/CompetenceFormPage.vue'),
                 props: { mode: 'create' },
-                meta: { breadcrumb: [{ name: 'Competencias', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.competences', disable: true }] }
             },
             {
                 path: 'manage-competences/competence/edit/:id',
                 name: 'CompetenceEdit',
                 component: () => import('@/features/competences/views/CompetenceFormPage.vue'),
                 props: route => ({ mode: 'edit', itemId: route.params.id }),
-                meta: { breadcrumb: [{ name: 'Competencias', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.competences', disable: true }] }
             },
             {
                 path: 'manage-roles/role',
                 name: 'Role',
                 component: () => import('@/features/roles/views/Role.vue'),
-                meta: { breadcrumb: [{ name: 'Roles', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.roles', disable: true }] }
             },
             {
                 path: 'manage-roles/role/create',
                 name: 'RoleCreate',
                 component: () => import('@/features/roles/views/RoleFormPage.vue'),
                 props: { mode: 'create' },
-                meta: { breadcrumb: [{ name: 'Roles', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.roles', disable: true }] }
             },
             {
                 path: 'manage-roles/role/edit/:id',
                 name: 'RoleEdit',
                 component: () => import('@/features/roles/views/RoleFormPage.vue'),
                 props: route => ({ mode: 'edit', itemId: route.params.id }),
-                meta: { breadcrumb: [{ name: 'Roles', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.roles', disable: true }] }
             },
             {
                 path: 'person',
                 name: 'Person',
                 component: () => import('@/features/persons/views/Person.vue'),
-                meta: { breadcrumb: [{ name: 'Personas', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.persons', disable: true }] }
             },
             {
                 path: 'person/create',
                 name: 'PersonCreate',
                 component: () => import('@/features/persons/views/PersonFormPage.vue'),
                 props: { mode: 'create' },
-                meta: { breadcrumb: [{ name: 'Personas', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.persons', disable: true }] }
             },
             {
                 path: 'person/edit/:id',
                 name: 'PersonEdit',
                 component: () => import('@/features/persons/views/PersonFormPage.vue'),
                 props: route => ({ mode: 'edit', itemId: route.params.id }),
-                meta: { breadcrumb: [{ name: 'Personas', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.persons', disable: true }] }
             },
             {
                 path: 'manage-projects/project',
                 name: 'Project',
                 component: () => import('@/features/projects/views/Project.vue'),
-                meta: { breadcrumb: [{ name: 'Proyectos', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.projects', disable: true }] }
             },
             {
                 path: 'manage-projects/project/create',
                 name: 'ProjectCreate',
                 component: () => import('@/features/projects/views/ProjectFormPage.vue'),
                 props: { mode: 'create' },
-                meta: { breadcrumb: [{ name: 'Proyectos', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.projects', disable: true }] }
             },
             {
                 path: 'manage-projects/project/edit/:id',
                 name: 'ProjectEdit',
                 component: () => import('@/features/projects/views/ProjectFormPage.vue'),
                 props: route => ({ mode: 'edit', itemId: route.params.id }),
-                meta: { breadcrumb: [{ name: 'Proyectos', disable: true }] }
+                meta: { breadcrumb: [{ name: 'menu.projects', disable: true }] }
             },
             {
                 path: 'manage-projects/team-formation',
                 name: 'TeamFormation',
                 component: () => import('@/features/projects/views/TeamUp.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Formar Equipo', disable: true }]
+                    breadcrumb: [{ name: 'menu.teamFormation', disable: true }]
                 }
             },
             {
@@ -138,7 +138,7 @@ const routes = [
                 name: 'CloseTeam',
                 component: () => import('@/features/projects/views/CloseTeam.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Cerrar Equipo', disable: true }]
+                    breadcrumb: [{ name: 'menu.closeTeam', disable: true }]
                 }
             },
             {
@@ -148,8 +148,8 @@ const routes = [
                 props: true,
                 meta: {
                     breadcrumb: [
-                        { name: 'Cerrar Equipo', path: '/manage-projects/close-team' },
-                        { name: 'Evaluar Jefe', disable: true },
+                        { name: 'menu.closeTeam', path: '/manage-projects/close-team' },
+                        { name: 'menu.evaluateLeader', disable: true },
                     ]
                 }
             },
@@ -158,7 +158,7 @@ const routes = [
                 name: 'FinalizeTeam',
                 component: () => import('@/features/projects/views/FinalizeTeam.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Finalizar Equipo', disable: true }]
+                    breadcrumb: [{ name: 'menu.finalizeTeam', disable: true }]
                 }
             },
             {
@@ -168,8 +168,8 @@ const routes = [
                 props: true,
                 meta: {
                     breadcrumb: [
-                        { name: 'Finalizar Equipo', path: '/manage-projects/finalize-team' },
-                        { name: 'Evaluar Miembros', disable: true },
+                        { name: 'menu.finalizeTeam', path: '/manage-projects/finalize-team' },
+                        { name: 'menu.evaluateMembers', disable: true },
                     ]
                 }
             },
@@ -180,8 +180,8 @@ const routes = [
                 props: true,
                 meta: {
                     breadcrumb: [
-                        { name: 'Finalizar Equipo', path: '/manage-projects/finalize-team' },
-                        { name: 'Editar Competencias', disable: true },
+                        { name: 'menu.finalizeTeam', path: '/manage-projects/finalize-team' },
+                        { name: 'menu.editCompetences', disable: true },
                     ]
                 }
             },
@@ -189,28 +189,28 @@ const routes = [
                 path: 'manage-user-role/users',
                 name: 'UserManagement',
                 component: () => import('@/features/users/views/UserManagement.vue'),
-                meta: { breadcrumb: [{ name: 'Usuarios', disable: true }], roles: ['ROLE_ADMIN'] }
+                meta: { breadcrumb: [{ name: 'menu.users', disable: true }], roles: ['ROLE_ADMIN'] }
             },
             {
                 path: 'manage-user-role/users/create',
                 name: 'UserCreate',
                 component: () => import('@/features/users/views/UserFormPage.vue'),
                 props: { mode: 'create' },
-                meta: { breadcrumb: [{ name: 'Usuarios', disable: true }], roles: ['ROLE_ADMIN'] }
+                meta: { breadcrumb: [{ name: 'menu.users', disable: true }], roles: ['ROLE_ADMIN'] }
             },
             {
                 path: 'manage-user-role/users/edit/:id',
                 name: 'UserEdit',
                 component: () => import('@/features/users/views/UserFormPage.vue'),
                 props: route => ({ mode: 'edit', itemId: route.params.id }),
-                meta: { breadcrumb: [{ name: 'Usuarios', disable: true }], roles: ['ROLE_ADMIN'] }
+                meta: { breadcrumb: [{ name: 'menu.users', disable: true }], roles: ['ROLE_ADMIN'] }
             },
             {
                 path: 'change-password',
                 name: 'ChangePassword',
                 component: () => import('@/features/users/views/ChangePassword.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Cambiar Contraseña', disable: true }]
+                    breadcrumb: [{ name: 'menu.changePassword', disable: true }]
                 }
             },
             {
@@ -218,7 +218,7 @@ const routes = [
                 name: 'PersonReport',
                 component: () => import('@/features/reports/views/PersonReport.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Reporte de Personas', disable: true }],
+                    breadcrumb: [{ name: 'features.reports.personReport.title', disable: true }],
                     roles: ['ROLE_ADMIN']
                 }
             },
@@ -227,7 +227,7 @@ const routes = [
                 name: 'FinishedTeams',
                 component: () => import('@/features/reports/views/FinishedTeams.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Equipos Cerrados', disable: true }],
+                    breadcrumb: [{ name: 'features.reports.finishedTeams.title', disable: true }],
                     roles: ['ROLE_ADMIN']
                 }
             },
@@ -236,7 +236,7 @@ const routes = [
                 name: 'ListWorkers',
                 component: () => import('@/features/reports/views/ListWorkers.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Listar Personas', disable: true }],
+                    breadcrumb: [{ name: 'features.reports.listWorkers.title', disable: true }],
                     roles: ['ROLE_ADMIN']
                 }
             },
@@ -245,7 +245,7 @@ const routes = [
                 name: 'Import',
                 component: () => import('@/features/import/views/ImportWizard.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Importar Personas', disable: true }]
+                    breadcrumb: [{ name: 'features.import.title', disable: true }]
                 }
             },
             {
@@ -253,7 +253,7 @@ const routes = [
                 name: 'ImportConfig',
                 component: () => import('@/features/import/views/ImportConfig.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Configuración de Importación', disable: true }]
+                    breadcrumb: [{ name: 'features.import.configTitle', disable: true }]
                 }
             },
             {
@@ -261,7 +261,7 @@ const routes = [
                 name: 'ExperimentConfig',
                 component: () => import('@/features/experiments/views/ExperimentConfig.vue'),
                 meta: {
-                    breadcrumb: [{ name: 'Configuración del Experimento', disable: true }],
+                    breadcrumb: [{ name: 'features.experiments.configTitle', disable: true }],
                     roles: ['ROLE_EXPERIMENTADOR']
                 }
             },

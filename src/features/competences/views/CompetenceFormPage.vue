@@ -2,12 +2,16 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from "vue-i18n"
 import { AlertCircle, Save, Loader2, Plus, Pencil, Trash2, X } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppAutoGrow from '@/components/ui/AppAutoGrow.vue'
 import competenceService from '@/features/competences/services/competenceService.js'
 import levelsService from '@/features/nomenclatives/services/levelsService.js'
+import { parseApiError } from "@/lib/apiError"
+
+const { t } = useI18n()
 
 const props = defineProps({
   mode: { type: String, default: 'create' },
@@ -49,7 +53,9 @@ const selectedBehaviorIdx = ref(-1)
 const isEditing = computed(() => editingIdx.value >= 0)
 
 const formTitle = computed(() =>
-  props.mode === 'create' ? 'Crear Competencia' : 'Editar Competencia'
+  props.mode === 'create'
+    ? `${t('common.create')} ${t('features.competences.formTitle')}`
+    : `${t('common.edit')} ${t('features.competences.formTitle')}`
 )
 
 function getLevelById(id) {
@@ -72,7 +78,7 @@ function onAddOrUpdate() {
   } else {
     const exists = behaviors.value.some(b => b.levelId === level.id)
     if (exists) {
-      toast.add({ severity: 'warn', summary: 'Aviso', detail: 'Ya existe una conducta observable para ese nivel', life: 3000 })
+      toast.add({ severity: 'warn', summary: t('features.competences.aviso'), detail: t('features.competences.duplicateBehavior'), life: 3000 })
       return
     }
     behaviors.value.push({
@@ -117,7 +123,7 @@ onMounted(async () => {
     const res = await levelsService.getAll()
     allLevels.value = res?.data ?? res
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los niveles', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.competences.levelsLoadError'), life: 3000 })
   }
 
   if (props.mode === 'edit' && route.params.id) {
@@ -137,7 +143,7 @@ onMounted(async () => {
         }))
       }
     } catch {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la competencia', life: 3000 })
+      toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.competences.loadError'), life: 3000 })
     }
   }
   loadingData.value = false
@@ -148,11 +154,11 @@ async function handleSave() {
   let valid = true
 
   if (!form.competitionName.trim()) {
-    errors.competitionName = 'El nombre de la competencia es requerido'
+    errors.competitionName = t('features.competences.nameRequired')
     valid = false
   }
   if (!form.description.trim()) {
-    errors.description = 'La descripción es requerida'
+    errors.description = t('features.competences.descRequired')
     valid = false
   }
   if (!valid) return
@@ -171,17 +177,17 @@ async function handleSave() {
   try {
     if (props.mode === 'create') {
       await competenceService.create(payload)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Competencia creada correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.competences.created'), life: 3000 })
     } else {
       await competenceService.update(route.params.id, payload)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Competencia actualizada correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.competences.updated'), life: 3000 })
     }
     router.push('/manage-competences/competence')
   } catch (e) {
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: e?.response?.data?.message ?? e?.message ?? 'Error al guardar',
+      summary: t('common.error'),
+      detail: await parseApiError(e, t('common.saveError')),
       life: 3000,
     })
   } finally {
@@ -194,7 +200,7 @@ async function handleSave() {
   <div>
     <PageBreadcrumb
       :page-title="formTitle"
-      :items="[{ label: 'Competencias', path: '/manage-competences/competence' }]"
+      :items="[{ label: t('features.competences.formTitle'), path: '/manage-competences/competence' }]"
     />
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
@@ -209,22 +215,22 @@ async function handleSave() {
       </div>
 
       <template v-else>
-        <!-- ── Sección: Datos básicos ── -->
+        <!-- Section: Basic data -->
         <div class="px-6 pt-6 pb-5">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-            Datos básicos
+            {{ t('features.competences.basicData') }}
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <!-- Nombre -->
+            <!-- Name -->
             <div class="space-y-1">
               <label class="block text-sm font-medium text-gray-700">
-                Nombre de la Competencia <span class="text-error-500 ml-0.5">*</span>
+                {{ t('features.competences.competitionNameLabel') }} <span class="text-error-500 ml-0.5">*</span>
               </label>
               <input
                 v-model="form.competitionName"
                 type="text"
-                placeholder="Nombre de la competencia"
+                :placeholder="t('features.competences.competitionNameLabel')"
                 class="w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
                 :class="errors.competitionName ? 'border-error-400' : 'border-gray-300 hover:border-gray-400'"
               />
@@ -234,7 +240,7 @@ async function handleSave() {
               </p>
             </div>
 
-            <!-- Técnica (checkbox alineado) -->
+            <!-- Technical (aligned checkbox) -->
             <div class="flex items-end pb-1">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
@@ -242,18 +248,18 @@ async function handleSave() {
                   v-model="form.technical"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20"
                 />
-                <span class="text-sm font-medium text-gray-700">Técnica</span>
+                <span class="text-sm font-medium text-gray-700">{{ t('features.competences.technicalLabel') }}</span>
               </label>
             </div>
 
-            <!-- Descripción – full width -->
+            <!-- Description – full width -->
             <div class="space-y-1 sm:col-span-2 lg:col-span-3">
               <label class="block text-sm font-medium text-gray-700">
-                Descripción <span class="text-error-500 ml-0.5">*</span>
+                {{ t('features.competences.descriptionLabel') }} <span class="text-error-500 ml-0.5">*</span>
               </label>
               <AppAutoGrow
                 v-model="form.description"
-                placeholder="Descripción de la competencia"
+                :placeholder="t('features.competences.descriptionLabel')"
                 :max-length="300"
                 :has-error="!!errors.description"
               />
@@ -268,41 +274,41 @@ async function handleSave() {
         <!-- Divider -->
         <div class="mx-6 border-t border-gray-100"></div>
 
-        <!-- ── Sección: Conductas observables ── -->
+        <!-- Section: Observable behaviors -->
         <div class="px-6 pt-6 pb-6">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-            Conductas observables
+            {{ t('features.competences.observableBehaviors') }}
           </p>
 
-          <!-- Mini-formulario de entrada -->
+          <!-- Entry mini-form -->
           <div class="grid grid-cols-1 sm:grid-cols-[minmax(180px,1fr)_2fr] gap-3 mb-2">
-            <!-- Nivel -->
+            <!-- Level -->
             <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Nivel</label>
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.competences.levelLabel') }}</label>
               <AppSelect
                 v-model="selectedLevelId"
                 :options="availableLevelOptions"
-                placeholder="Seleccione nivel"
+                :placeholder="t('features.competences.selectLevel')"
                 :searchable="true"
               />
             </div>
 
-            <!-- Descripción de la conducta -->
+            <!-- Behavior description -->
             <div class="space-y-1">
               <label class="block text-sm font-medium text-gray-700">
-                Descripción de la conducta
-                <span class="text-xs font-normal text-gray-400 ml-1">(máx. 300 caracteres)</span>
+                {{ t('features.competences.behaviorDescLabel') }}
+                <span class="text-xs font-normal text-gray-400 ml-1">{{ t('features.competences.behaviorDescHint') }}</span>
               </label>
               <AppAutoGrow
                 v-model="behaviorDesc"
-                placeholder="Describa la conducta observable para este nivel..."
+                :placeholder="t('features.competences.behaviorDescLabel')"
                 :max-length="300"
                 :rows="1"
               />
             </div>
           </div>
 
-          <!-- Botones de acción del formulario -->
+          <!-- Form action buttons -->
           <div class="flex items-center gap-2 mb-5">
             <button
               type="button"
@@ -317,7 +323,7 @@ async function handleSave() {
             >
               <Pencil v-if="isEditing" class="w-4 h-4" />
               <Plus v-else class="w-4 h-4" />
-              {{ isEditing ? 'Actualizar' : 'Agregar' }}
+              {{ isEditing ? t('common.update') : t('common.add') }}
             </button>
             <button
               v-if="isEditing"
@@ -326,16 +332,16 @@ async function handleSave() {
               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               <X class="w-4 h-4" />
-              Cancelar
+              {{ t('common.cancel') }}
             </button>
           </div>
 
-          <!-- Tabla de conductas -->
+          <!-- Behaviors table -->
           <div class="rounded-xl border border-gray-200 overflow-hidden">
-            <!-- Toolbar de tabla -->
+            <!-- Table toolbar -->
             <div class="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-200">
               <span class="text-xs font-medium text-gray-500">
-                {{ behaviors.length }} conducta{{ behaviors.length !== 1 ? 's' : '' }} registrada{{ behaviors.length !== 1 ? 's' : '' }}
+                {{ behaviors.length }} {{ t('features.competences.observableBehaviors').toLowerCase() }}
               </span>
               <button
                 v-if="selectedBehaviorIdx >= 0"
@@ -344,7 +350,7 @@ async function handleSave() {
                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-error-200 text-xs font-medium text-error-600 hover:bg-error-50 transition-colors cursor-pointer"
               >
                 <Trash2 class="w-3.5 h-3.5" />
-                Eliminar
+                {{ t('common.delete') }}
               </button>
             </div>
 
@@ -353,20 +359,20 @@ async function handleSave() {
                 <thead>
                   <tr class="border-b border-gray-200 bg-white">
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                      Nivel
+                      {{ t('features.competences.levelHeader') }}
                     </th>
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                      Significado
+                      {{ t('features.competences.significanceHeader') }}
                     </th>
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Descripción
+                      {{ t('features.competences.descriptionHeader') }}
                     </th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                   <tr v-if="!behaviors.length">
                     <td colspan="3" class="px-4 py-10 text-center text-sm text-gray-400">
-                      No hay conductas observables registradas. Agregue una usando el formulario de arriba.
+                      {{ t('features.competences.noBehaviors') }}
                     </td>
                   </tr>
                   <tr
@@ -393,7 +399,7 @@ async function handleSave() {
             @click="router.back()"
             class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
           >
-            Cancelar
+            {{ t('common.cancel') }}
           </button>
           <button
             type="button"
@@ -403,7 +409,7 @@ async function handleSave() {
           >
             <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
             <Save v-else class="w-4 h-4" />
-            {{ saving ? 'Guardando...' : 'Guardar' }}
+            {{ saving ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </template>

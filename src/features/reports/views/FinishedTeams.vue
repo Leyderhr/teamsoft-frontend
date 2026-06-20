@@ -1,11 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { ArrowLeft, Loader2, FileText, BarChart2 } from 'lucide-vue-next'
 import DataTable from '@/shared/components/DataTable.vue'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import reportService from '@/features/reports/services/reportService.js'
 
+const { t } = useI18n()
 const toast = useToast()
 const loading = ref(false)
 const loadingTeam = ref(false)
@@ -16,14 +18,14 @@ const showReport = ref(false)
 const teamMembers = ref([])
 
 const projectColumns = [
-  { field: 'projectName', header: 'Nombre del Proyecto', sortable: true },
+  { field: 'projectName', header: t('features.projects.nameLabel'), sortable: true },
   { field: 'initialDate', header: 'Fecha Inicio', sortable: true },
   { field: 'state', header: 'Estado', type: 'badge', sortable: true },
 ]
 
 const teamColumns = [
   { field: 'fullName', header: 'Nombre', sortable: true },
-  { field: 'roleName', header: 'Rol', sortable: true },
+  { field: 'roleName', header: t('features.projects.structure.role'), sortable: true },
   { field: 'evaluation', header: 'Evaluación', sortable: true },
 ]
 
@@ -33,7 +35,7 @@ const loadFinishedProjects = async () => {
     const { default: projectService } = await import('@/features/projects/services/projectService.js')
     finishedProjects.value = await projectService.getByState('CLOSED')
   } catch (e) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los equipos cerrados', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: 'No se pudieron cargar los equipos cerrados', life: 3000 })
   } finally {
     loading.value = false
   }
@@ -58,7 +60,7 @@ const handleSeeReport = async (project) => {
   } catch (error) {
     console.error('Error cargando equipo:', error)
     teamMembers.value = []
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el equipo del proyecto', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: 'No se pudo cargar el equipo del proyecto', life: 3000 })
   } finally {
     loadingTeam.value = false
   }
@@ -98,7 +100,7 @@ onMounted(loadFinishedProjects)
     <div v-else class="space-y-5">
       <button @click="goBack" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-brand-500 transition-colors">
         <ArrowLeft class="w-4 h-4" />
-        Volver
+        {{ t('common.back') }}
       </button>
 
       <!-- Cabecera del proyecto -->

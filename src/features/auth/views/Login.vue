@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue';
+import { useI18n } from "vue-i18n";
 import { Card, InputGroup, InputGroupAddon, InputText } from 'primevue';
 import FloatLabel from 'primevue/floatlabel';
 import Password from 'primevue/password';
@@ -7,7 +8,9 @@ import Button from 'primevue/button';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import { useAuth } from '@/composables/useAuth';
+import LanguageSwitcher from '@/core/layout/LanguageSwitcher.vue';
 
+const { t } = useI18n();
 const toast = useToast();
 const { loginAsync, isLoggingIn } = useAuth();
 
@@ -24,8 +27,8 @@ const handleLogin = async () => {
   if (!form.username || !form.password) {
     toast.add({
       severity: 'error',
-      summary: 'Campos requeridos',
-      detail: 'Por favor complete todos los campos requeridos',
+      summary: t('features.auth.requiredFields'),
+      detail: t('features.auth.requiredFieldsDetail'),
       life: 3000,
       icon: 'pi pi-times-circle'
     });
@@ -40,8 +43,8 @@ const handleLogin = async () => {
 
     toast.add({
       severity: 'success',
-      summary: 'Login Exitoso',
-      detail: `Bienvenido ${form.username}!`,
+      summary: t('features.auth.loginSuccess'),
+      detail: t('features.auth.welcome', [form.username]),
       life: 2000,
       icon: 'pi pi-check-circle'
     });
@@ -51,40 +54,40 @@ const handleLogin = async () => {
     if (error.name === 'TypeError' || error.message?.includes('Failed to fetch') || error.message?.includes('Network Error')) {
       toast.add({
         severity: 'error',
-        summary: 'Error de Conexión',
-        detail: 'No se puede conectar con el servidor. Verifica que la API esté disponible.',
+        summary: t('features.auth.connectionError'),
+        detail: t('features.auth.connectionErrorDetail'),
         life: 4000,
         icon: 'pi pi-wifi'
       });
     } else if (status === 401) {
       toast.add({
         severity: 'error',
-        summary: 'Credenciales Inválidas',
-        detail: 'Usuario o contraseña incorrectos. Por favor, verifica tus datos.',
+        summary: t('features.auth.invalidCredentials'),
+        detail: t('features.auth.invalidCredentialsDetail'),
         life: 4000,
         icon: 'pi pi-lock'
       });
     } else if (status === 400) {
       toast.add({
         severity: 'error',
-        summary: 'Solicitud Incorrecta',
-        detail: 'Los datos ingresados no son válidos.',
+        summary: t('features.auth.badRequest'),
+        detail: t('features.auth.badRequestDetail'),
         life: 4000,
         icon: 'pi pi-exclamation-triangle'
       });
     } else if (status === 500) {
       toast.add({
         severity: 'error',
-        summary: 'Error del Servidor',
-        detail: 'Error interno del servidor. Por favor, intente más tarde.',
+        summary: t('features.auth.serverError'),
+        detail: t('features.auth.serverErrorDetail'),
         life: 4000,
         icon: 'pi pi-exclamation-triangle'
       });
     } else {
       toast.add({
         severity: 'error',
-        summary: 'Error de autenticación',
-        detail: 'Ocurrió un error inesperado. Por favor, intente de nuevo.',
+        summary: t('features.auth.authError'),
+        detail: t('features.auth.authErrorDetail'),
         life: 4000,
         icon: 'pi pi-exclamation-triangle'
       });
@@ -95,6 +98,9 @@ const handleLogin = async () => {
 
 <template>
   <div id="login-page" class="login-body">
+    <div class="login-lang-switch">
+      <LanguageSwitcher />
+    </div>
     <div class="container">
       <Card id="card" class="login-card">
         <template #content>
@@ -111,14 +117,14 @@ const handleLogin = async () => {
                 </InputGroupAddon>
                 <FloatLabel>
                   <InputText
-                      v-tooltip="{ value: 'Tu usuario', showDelay: 1000, hideDelay: 300 }"
+                      v-tooltip="{ value: t('features.auth.usernameLabel'), showDelay: 1000, hideDelay: 300 }"
                       id="username"
                       v-model="form.username"
                       :invalid="submitted && !form.username"
                       class="p-inputtext-lg"
                       required
                   />
-                  <label for="username">Usuario</label>
+                  <label for="username">{{ t('features.auth.usernameLabel') }}</label>
                 </FloatLabel>
               </InputGroup>
 
@@ -135,9 +141,9 @@ const handleLogin = async () => {
                             :feedback="false"
                             :toggleMask="true"
                             inputId="password"
-                            v-tooltip="{ value: 'Tu contraseña', showDelay: 1000, hideDelay: 300 }"
+                            v-tooltip="{ value: t('features.auth.requiredFieldsDetail'), showDelay: 1000, hideDelay: 300 }"
                   />
-                  <label for="password">Contraseña</label>
+                  <label for="password">{{ t('features.auth.passwordLabel') }}</label>
                 </FloatLabel>
               </InputGroup>
             </div>
@@ -146,7 +152,7 @@ const handleLogin = async () => {
             <Button
                 id="boton-login"
                 type="submit"
-                label="Login"
+                :label="t('features.auth.loginButton')"
                 class="login-button"
             />
           </form>
@@ -175,6 +181,16 @@ const handleLogin = async () => {
   margin-top: 5%;
   display: flex;
   justify-content: center;
+}
+
+.login-lang-switch {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(4px);
 }
 
 /* Card personalizada */

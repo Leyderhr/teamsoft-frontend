@@ -1,10 +1,10 @@
 <template>
   <div>
-    <PageBreadcrumb 
-      :page-title="pageTitle" 
-      :items="[{ label: 'Estructuras de Proyecto', path: '/nomenclatives/project-structure' }]" 
+    <PageBreadcrumb
+      :page-title="pageTitle"
+      :items="[{ label: t('features.projects.structure.title'), path: '/nomenclatives/project-structure' }]"
     />
-    
+
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4">
         <h2 class="text-base font-semibold text-gray-800">{{ pageTitle }}</h2>
@@ -13,12 +13,12 @@
       <div class="px-6 pt-6 pb-2">
         <div class="space-y-1 w-full max-w-xl">
           <label class="block text-sm font-medium text-gray-700">
-            Nombre de la Estructura <span class="text-error-500">*</span>
+            {{ t('features.projects.structure.nameLabel') }} <span class="text-error-500">*</span>
           </label>
           <input
             v-model="structureName"
             type="text"
-            placeholder="Ingrese el nombre"
+            :placeholder="t('common.select')"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
           />
         </div>
@@ -41,45 +41,45 @@
       </div>
 
       <div class="p-6">
-        
+
         <div v-show="activeTab === 'roles'">
           <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6 transition-colors">
             <h3 class="text-sm font-semibold mb-4 text-gray-700">
-              {{ isEditingRole ? 'Editando Rol Seleccionado' : 'Asignar Rol a la Plantilla' }}
+              {{ isEditingRole ? t('features.projects.structure.roleEditSection') : t('features.projects.structure.rolesSection') }}
             </h3>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Rol <span class="text-error-500">*</span></label>
+                <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.role') }} <span class="text-error-500">*</span></label>
                 <AppSelect
                   v-model="selectedRoleId"
                   :options="roleOptions"
-                  placeholder="Seleccione..."
+                  :placeholder="t('common.select')"
                   searchable
                 />
               </div>
 
               <div class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Carga del Rol <span class="text-error-500">*</span></label>
+                <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.roleLoad') }} <span class="text-error-500">*</span></label>
                 <AppSelect
                   v-model="selectedRoleLoadId"
                   :options="roleLoadOptions"
-                  placeholder="Seleccione..."
+                  :placeholder="t('common.select')"
                 />
               </div>
 
               <div class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Cantidad Trabajadores <span class="text-error-500">*</span></label>
+                <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.workersAmount') }} <span class="text-error-500">*</span></label>
                 <input
                   v-model.number="workersAmount"
                   type="number"
                   min="1"
-                  placeholder="Mínimo 1"
+                  placeholder="1"
                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
                 />
               </div>
             </div>
-            
+
             <div class="flex gap-2">
               <button
                 type="button"
@@ -88,7 +88,7 @@
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium bg-brand-500 hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <component :is="isEditingRole ? RefreshCw : Plus" class="w-4 h-4" />
-                {{ isEditingRole ? 'Actualizar Rol' : 'Agregar Rol' }}
+                {{ isEditingRole ? t('features.projects.structure.updateRole') : t('features.projects.structure.addRole') }}
               </button>
 
               <button
@@ -97,19 +97,19 @@
                 @click="resetRoleForm"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
               >
-                Cancelar edición
+                {{ t('features.projects.structure.cancelEdit') }}
               </button>
             </div>
           </div>
 
           <div v-if="!hasBoss && projectRoles.length > 0" class="flex items-center gap-2 text-warning-700 bg-warning-50 p-3 rounded-lg border border-warning-200 mb-4">
             <AlertCircle class="w-4 h-4 flex-shrink-0" />
-            <p class="text-xs font-medium">Debe agregar al menos un rol de tipo <strong>Jefe</strong> a la estructura.</p>
+            <p class="text-xs font-medium">{{ t('features.projects.structure.bossAlert') }}</p>
           </div>
 
           <div v-if="projectRoles.length > 0" class="mt-4">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Estructura del Equipo ({{ projectRoles.length }})</h3>
-            
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ t('features.projects.structure.teamStructure') }} ({{ projectRoles.length }})</h3>
+
             <MiniTable
               :rows="projectRoles"
               :columns="roleTableColumns"
@@ -118,63 +118,63 @@
               @remove="removeSelectedRoles"
               @row-click="handleRoleRowClick"
             />
-            <p class="text-xs text-gray-400 mt-2">* Haga clic en cualquier fila para editar sus valores.</p>
+            <p class="text-xs text-gray-400 mt-2">{{ t('features.projects.structure.tableNote') }}</p>
           </div>
         </div>
 
         <div v-show="activeTab === 'competences'">
-          
+
           <div v-if="projectRoles.length === 0" class="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
             <AlertCircle class="w-8 h-8 mx-auto text-gray-400 mb-2" />
-            <p class="text-sm text-gray-500 font-medium">Aún no has agregado roles a la estructura.</p>
-            <p class="text-xs text-gray-400">Regresa a la pestaña anterior y agrega los roles primero.</p>
+            <p class="text-sm text-gray-500 font-medium">{{ t('features.projects.structure.noRoles') }}</p>
+            <p class="text-xs text-gray-400">{{ t('features.projects.structure.noRolesDetail') }}</p>
           </div>
 
           <div v-else>
             <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6 transition-colors">
               <h3 class="text-sm font-semibold mb-4 text-gray-700">
-                {{ isEditingComp ? 'Editando Competencia' : 'Asignar Competencia Técnica a un Rol' }}
+                {{ isEditingComp ? t('features.projects.structure.updateCompetence') : t('features.projects.structure.addCompetence') }}
               </h3>
-              
+
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div class="space-y-1">
-                  <label class="block text-sm font-medium text-gray-700">Rol del Equipo <span class="text-error-500">*</span></label>
+                  <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.role') }} <span class="text-error-500">*</span></label>
                   <AppSelect
                     v-model="selectedCompRoleId"
                     :options="availableRolesForCompetences"
-                    placeholder="Seleccione..."
+                    :placeholder="t('common.select')"
                   />
                 </div>
 
                 <div class="space-y-1">
-                  <label class="block text-sm font-medium text-gray-700">Competencia Técnica <span class="text-error-500">*</span></label>
+                  <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.competence') }} <span class="text-error-500">*</span></label>
                   <AppSelect
                     v-model="selectedCompId"
                     :options="competenceOptions"
-                    placeholder="Seleccione..."
+                    :placeholder="t('common.select')"
                     searchable
                   />
                 </div>
 
                 <div class="space-y-1">
-                  <label class="block text-sm font-medium text-gray-700">Nivel Exigido <span class="text-error-500">*</span></label>
+                  <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.level') }} <span class="text-error-500">*</span></label>
                   <AppSelect
                     v-model="selectedCompLevelId"
                     :options="levelOptions"
-                    placeholder="Seleccione..."
+                    :placeholder="t('common.select')"
                   />
                 </div>
 
                 <div class="space-y-1">
-                  <label class="block text-sm font-medium text-gray-700">Importancia <span class="text-error-500">*</span></label>
+                  <label class="block text-sm font-medium text-gray-700">{{ t('features.projects.structure.importance') }} <span class="text-error-500">*</span></label>
                   <AppSelect
                     v-model="selectedCompImportanceId"
                     :options="importanceOptions"
-                    placeholder="Seleccione..."
+                    :placeholder="t('common.select')"
                   />
                 </div>
               </div>
-              
+
               <div class="flex gap-2">
                 <button
                   type="button"
@@ -183,7 +183,7 @@
                   class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium bg-brand-500 hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <component :is="isEditingComp ? RefreshCw : Plus" class="w-4 h-4" />
-                  {{ isEditingComp ? 'Actualizar Competencia' : 'Agregar Competencia' }}
+                  {{ isEditingComp ? t('features.projects.structure.updateCompetence') : t('features.projects.structure.addCompetence') }}
                 </button>
 
                 <button
@@ -192,14 +192,14 @@
                   @click="resetCompForm"
                   class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
                 >
-                  Cancelar edición
+                  {{ t('features.projects.structure.cancelEdit') }}
                 </button>
               </div>
             </div>
 
             <div v-if="projectCompetences.length > 0" class="mt-4">
-              <h3 class="text-sm font-semibold text-gray-700 mb-3">Competencias Requeridas ({{ projectCompetences.length }})</h3>
-              
+              <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ t('features.projects.structure.competencesSection') }} ({{ projectCompetences.length }})</h3>
+
               <MiniTable
                 :rows="projectCompetences"
                 :columns="compTableColumns"
@@ -208,7 +208,7 @@
                 @remove="removeSelectedComps"
                 @row-click="handleCompRowClick"
               />
-              <p class="text-xs text-gray-400 mt-2">* Haga clic en cualquier fila para editar sus valores.</p>
+              <p class="text-xs text-gray-400 mt-2">{{ t('features.projects.structure.tableNote') }}</p>
             </div>
           </div>
         </div>
@@ -220,9 +220,9 @@
           @click="router.back()"
           class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
-          Cancelar
+          {{ t('common.cancel') }}
         </button>
-        
+
         <button
           v-if="activeTab === 'roles'"
           type="button"
@@ -230,10 +230,10 @@
           :disabled="!hasBoss || !structureName"
           class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
-          Siguiente
+          {{ t('common.next') }}
           <ChevronRight class="w-4 h-4" />
         </button>
-        
+
         <button
           v-else
           type="button"
@@ -243,7 +243,7 @@
         >
           <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
           <Save v-else class="w-4 h-4" />
-          {{ saving ? 'Guardando...' : 'Guardar Estructura' }}
+          {{ saving ? t('common.saving') : t('common.save') }}
         </button>
       </div>
     </div>
@@ -253,6 +253,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { Save, Loader2, Plus, AlertCircle, RefreshCw, ChevronRight } from 'lucide-vue-next'
 
@@ -261,26 +262,28 @@ import AppSelect from '@/components/ui/AppSelect.vue'
 import MiniTable from '@/components/common/MiniTable.vue'
 
 import { api } from '@/lib/api'
+import { parseApiError } from '@/lib/apiError'
 import { fetchGetRoles } from '@/services/roles/index.js'
-import { 
-  fetchGetRoleLoads, 
-  fetchCreateProjectStructure, 
-  fetchUpdateProjectStructure 
+import {
+  fetchGetRoleLoads,
+  fetchCreateProjectStructure,
+  fetchUpdateProjectStructure
 } from '@/services/nomenclatives/index.js'
 
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
+const { t } = useI18n()
 
 const isEditMode = computed(() => !!route.params.id)
-const pageTitle = computed(() => isEditMode.value ? 'Editar Estructura de Proyecto' : 'Crear Estructura de Proyecto')
+const pageTitle = computed(() => isEditMode.value ? t('features.projects.structure.editTitle') : t('features.projects.structure.createTitle'))
 
 // Tabs Configuration
 const activeTab = ref('roles')
-const tabs = [
-  { key: 'roles', label: 'Estructura del Equipo' },
-  { key: 'competences', label: 'Competencias Técnicas' },
-]
+const tabs = computed(() => [
+  { key: 'roles', label: t('features.projects.structure.tabs.roles') },
+  { key: 'competences', label: t('features.projects.structure.tabs.competences') },
+])
 
 // ESTADO: GLOBALES Y ROLES
 const structureName = ref('')
@@ -297,11 +300,11 @@ const saving = ref(false)
 const editingRoleId = ref(null)
 const isEditingRole = computed(() => editingRoleId.value !== null)
 
-const roleTableColumns = [
-  { field: 'roleName', header: 'ROLES' },
-  { field: 'roleLoadLabel', header: 'CARGA DEL ROL' },
-  { field: 'amountWorkersRole', header: 'CANTIDAD DE TRABAJADORES' }
-]
+const roleTableColumns = computed(() => [
+  { field: 'roleName', header: t('features.projects.structure.role').toUpperCase() },
+  { field: 'roleLoadLabel', header: t('features.projects.structure.roleLoad').toUpperCase() },
+  { field: 'amountWorkersRole', header: t('features.projects.structure.workersAmount').toUpperCase() }
+])
 
 const canAddRole = computed(() => selectedRoleId.value && selectedRoleLoadId.value && workersAmount.value >= 1)
 const hasBoss = computed(() => projectRoles.value.some(pr => roleOptions.value.find(r => r.value === pr.roleId)?.isBoss))
@@ -318,15 +321,15 @@ const selectedCompLevelId = ref('')
 const selectedCompImportanceId = ref('')
 const selectedCompsToDelete = ref([])
 
-const editingCompId = ref(null) 
+const editingCompId = ref(null)
 const isEditingComp = computed(() => editingCompId.value !== null)
 
-const compTableColumns = [
-  { field: 'roleName', header: 'ROL' },
-  { field: 'competenceName', header: 'COMPETENCIA' },
-  { field: 'levelName', header: 'NIVEL' },
-  { field: 'importanceName', header: 'IMPORTANCIA' }
-]
+const compTableColumns = computed(() => [
+  { field: 'roleName', header: t('features.projects.structure.role').toUpperCase() },
+  { field: 'competenceName', header: t('features.projects.structure.competence').toUpperCase() },
+  { field: 'levelName', header: t('features.projects.structure.level').toUpperCase() },
+  { field: 'importanceName', header: t('features.projects.structure.importance').toUpperCase() }
+])
 
 const availableRolesForCompetences = computed(() => {
   return projectRoles.value.map(pr => ({ label: pr.roleName, value: pr.roleId }))
@@ -340,11 +343,11 @@ onMounted(async () => {
     const [roles, roleLoads, competencesRes, levelsRes, importancesRes] = await Promise.all([
       fetchGetRoles(),
       fetchGetRoleLoads(),
-      api.get('competence').json(), 
-      api.get('levels').json(),     
-      api.get('competenceImportance').json() 
+      api.get('competence').json(),
+      api.get('levels').json(),
+      api.get('competenceImportance').json()
     ])
-    
+
     roleOptions.value = roles.map(r => ({ label: r.roleName, value: r.id, isBoss: r.isBoss }))
     roleLoadOptions.value = roleLoads.map(rl => ({ label: `${rl.value} -> ${rl.significance}`, value: rl.id }))
     competenceOptions.value = competencesRes.map(c => ({ label: c.competitionName, value: c.id }))
@@ -354,9 +357,9 @@ onMounted(async () => {
     if (isEditMode.value && route.params.id) {
       const res = await api.get(`project-structure/${route.params.id}`).json()
       const data = res?.data ?? res
-      
+
       structureName.value = data.name ?? ''
-      
+
       if (data.projectRoles?.length) {
         // Cargar Roles
         projectRoles.value = data.projectRoles.map(pr => ({
@@ -372,7 +375,7 @@ onMounted(async () => {
         data.projectRoles.forEach(pr => {
           const rId = pr.role?.id ?? pr.role
           const rName = roleOptions.value.find(r => r.value === rId)?.label || ''
-          
+
           if (pr.techCompetences?.length) {
             pr.techCompetences.forEach(c => {
               const compId = c.competenceId ?? c.competence?.id ?? c.competence
@@ -396,7 +399,7 @@ onMounted(async () => {
       }
     }
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los datos', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.projects.structure.dataLoadError'), life: 3000 })
   }
 })
 
@@ -409,7 +412,7 @@ function addOrUpdateRole() {
 
   if (isEditingRole.value) {
     if (selectedRoleId.value !== editingRoleId.value && projectRoles.value.some(pr => pr.roleId === selectedRoleId.value)) {
-      toast.add({ severity: 'warn', summary: 'Aviso', detail: 'El rol seleccionado ya existe en la estructura', life: 3000 })
+      toast.add({ severity: 'warn', summary: t('features.projects.structure.aviso'), detail: t('features.projects.structure.roleExists'), life: 3000 })
       return
     }
 
@@ -418,7 +421,7 @@ function addOrUpdateRole() {
       projectRoles.value[index] = {
         roleId: selectedRoleId.value, roleName, roleLoadId: selectedRoleLoadId.value, roleLoadLabel, amountWorkersRole: workersAmount.value
       }
-      
+
       projectCompetences.value.forEach(comp => {
         if (comp.roleId === editingRoleId.value) {
           comp.roleId = selectedRoleId.value
@@ -426,11 +429,11 @@ function addOrUpdateRole() {
         }
       })
 
-      toast.add({ severity: 'success', summary: 'Actualizado', detail: 'Rol actualizado correctamente', life: 2000 })
+      toast.add({ severity: 'success', summary: t('features.projects.structure.updatedSummary'), detail: t('features.projects.structure.roleUpdated'), life: 2000 })
     }
   } else {
     if (projectRoles.value.some(pr => pr.roleId === selectedRoleId.value)) {
-      toast.add({ severity: 'info', summary: 'Aviso', detail: 'Este rol ya ha sido agregado', life: 3000 })
+      toast.add({ severity: 'info', summary: t('features.projects.structure.aviso'), detail: t('features.projects.structure.roleAlreadyAdded'), life: 3000 })
       return
     }
 
@@ -457,7 +460,7 @@ function removeSelectedRoles() {
   const removedRoleIds = selectedRolesToDelete.value.map(r => r.roleId)
   projectRoles.value = projectRoles.value.filter(pr => !selectedRolesToDelete.value.includes(pr))
   selectedRolesToDelete.value = []
-  
+
   projectCompetences.value = projectCompetences.value.filter(pc => !removedRoleIds.includes(pc.roleId))
 
   if (editingRoleId.value && removedRoleIds.includes(editingRoleId.value)) {
@@ -477,7 +480,7 @@ function addOrUpdateCompetence() {
 
   if (isEditingComp.value) {
     if (uniqueKey !== editingCompId.value && projectCompetences.value.some(c => `${c.roleId}-${c.competenceId}` === uniqueKey)) {
-      toast.add({ severity: 'warn', summary: 'Aviso', detail: 'Esta competencia ya fue asignada al rol', life: 3000 })
+      toast.add({ severity: 'warn', summary: t('features.projects.structure.aviso'), detail: t('features.projects.structure.competenceAlreadyAdded'), life: 3000 })
       return
     }
 
@@ -489,11 +492,11 @@ function addOrUpdateCompetence() {
         levelId: selectedCompLevelId.value, levelName,
         importanceId: selectedCompImportanceId.value, importanceName: impName
       }
-      toast.add({ severity: 'success', summary: 'Actualizado', detail: 'Competencia actualizada correctamente', life: 2000 })
+      toast.add({ severity: 'success', summary: t('features.projects.structure.updatedSummary'), detail: t('features.projects.structure.competenceUpdated'), life: 2000 })
     }
   } else {
     if (projectCompetences.value.some(c => `${c.roleId}-${c.competenceId}` === uniqueKey)) {
-      toast.add({ severity: 'info', summary: 'Aviso', detail: 'Esta competencia ya fue asignada a este rol', life: 3000 })
+      toast.add({ severity: 'info', summary: t('features.projects.structure.aviso'), detail: t('features.projects.structure.competenceAlreadyAdded'), life: 3000 })
       return
     }
 
@@ -526,7 +529,7 @@ function resetCompForm() {
 function removeSelectedComps() {
   projectCompetences.value = projectCompetences.value.filter(c => !selectedCompsToDelete.value.includes(c))
   selectedCompsToDelete.value = []
-  
+
   if (editingCompId.value && !projectCompetences.value.some(c => `${c.roleId}-${c.competenceId}` === editingCompId.value)) {
     resetCompForm()
   }
@@ -535,12 +538,12 @@ function removeSelectedComps() {
 // === GUARDAR TODO ===
 async function handleSave() {
   if (!structureName.value.trim() || !hasBoss.value || projectRoles.value.length === 0) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'Debe ingresar un nombre y al menos un rol de tipo Jefe', life: 4000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.structure.validationSummary'), detail: t('features.projects.structure.nameAndBossRequired'), life: 4000 })
     return
   }
 
   saving.value = true
-  
+
   // Transformar el payload a la estructura anidada requerida por la API
   const payload = {
     name: structureName.value,
@@ -566,17 +569,18 @@ async function handleSave() {
   try {
     if (isEditMode.value) {
       await fetchUpdateProjectStructure(route.params.id, payload)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Estructura actualizada correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.projects.structure.structureUpdated'), life: 3000 })
     } else {
       await fetchCreateProjectStructure(payload)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Estructura creada correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.projects.structure.structureCreated'), life: 3000 })
     }
     router.back()
   } catch (e) {
+    const detail = await parseApiError(e, t('common.saveError'))
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: e?.response?.data?.message ?? e?.message ?? 'Error al guardar la estructura',
+      summary: t('common.error'),
+      detail,
       life: 3000,
     })
   } finally {

@@ -2,10 +2,13 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import DataTable from './DataTable.vue'
 import PageBreadcrumb from './PageBreadcrumb.vue'
+import { parseApiError } from '@/lib/apiError'
 
 const toast = useToast()
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 
@@ -50,7 +53,7 @@ const handleCreate = () => {
 const handleEdit = (item) => {
   const target = item || localSelected.value
   if (!target) {
-    toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'Selecciona un elemento para editar', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('common.warning'), detail: t('common.selectToEdit'), life: 3000 })
     return
   }
   if (typeof props.config?.editRoute === 'function') {
@@ -68,10 +71,11 @@ const handleDelete = async (item) => {
     await props.service.delete(target.id)
     localSelected.value = null
     emit('update:selectedItem', null)
-    toast.add({ severity: 'success', summary: 'Éxito', detail: 'Elemento eliminado correctamente', life: 3000 })
+    toast.add({ severity: 'success', summary: t('common.success'), detail: t('common.recordDeleted'), life: 3000 })
     if (typeof props.onCreateClick === 'function') props.onCreateClick()
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Error al eliminar', life: 3000 })
+    const detail = await parseApiError(error, t('common.deleteError'))
+    toast.add({ severity: 'error', summary: t('common.error'), detail, life: 3000 })
   }
 }
 
@@ -92,7 +96,7 @@ const handleExport = () => {
 
 <template>
   <div>
-    <PageBreadcrumb :page-title="title" />
+    <PageBreadcrumb :page-title="t(title)" />
 
     <DataTable
       :columns="columns"
