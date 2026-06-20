@@ -69,6 +69,12 @@ const _baseApi = ky.create({
         const url = response.url || ''
 
         if (response.status === 401 && !isPublicEndpoint(url)) {
+          
+          if (request.headers.has('X-Is-Retry')) {
+            forceLogin()
+            return response
+          }
+          
           const authStore = useAuthStore()
           const failedToken = bearerToken(request.headers.get('Authorization'))
           const currentToken = authStore.getAccessToken()
