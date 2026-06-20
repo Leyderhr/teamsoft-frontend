@@ -1,9 +1,11 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Breadcrumb from 'primevue/breadcrumb'
 
 const route = useRoute()
+const { t } = useI18n()
 const items = ref([])
 const home = ref({
   icon: 'pi pi-home',
@@ -41,9 +43,9 @@ watch(() => route.path, updateBreadcrumb, { immediate: true })
             :to="item.to"
             class="breadcrumb-link"
         >
-          {{ item.label }}
+          {{ t(item.label) }}
         </router-link>
-        <span v-else class="breadcrumb-current">{{ item.label }}</span>
+        <span v-else class="breadcrumb-current">{{ t(item.label) }}</span>
       </template>
     </Breadcrumb>
   </nav>

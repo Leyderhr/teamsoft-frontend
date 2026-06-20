@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { Check, ArrowLeft, ArrowRight } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
@@ -10,6 +11,7 @@ import { useProjectsByState } from '@/services/projects/queries'
 import { usePersonGroups } from '@/services/nomenclatives/queries'
 import { useTeamFormationStore } from '@/stores/teamFormation'
 
+const { t } = useI18n()
 const toast  = useToast()
 const store  = useTeamFormationStore()
 
@@ -18,7 +20,11 @@ const currentStep = computed({
   get: () => store.currentStep,
   set: (v) => { store.currentStep = v },
 })
-const stepLabels   = ['Configurar', 'Fijar Miembro', 'Formar Equipo']
+const stepLabels = computed(() => [
+  t('features.projects.teamFormation.configure'),
+  t('features.projects.teamFormation.fixMember'),
+  t('features.projects.teamFormation.formTeam'),
+])
 
 // Solo proyectos en estado CREATED pueden formar equipo
 const { data: projectsData, isLoading: loadingProjects } = useProjectsByState('CREATED')
@@ -51,8 +57,8 @@ const nextStep = () => {
   if (currentStep.value === 1) {
     showValidation.value = true
     if (!step1Valid.value) {
-      toast.add({ severity: 'warn', summary: 'Campos requeridos',
-        detail: 'Seleccione al menos un proyecto y un grupo de búsqueda', life: 3000 })
+      toast.add({ severity: 'warn', summary: t('features.projects.teamFormation.requiredFieldsSummary'),
+        detail: t('features.projects.teamFormation.selectProjectAndGroup'), life: 3000 })
       return
     }
   }
@@ -65,7 +71,7 @@ const prevStep = () => {
 
 <template>
   <div class="space-y-6">
-    <PageBreadcrumb page-title="Formar Equipo" />
+    <PageBreadcrumb :page-title="t('features.projects.teamFormation.title')" />
 
     <!-- Stepper -->
     <div class="flex items-center gap-1 overflow-x-auto pb-1">
@@ -124,14 +130,14 @@ const prevStep = () => {
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
       >
         <ArrowLeft class="w-4 h-4" />
-        Anterior
+        {{ t('common.back') }}
       </button>
       <button
         v-if="currentStep < 3"
         @click="nextStep"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
       >
-        Siguiente
+        {{ t('common.next') }}
         <ArrowRight class="w-4 h-4" />
       </button>
     </div>

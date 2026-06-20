@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import {
   Loader2, Lock, ArrowLeft, Award, Cpu, ShieldAlert, Trash2, Plus, Crown,
 } from 'lucide-vue-next'
@@ -19,24 +20,22 @@ const props = defineProps({
 
 const router = useRouter()
 const toast = useToast()
+const { t } = useI18n()
 
 const activeTab = ref('competences')
 const loading = ref(false)
 const closing = ref(false)
 
-// Jefe del equipo
-const boss = ref(null) // { personId, personName, surName, roleId, roleName }
+const boss = ref(null)
 const bossName = computed(() => boss.value ? `${boss.value.personName} ${boss.value.surName}`.trim() : '')
 
-// Evaluaciones
 const bossEvaluationId    = ref(null)
 const projectEvaluationId = ref(null)
 
-// Competencias / incompatibilidades del jefe
-const techCompetences = ref([]) // { competenceId, name, levelsId }
+const techCompetences = ref([])
 const genCompetences  = ref([])
-const conflicts       = ref([]) // { personConflictId, name, surName, card, conflictIndexId }
-const personsList     = ref([]) // miembros no jefe del equipo
+const conflicts       = ref([])
+const personsList     = ref([])
 
 const techNewCompetence = ref(null)
 const techNewLevel      = ref(null)
@@ -45,7 +44,6 @@ const genNewLevel       = ref(null)
 const newConflictPerson = ref(null)
 const newConflictIndex  = ref(null)
 
-// ── Nomencladores ──
 const { data: levelsData }        = useLevels()
 const { data: competencesData }   = useCompetences()
 const { data: conflictIndexData } = useConflictIndex()
@@ -67,7 +65,7 @@ const conflictPersonOptions = computed(() =>
 )
 const availableTechCompetences = computed(() =>
   (competencesData.value ?? [])
-    .filter(c => c.technical && !techCompetences.value.some(t => t.competenceId === c.id))
+    .filter(c => c.technical && !techCompetences.value.some(tc => tc.competenceId === c.id))
     .map(c => ({ label: c.competitionName, value: c.id }))
 )
 const availableGenCompetences = computed(() =>
@@ -76,14 +74,18 @@ const availableGenCompetences = computed(() =>
     .map(c => ({ label: c.competitionName, value: c.id }))
 )
 
-// ── Carga ──
+const tabs = computed(() => [
+  { id: 'competences', label: t('features.projects.closeTeam.competencesTab'), icon: Award },
+  { id: 'compatibility', label: t('features.projects.closeTeam.compatibilityTab'), icon: ShieldAlert },
+])
+
 async function loadBossAndData() {
   loading.value = true
   try {
     const bossRole = await projectService.getBossAssignedRole(props.projectId)
     const bossPerson = bossRole?.persons?.[0]
     if (!bossPerson) {
-      toast.add({ severity: 'warn', summary: 'Sin jefe', detail: 'El equipo no tiene un jefe asignado', life: 4000 })
+      toast.add({ severity: 'warn', summary: t('features.projects.closeTeam.noBossSummary'), detail: t('features.projects.closeTeam.noBossDetail'), life: 4000 })
       return
     }
     boss.value = {
@@ -110,8 +112,8 @@ async function loadBossAndData() {
       conflictIndexId: pc.conflictIndex?.id ?? null,
     }))
   } catch (e) {
-    const detail = await parseApiError(e, 'No se pudo cargar el jefe del equipo')
-    toast.add({ severity: 'error', summary: 'Error', detail, life: 5000 })
+    const detail = await parseApiError(e, t('common.loadError'))
+    toast.add({ severity: 'error', summary: t('common.error'), detail, life: 5000 })
   } finally {
     loading.value = false
   }
@@ -128,7 +130,7 @@ async function loadTeamMembers() {
     }
     personsList.value = [...byId.values()]
   } catch {
-    // sin miembros -> no se podrán agregar incompatibilidades
+    // failures only disable adding new conflicts
   }
 }
 
@@ -137,7 +139,6 @@ onMounted(() => {
   loadTeamMembers()
 })
 
-// ── Competencias ──
 function addCompetence(kind) {
   const compId = kind === 'tech' ? techNewCompetence.value : genNewCompetence.value
   const levelId = kind === 'tech' ? techNewLevel.value : genNewLevel.value
@@ -155,11 +156,10 @@ function removeCompetence(kind, index) {
   else genCompetences.value.splice(index, 1)
 }
 
-// ── Incompatibilidades ──
 function addConflict() {
   if (!newConflictPerson.value || !newConflictIndex.value) return
   if (conflicts.value.some(c => c.personConflictId === newConflictPerson.value)) {
-    toast.add({ severity: 'warn', summary: 'Duplicado', detail: 'Esa persona ya está en la lista', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.closeTeam.duplicateConflictSummary'), detail: t('features.projects.closeTeam.duplicateConflictDetail'), life: 3000 })
     return
   }
   const person = personsList.value.find(p => p.id === newConflictPerson.value)
@@ -177,32 +177,29 @@ function removeConflict(index) {
   conflicts.value.splice(index, 1)
 }
 
-// ── Cerrar equipo ──
 async function handleClose() {
   if (!boss.value) return
   if (bossEvaluationId.value == null) {
-    toast.add({ severity: 'warn', summary: 'Falta evaluación', detail: 'Selecciona la evaluación del jefe', life: 3000 }); return
+    toast.add({ severity: 'warn', summary: t('features.projects.closeTeam.missingBossEvalSummary'), detail: t('features.projects.closeTeam.missingBossEvalDetail'), life: 3000 }); return
   }
   if (projectEvaluationId.value == null) {
-    toast.add({ severity: 'warn', summary: 'Falta evaluación', detail: 'Selecciona la evaluación del proyecto', life: 3000 }); return
+    toast.add({ severity: 'warn', summary: t('features.projects.closeTeam.missingBossEvalSummary'), detail: t('features.projects.closeTeam.missingProjectEvalDetail'), life: 3000 }); return
   }
   const allCompetences = [...techCompetences.value, ...genCompetences.value]
   if (allCompetences.some(c => c.levelsId == null)) {
-    toast.add({ severity: 'warn', summary: 'Falta nivel', detail: 'Todas las competencias deben tener un nivel asignado', life: 4000 }); return
+    toast.add({ severity: 'warn', summary: t('features.projects.closeTeam.missingLevel'), detail: t('features.projects.closeTeam.missingLevelDetail'), life: 4000 }); return
   }
   if (conflicts.value.some(c => c.conflictIndexId == null)) {
-    toast.add({ severity: 'warn', summary: 'Falta nivel de conflicto', detail: 'Todas las incompatibilidades deben tener un nivel', life: 4000 }); return
+    toast.add({ severity: 'warn', summary: t('features.projects.closeTeam.missingConflictLevel'), detail: t('features.projects.closeTeam.missingConflictLevelDetail'), life: 4000 }); return
   }
 
   closing.value = true
   try {
-    // 1) Guardar competencias e incompatibilidades del jefe
     await personService.patchCompetencesConflicts(boss.value.personId, {
       competenceValues: allCompetences.map(c => ({ competenceId: c.competenceId, levelsId: c.levelsId })),
       personConflicts: conflicts.value.map(c => ({ personConflictId: c.personConflictId, conflictIndexId: c.conflictIndexId })),
     })
 
-    // 2) Cerrar el equipo con la evaluación del jefe y del proyecto
     await projectService.closeTeam(props.projectId, {
       roleEvaluation: projectEvaluationId.value,
       bossEvaluation: {
@@ -212,11 +209,11 @@ async function handleClose() {
       },
     })
 
-    toast.add({ severity: 'success', summary: 'Equipo cerrado', detail: 'El equipo se cerró correctamente', life: 4000 })
+    toast.add({ severity: 'success', summary: t('features.projects.closeTeam.teamClosedSummary'), detail: t('features.projects.closeTeam.teamClosedDetail'), life: 4000 })
     router.push({ name: 'CloseTeam' })
   } catch (e) {
-    const detail = await parseApiError(e, 'No se pudo cerrar el equipo')
-    toast.add({ severity: 'error', summary: 'Error al cerrar', detail, life: 6000 })
+    const detail = await parseApiError(e, t('common.saveError'))
+    toast.add({ severity: 'error', summary: t('features.projects.closeTeam.closeErrorSummary'), detail, life: 6000 })
   } finally {
     closing.value = false
   }
@@ -225,18 +222,13 @@ async function handleClose() {
 function goBack() {
   router.push({ name: 'CloseTeam' })
 }
-
-const tabs = [
-  { id: 'competences', label: 'Competencias', icon: Award },
-  { id: 'compatibility', label: 'Nivel de compatibilidad', icon: ShieldAlert },
-]
 </script>
 
 <template>
   <div class="space-y-6">
     <PageBreadcrumb
-      page-title="Cerrar Equipo"
-      :items="[{ label: 'Cerrar Equipo', path: '/manage-projects/close-team' }]"
+      :page-title="t('features.projects.closeTeam.title')"
+      :items="[{ label: t('features.projects.closeTeam.title'), path: '/manage-projects/close-team' }]"
     />
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
@@ -244,7 +236,7 @@ const tabs = [
       <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
         <div class="flex items-center gap-2">
           <Crown class="w-5 h-5 text-amber-500" />
-          <h2 class="text-base font-semibold text-gray-800">Jefe de equipo: {{ bossName || '—' }}</h2>
+          <h2 class="text-base font-semibold text-gray-800">{{ t('features.projects.closeTeam.bossHeader') }} {{ bossName || '—' }}</h2>
         </div>
         <button
           type="button"
@@ -252,25 +244,25 @@ const tabs = [
           class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
           <ArrowLeft class="w-4 h-4" />
-          Volver
+          {{ t('common.back') }}
         </button>
       </div>
 
       <div v-if="loading" class="py-16 flex items-center justify-center gap-2 text-sm text-gray-400">
         <Loader2 class="w-5 h-5 animate-spin" />
-        Cargando datos del jefe...
+        {{ t('features.projects.closeTeam.loadingBoss') }}
       </div>
 
       <template v-else>
         <!-- Evaluaciones -->
         <div class="px-6 py-5 border-b border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div class="space-y-1.5">
-            <label class="text-xs font-medium text-gray-600">Evaluación del jefe ({{ boss?.roleName || 'Jefe' }})</label>
-            <AppSelect v-model="bossEvaluationId" :options="roleEvaluationOptions" placeholder="Seleccionar evaluación..." />
+            <label class="text-xs font-medium text-gray-600">{{ t('features.projects.closeTeam.bossEvaluationLabel', [boss?.roleName || 'Jefe']) }}</label>
+            <AppSelect v-model="bossEvaluationId" :options="roleEvaluationOptions" :placeholder="t('common.select')" />
           </div>
           <div class="space-y-1.5">
-            <label class="text-xs font-medium text-gray-600">Evaluación del proyecto</label>
-            <AppSelect v-model="projectEvaluationId" :options="roleEvaluationOptions" placeholder="Seleccionar evaluación..." />
+            <label class="text-xs font-medium text-gray-600">{{ t('features.projects.closeTeam.projectEvaluationLabel') }}</label>
+            <AppSelect v-model="projectEvaluationId" :options="roleEvaluationOptions" :placeholder="t('common.select')" />
           </div>
         </div>
 
@@ -278,15 +270,15 @@ const tabs = [
         <div class="px-6 pt-4 border-b border-gray-200">
           <nav class="flex gap-6 -mb-px">
             <button
-              v-for="t in tabs"
-              :key="t.id"
+              v-for="tab in tabs"
+              :key="tab.id"
               type="button"
-              @click="activeTab = t.id"
+              @click="activeTab = tab.id"
               class="inline-flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors cursor-pointer"
-              :class="activeTab === t.id ? 'border-brand-500 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+              :class="activeTab === tab.id ? 'border-brand-500 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
             >
-              <component :is="t.icon" class="w-4 h-4" />
-              {{ t.label }}
+              <component :is="tab.icon" class="w-4 h-4" />
+              {{ tab.label }}
             </button>
           </nav>
         </div>
@@ -297,42 +289,42 @@ const tabs = [
           <section class="space-y-3">
             <div class="flex items-center gap-2">
               <Cpu class="w-4 h-4 text-brand-500" />
-              <h3 class="text-sm font-semibold text-gray-700">Competencias Técnicas</h3>
+              <h3 class="text-sm font-semibold text-gray-700">{{ t('features.projects.closeTeam.techCompetences') }}</h3>
             </div>
             <div class="flex flex-col sm:flex-row sm:items-end gap-3 rounded-xl bg-gray-50 border border-gray-100 p-4">
               <div class="flex-1 min-w-[200px] space-y-1.5">
-                <label class="text-xs font-medium text-gray-600">Competencia</label>
-                <AppSelect v-model="techNewCompetence" :options="availableTechCompetences" placeholder="Seleccionar competencia..." :searchable="true" />
+                <label class="text-xs font-medium text-gray-600">{{ t('features.projects.closeTeam.competenceLabel') }}</label>
+                <AppSelect v-model="techNewCompetence" :options="availableTechCompetences" :placeholder="t('common.select')" :searchable="true" />
               </div>
               <div class="w-full sm:w-56 space-y-1.5">
-                <label class="text-xs font-medium text-gray-600">Nivel</label>
-                <AppSelect v-model="techNewLevel" :options="levelOptions" placeholder="Seleccionar nivel..." />
+                <label class="text-xs font-medium text-gray-600">{{ t('features.projects.closeTeam.levelLabel') }}</label>
+                <AppSelect v-model="techNewLevel" :options="levelOptions" :placeholder="t('common.select')" />
               </div>
               <button type="button" @click="addCompetence('tech')" :disabled="!techNewCompetence || !techNewLevel"
                 class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                <Plus class="w-4 h-4" /> Agregar
+                <Plus class="w-4 h-4" /> {{ t('common.add') }}
               </button>
             </div>
             <div class="overflow-hidden rounded-xl border border-gray-200">
               <table class="min-w-full text-sm">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-56">Nivel</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.closeTeam.nameHeader') }}</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-56">{{ t('features.projects.closeTeam.levelLabel') }}</th>
                     <th class="px-2 py-2.5 w-10"></th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                   <tr v-for="(c, idx) in techCompetences" :key="c.competenceId" class="hover:bg-gray-50/60">
                     <td class="px-4 py-2 text-gray-700">{{ c.name }}</td>
-                    <td class="px-4 py-2"><AppSelect v-model="c.levelsId" :options="levelOptions" size="sm" placeholder="Nivel..." /></td>
+                    <td class="px-4 py-2"><AppSelect v-model="c.levelsId" :options="levelOptions" size="sm" :placeholder="t('common.select')" /></td>
                     <td class="px-2 py-2 text-right">
                       <button type="button" @click="removeCompetence('tech', idx)" class="p-1 rounded text-gray-300 hover:text-error-500 hover:bg-error-50 transition-colors">
                         <Trash2 class="w-4 h-4" />
                       </button>
                     </td>
                   </tr>
-                  <tr v-if="!techCompetences.length"><td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Sin competencias técnicas</td></tr>
+                  <tr v-if="!techCompetences.length"><td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">{{ t('features.projects.closeTeam.noTechCompetences') }}</td></tr>
                 </tbody>
               </table>
             </div>
@@ -344,42 +336,42 @@ const tabs = [
           <section class="space-y-3">
             <div class="flex items-center gap-2">
               <Award class="w-4 h-4 text-brand-500" />
-              <h3 class="text-sm font-semibold text-gray-700">Competencias Genéricas</h3>
+              <h3 class="text-sm font-semibold text-gray-700">{{ t('features.projects.closeTeam.genericCompetences') }}</h3>
             </div>
             <div class="flex flex-col sm:flex-row sm:items-end gap-3 rounded-xl bg-gray-50 border border-gray-100 p-4">
               <div class="flex-1 min-w-[200px] space-y-1.5">
-                <label class="text-xs font-medium text-gray-600">Competencia</label>
-                <AppSelect v-model="genNewCompetence" :options="availableGenCompetences" placeholder="Seleccionar competencia..." :searchable="true" />
+                <label class="text-xs font-medium text-gray-600">{{ t('features.projects.closeTeam.competenceLabel') }}</label>
+                <AppSelect v-model="genNewCompetence" :options="availableGenCompetences" :placeholder="t('common.select')" :searchable="true" />
               </div>
               <div class="w-full sm:w-56 space-y-1.5">
-                <label class="text-xs font-medium text-gray-600">Nivel</label>
-                <AppSelect v-model="genNewLevel" :options="levelOptions" placeholder="Seleccionar nivel..." />
+                <label class="text-xs font-medium text-gray-600">{{ t('features.projects.closeTeam.levelLabel') }}</label>
+                <AppSelect v-model="genNewLevel" :options="levelOptions" :placeholder="t('common.select')" />
               </div>
               <button type="button" @click="addCompetence('gen')" :disabled="!genNewCompetence || !genNewLevel"
                 class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                <Plus class="w-4 h-4" /> Agregar
+                <Plus class="w-4 h-4" /> {{ t('common.add') }}
               </button>
             </div>
             <div class="overflow-hidden rounded-xl border border-gray-200">
               <table class="min-w-full text-sm">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-56">Nivel</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.closeTeam.nameHeader') }}</th>
+                    <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-56">{{ t('features.projects.closeTeam.levelLabel') }}</th>
                     <th class="px-2 py-2.5 w-10"></th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                   <tr v-for="(c, idx) in genCompetences" :key="c.competenceId" class="hover:bg-gray-50/60">
                     <td class="px-4 py-2 text-gray-700">{{ c.name }}</td>
-                    <td class="px-4 py-2"><AppSelect v-model="c.levelsId" :options="levelOptions" size="sm" placeholder="Nivel..." /></td>
+                    <td class="px-4 py-2"><AppSelect v-model="c.levelsId" :options="levelOptions" size="sm" :placeholder="t('common.select')" /></td>
                     <td class="px-2 py-2 text-right">
                       <button type="button" @click="removeCompetence('gen', idx)" class="p-1 rounded text-gray-300 hover:text-error-500 hover:bg-error-50 transition-colors">
                         <Trash2 class="w-4 h-4" />
                       </button>
                     </td>
                   </tr>
-                  <tr v-if="!genCompetences.length"><td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Sin competencias genéricas</td></tr>
+                  <tr v-if="!genCompetences.length"><td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">{{ t('features.projects.closeTeam.noGenericCompetences') }}</td></tr>
                 </tbody>
               </table>
             </div>
@@ -390,26 +382,26 @@ const tabs = [
         <div v-show="activeTab === 'compatibility'" class="p-6 space-y-4">
           <div class="flex flex-col sm:flex-row sm:items-end gap-3 rounded-xl bg-gray-50 border border-gray-100 p-4">
             <div class="flex-1 min-w-[200px] space-y-1.5">
-              <label class="text-xs font-medium text-gray-600">Persona (miembro del equipo)</label>
-              <AppSelect v-model="newConflictPerson" :options="conflictPersonOptions" placeholder="Seleccionar persona..." :searchable="true" search-placeholder="Buscar persona..." />
+              <label class="text-xs font-medium text-gray-600">{{ t('features.projects.closeTeam.personMemberLabel') }}</label>
+              <AppSelect v-model="newConflictPerson" :options="conflictPersonOptions" :placeholder="t('common.select')" :searchable="true" />
             </div>
             <div class="w-full sm:w-64 space-y-1.5">
-              <label class="text-xs font-medium text-gray-600">Nivel de conflicto</label>
-              <AppSelect v-model="newConflictIndex" :options="conflictIndexOptions" placeholder="Nivel de conflicto..." />
+              <label class="text-xs font-medium text-gray-600">{{ t('features.projects.closeTeam.conflictLevelLabel') }}</label>
+              <AppSelect v-model="newConflictIndex" :options="conflictIndexOptions" :placeholder="t('common.select')" />
             </div>
             <button type="button" @click="addConflict" :disabled="!newConflictPerson || !newConflictIndex"
               class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              <Plus class="w-4 h-4" /> Agregar
+              <Plus class="w-4 h-4" /> {{ t('common.add') }}
             </button>
           </div>
           <div class="overflow-hidden rounded-xl border border-gray-200">
             <table class="min-w-full text-sm">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Apellidos</th>
-                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">DNI</th>
-                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-64">Nivel de conflicto</th>
+                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.closeTeam.nameHeader') }}</th>
+                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.closeTeam.surnameHeader') }}</th>
+                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.closeTeam.dniHeader') }}</th>
+                  <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-64">{{ t('features.projects.closeTeam.conflictLevelLabel') }}</th>
                   <th class="px-2 py-2.5 w-10"></th>
                 </tr>
               </thead>
@@ -418,7 +410,7 @@ const tabs = [
                   <td class="px-4 py-2 text-gray-700">{{ c.name }}</td>
                   <td class="px-4 py-2 text-gray-600">{{ c.surName }}</td>
                   <td class="px-4 py-2 text-gray-500">{{ c.card }}</td>
-                  <td class="px-4 py-2"><AppSelect v-model="c.conflictIndexId" :options="conflictIndexOptions" size="sm" placeholder="Nivel de conflicto..." /></td>
+                  <td class="px-4 py-2"><AppSelect v-model="c.conflictIndexId" :options="conflictIndexOptions" size="sm" :placeholder="t('common.select')" /></td>
                   <td class="px-2 py-2 text-right">
                     <button type="button" @click="removeConflict(idx)" class="p-1 rounded text-gray-300 hover:text-error-500 hover:bg-error-50 transition-colors">
                       <Trash2 class="w-4 h-4" />
@@ -426,7 +418,7 @@ const tabs = [
                   </td>
                 </tr>
                 <tr v-if="!conflicts.length">
-                  <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">El jefe no tiene incompatibilidades registradas</td>
+                  <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">{{ t('features.projects.closeTeam.noBossConflicts') }}</td>
                 </tr>
               </tbody>
             </table>
@@ -437,13 +429,13 @@ const tabs = [
         <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
           <button type="button" @click="goBack"
             class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-            Cancelar
+            {{ t('common.cancel') }}
           </button>
           <button type="button" :disabled="closing" @click="handleClose"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-error-500 text-white text-sm font-medium hover:bg-error-600 disabled:opacity-50 transition-colors">
             <Loader2 v-if="closing" class="w-4 h-4 animate-spin" />
             <Lock v-else class="w-4 h-4" />
-            Cerrar equipo
+            {{ t('features.projects.closeTeam.closeTeamBtn') }}
           </button>
         </div>
       </template>

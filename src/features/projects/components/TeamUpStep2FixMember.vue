@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import {
   Award, BarChart2, Bookmark, Brain, Navigation, Lightbulb,
   Cog, Users, ChevronRight, Trash2, UserCircle, Folder, Loader2, Crown, AlertCircle,
@@ -20,18 +21,19 @@ const props = defineProps({
 
 const store = useTeamFormationStore()
 const toast = useToast()
+const { t } = useI18n()
 
 // ──────────────────────────────────────────────
-// Factor definitions
+// Factor definitions (reactive labels via i18n)
 // ──────────────────────────────────────────────
-const factors = [
-  { id: 'competencia',     label: 'Competencia',                  icon: Award,      hasWeight: true  },
-  { id: 'workload',        label: 'Carga de trabajo',             icon: BarChart2,  hasWeight: true  },
-  { id: 'rolInterest',     label: 'Interés por el rol',           icon: Bookmark,   hasWeight: true  },
-  { id: 'psico',           label: 'Caract. psicológicas',         icon: Brain,      hasWeight: false },
-  { id: 'distance',        label: 'Costo a distancia',            icon: Navigation, hasWeight: true  },
-  { id: 'projectInterest', label: 'Interés por el equipo',        icon: Lightbulb,  hasWeight: true  },
-]
+const factors = computed(() => [
+  { id: 'competencia',     label: t('features.projects.teamFormation.factorCompetencia'),    icon: Award,      hasWeight: true  },
+  { id: 'workload',        label: t('features.projects.teamFormation.factorWorkload'),        icon: BarChart2,  hasWeight: true  },
+  { id: 'rolInterest',     label: t('features.projects.teamFormation.factorRolInterest'),     icon: Bookmark,   hasWeight: true  },
+  { id: 'psico',           label: t('features.projects.teamFormation.factorPsico'),           icon: Brain,      hasWeight: false },
+  { id: 'distance',        label: t('features.projects.teamFormation.factorDistance'),        icon: Navigation, hasWeight: true  },
+  { id: 'projectInterest', label: t('features.projects.teamFormation.factorProjectInterest'), icon: Lightbulb,  hasWeight: true  },
+])
 
 const selectedFactor = ref(null)
 
@@ -226,8 +228,6 @@ function getPersonName(person) {
     || `${person.id}`
 }
 
-// Calcula el rol de jefe para un proyecto dado:
-// rol de jefe = primer rol que NO está en la lista de nonBossRoles del proyecto
 function getBossRoleForProject(projectId) {
   const allRoles = rolesData.value ?? []
   const nonBossRolesForProjects = bossNonBossRolesData.value ?? []
@@ -250,22 +250,19 @@ function selectTreePerson(person, project) {
   }
   selectedTreePerson.value = { ...person, projectId: project.projectId, projectName: project.projectName }
   if (project.type === 'boss') {
-    // El backend ya indica el rol de jefe en la propuesta (project.roleId).
-    // Usamos la heurística local solo como respaldo si no viniera.
     assignRoleId.value = project.roleId ?? getBossRoleForProject(project.projectId)?.id ?? null
   } else {
-    // Para member-proposals: el rol viene del response de la propuesta
     assignRoleId.value = project.roleId ?? null
   }
 }
 
 function assignAsBoss() {
   if (!selectedTreePerson.value) {
-    toast.add({ severity: 'warn', summary: 'Sin selección', detail: 'Selecciona una persona', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.teamFormation.noSelectionSummary'), detail: t('features.projects.teamFormation.noSelectionDetail'), life: 3000 })
     return
   }
   if (!assignRoleId.value) {
-    toast.add({ severity: 'warn', summary: 'Rol requerido', detail: 'Selecciona el rol de jefe para fijar a esta persona', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.teamFormation.roleRequiredSummary'), detail: t('features.projects.teamFormation.roleRequiredDetail'), life: 3000 })
     return
   }
   const role = rolesData.value?.find(r => r.id === assignRoleId.value)
@@ -284,7 +281,7 @@ function assignAsBoss() {
 
 function assignAsMember() {
   if (!selectedTreePerson.value || !assignRoleId.value) {
-    toast.add({ severity: 'warn', summary: 'Selección incompleta', detail: 'Selecciona una persona y un rol', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.teamFormation.incompleteSelectionSummary'), detail: t('features.projects.teamFormation.incompleteSelectionDetail'), life: 3000 })
     return
   }
   const role = rolesData.value?.find(r => r.id === assignRoleId.value)
@@ -332,13 +329,13 @@ function generateBossProposals() {
         selectedTreePerson.value = null
         assignRoleId.value = null
         if (!proposalsTree.value.length) {
-          toast.add({ severity: 'info', summary: 'Sin candidatos', detail: 'No se encontraron candidatos para jefe', life: 4000 })
+          toast.add({ severity: 'info', summary: t('features.projects.teamFormation.sinCandidatosSummary'), detail: t('features.projects.teamFormation.noCandidatesBoss'), life: 4000 })
         }
       },
       onError: async (e) => {
-        const detail = await parseApiError(e, 'No se pudieron generar las propuestas')
+        const detail = await parseApiError(e, t('common.saveError'))
         weightError.value = detail
-        toast.add({ severity: 'error', summary: 'Error al generar propuestas', detail, life: 6000 })
+        toast.add({ severity: 'error', summary: t('features.projects.teamFormation.generateErrorSummary'), detail, life: 6000 })
       },
     }
   )
@@ -347,7 +344,7 @@ function generateBossProposals() {
 function generateMemberProposals() {
   weightError.value = null
   if (!memberProposalProjectId.value || !memberProposalRoleId.value) {
-    toast.add({ severity: 'warn', summary: 'Faltan datos', detail: 'Selecciona un proyecto y un rol', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.teamFormation.missingDataSummary'), detail: t('features.projects.teamFormation.missingDataDetail'), life: 3000 })
     return
   }
   const { valid, error } = store.validateProposalWeights()
@@ -378,13 +375,13 @@ function generateMemberProposals() {
         selectedTreePerson.value = null
         assignRoleId.value = null
         if (!proposalsTree.value.length || !proposalsTree.value[0]?.persons?.length) {
-          toast.add({ severity: 'info', summary: 'Sin candidatos', detail: 'No se encontraron candidatos para ese rol', life: 4000 })
+          toast.add({ severity: 'info', summary: t('features.projects.teamFormation.sinCandidatosSummary'), detail: t('features.projects.teamFormation.noCandidatesRole'), life: 4000 })
         }
       },
       onError: async (e) => {
-        const detail = await parseApiError(e, 'No se pudieron generar las propuestas')
+        const detail = await parseApiError(e, t('common.saveError'))
         weightError.value = detail
-        toast.add({ severity: 'error', summary: 'Error al generar propuestas', detail, life: 6000 })
+        toast.add({ severity: 'error', summary: t('features.projects.teamFormation.generateErrorSummary'), detail, life: 6000 })
       },
     }
   )
@@ -397,8 +394,8 @@ function generateMemberProposals() {
     <!-- Fila de factores -->
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-base font-semibold text-gray-800">Factores de Asignación</h3>
-        <p class="text-sm text-gray-400 mt-0.5">Selecciona los factores a tener en cuenta para la asignación e indique un peso a cada factor (0–1)</p>
+        <h3 class="text-base font-semibold text-gray-800">{{ t('features.projects.teamFormation.factorsTitle') }}</h3>
+        <p class="text-sm text-gray-400 mt-0.5">{{ t('features.projects.teamFormation.factorsSubtitle') }}</p>
       </div>
       <div class="p-5">
         <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
@@ -425,7 +422,6 @@ function generateMemberProposals() {
             >
               {{ f.label }}
             </span>
-            <!-- Weight badge (only for weighted factors) -->
             <span
               v-if="f.hasWeight"
               class="text-xs font-semibold tabular-nums"
@@ -433,13 +429,12 @@ function generateMemberProposals() {
             >
               {{ factorWeight[f.id] !== null ? factorWeight[f.id] : '—' }}
             </span>
-            <!-- Enabled indicator for psico (no weight) -->
             <span
               v-else
               class="text-xs font-semibold"
               :class="factorEnabled[f.id] ? 'text-brand-600' : 'text-gray-300'"
             >
-              {{ factorEnabled[f.id] ? 'activo' : '—' }}
+              {{ factorEnabled[f.id] ? t('features.projects.teamFormation.factorActive') : '—' }}
             </span>
           </button>
         </div>
@@ -461,7 +456,7 @@ function generateMemberProposals() {
             <Cog class="w-6 h-6 text-gray-400" />
           </div>
           <p class="text-sm text-gray-400 text-center max-w-xs">
-            Selecciona un factor en la fila superior para ver y configurar sus opciones
+            {{ t('features.projects.teamFormation.selectFactorHint') }}
           </p>
         </div>
 
@@ -471,21 +466,20 @@ function generateMemberProposals() {
         <div v-if="selectedFactor === 'competencia'" class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
             <Award class="w-5 h-5 text-brand-500" />
-            <h3 class="text-base font-semibold text-gray-800">Competencia</h3>
+            <h3 class="text-base font-semibold text-gray-800">{{ t('features.projects.teamFormation.factorCompetencia') }}</h3>
           </div>
           <div class="p-6 space-y-5">
 
-            <!-- Activar + peso -->
             <div class="flex items-center gap-5 flex-wrap">
               <label class="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox"
                   :checked="store.step2Factors.maxCompetences"
                   @change="store.updateStep2Factors({ maxCompetences: $event.target.checked })"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                <span class="text-sm font-medium text-gray-700 select-none">Tomar en consideración</span>
+                <span class="text-sm font-medium text-gray-700 select-none">{{ t('features.projects.teamFormation.considerCompetences') }}</span>
               </label>
               <div class="flex items-center gap-2" :class="!store.step2Factors.maxCompetences && 'opacity-40 pointer-events-none'">
-                <span class="text-xs text-gray-500">Peso:</span>
+                <span class="text-xs text-gray-500">{{ t('features.projects.teamFormation.factorWeight') }}</span>
                 <input
                   type="number" min="0" max="1" step="0.01"
                   placeholder="0.00"
@@ -498,7 +492,6 @@ function generateMemberProposals() {
 
             <div class="h-px bg-gray-100" />
 
-            <!-- Seleccionar competencias por proyecto -->
             <div class="space-y-4" :class="!store.step2Factors.maxCompetences && 'opacity-40 pointer-events-none'">
               <label class="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox"
@@ -506,48 +499,48 @@ function generateMemberProposals() {
                   @change="selectProjectCompetences = $event.target.checked"
                   :disabled="!store.step2Factors.maxCompetences"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                <span class="text-sm font-medium text-gray-700 select-none">Seleccionar competencias por proyecto</span>
+                <span class="text-sm font-medium text-gray-700 select-none">{{ t('features.projects.teamFormation.selectByProject') }}</span>
               </label>
 
               <div v-if="selectProjectCompetences" class="space-y-5">
                 <div class="flex flex-col gap-1.5">
-                  <label class="text-xs font-medium text-gray-600">Proyecto</label>
+                  <label class="text-xs font-medium text-gray-600">{{ t('features.projects.teamFormation.projectLabel') }}</label>
                   <AppSelect
                     :model-value="competenceProjectId"
                     @update:model-value="competenceProjectId = $event"
                     :options="selectedProjectOptions"
-                    placeholder="Seleccionar proyecto..."
+                    :placeholder="t('common.select')"
                     :searchable="true"
                   />
                   <p v-if="!selectedProjectOptions.length" class="text-xs text-amber-500">
-                    No hay proyectos seleccionados. Selecciona proyectos en el Paso 1.
+                    {{ t('features.projects.teamFormation.noProjectsSelected') }}
                   </p>
                 </div>
 
                 <!-- Competencias Técnicas -->
                 <div class="space-y-2">
-                  <p class="text-sm font-semibold text-gray-700">Competencias Técnicas</p>
+                  <p class="text-sm font-semibold text-gray-700">{{ t('features.projects.teamFormation.techCompetences') }}</p>
                   <div class="overflow-hidden rounded-xl border border-gray-200">
                     <table class="min-w-full text-sm">
                       <thead class="bg-gray-50">
                         <tr>
-                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">Nivel mínimo</th>
-                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">Importancia</th>
+                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.nameHeader') }}</th>
+                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">{{ t('features.projects.teamFormation.minLevelHeader') }}</th>
+                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">{{ t('features.projects.teamFormation.importanceHeader') }}</th>
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-gray-100">
                         <tr v-for="comp in displayTechnicalCompetences" :key="comp.id" class="hover:bg-gray-50/50">
                           <td class="px-4 py-2 text-gray-700">{{ comp.competitionName }}</td>
                           <td class="px-4 py-2">
-                            <AppSelect size="sm" :model-value="getMinLevel(comp.id)" @update:model-value="setMinLevel(comp.id, $event)" :options="levelOptions" placeholder="Nivel..." />
+                            <AppSelect size="sm" :model-value="getMinLevel(comp.id)" @update:model-value="setMinLevel(comp.id, $event)" :options="levelOptions" :placeholder="t('common.select')" />
                           </td>
                           <td class="px-4 py-2">
-                            <AppSelect size="sm" :model-value="getImportance(comp.id)" @update:model-value="setImportance(comp.id, $event)" :options="importanceOptions" placeholder="Import..." />
+                            <AppSelect size="sm" :model-value="getImportance(comp.id)" @update:model-value="setImportance(comp.id, $event)" :options="importanceOptions" :placeholder="t('common.select')" />
                           </td>
                         </tr>
                         <tr v-if="!displayTechnicalCompetences.length">
-                          <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Sin competencias técnicas disponibles</td>
+                          <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">{{ t('features.projects.teamFormation.noTechCompetences') }}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -556,28 +549,28 @@ function generateMemberProposals() {
 
                 <!-- Competencias Genéricas -->
                 <div class="space-y-2">
-                  <p class="text-sm font-semibold text-gray-700">Competencias Genéricas</p>
+                  <p class="text-sm font-semibold text-gray-700">{{ t('features.projects.teamFormation.genericCompetences') }}</p>
                   <div class="overflow-hidden rounded-xl border border-gray-200">
                     <table class="min-w-full text-sm">
                       <thead class="bg-gray-50">
                         <tr>
-                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">Nivel mínimo</th>
-                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">Importancia</th>
+                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.nameHeader') }}</th>
+                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">{{ t('features.projects.teamFormation.minLevelHeader') }}</th>
+                          <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">{{ t('features.projects.teamFormation.importanceHeader') }}</th>
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-gray-100">
                         <tr v-for="comp in displayGenericCompetences" :key="comp.id" class="hover:bg-gray-50/50">
                           <td class="px-4 py-2 text-gray-700">{{ comp.competitionName }}</td>
                           <td class="px-4 py-2">
-                            <AppSelect size="sm" :model-value="getMinLevel(comp.id)" @update:model-value="setMinLevel(comp.id, $event)" :options="levelOptions" placeholder="Nivel..." />
+                            <AppSelect size="sm" :model-value="getMinLevel(comp.id)" @update:model-value="setMinLevel(comp.id, $event)" :options="levelOptions" :placeholder="t('common.select')" />
                           </td>
                           <td class="px-4 py-2">
-                            <AppSelect size="sm" :model-value="getImportance(comp.id)" @update:model-value="setImportance(comp.id, $event)" :options="importanceOptions" placeholder="Import..." />
+                            <AppSelect size="sm" :model-value="getImportance(comp.id)" @update:model-value="setImportance(comp.id, $event)" :options="importanceOptions" :placeholder="t('common.select')" />
                           </td>
                         </tr>
                         <tr v-if="!displayGenericCompetences.length">
-                          <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">Sin competencias genéricas disponibles</td>
+                          <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-400">{{ t('features.projects.teamFormation.noGenericCompetences') }}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -595,21 +588,20 @@ function generateMemberProposals() {
         <div v-if="selectedFactor === 'workload'" class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
             <BarChart2 class="w-5 h-5 text-brand-500" />
-            <h3 class="text-base font-semibold text-gray-800">Carga de trabajo</h3>
+            <h3 class="text-base font-semibold text-gray-800">{{ t('features.projects.teamFormation.factorWorkload') }}</h3>
           </div>
           <div class="p-6 space-y-5">
 
-            <!-- Activar + peso -->
             <div class="flex items-center gap-5 flex-wrap">
               <label class="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox"
                   :checked="store.step2Factors.takeWorkLoad"
                   @change="store.updateStep2Factors({ takeWorkLoad: $event.target.checked })"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                <span class="text-sm font-medium text-gray-700 select-none">Tomar en consideración la carga de trabajo</span>
+                <span class="text-sm font-medium text-gray-700 select-none">{{ t('features.projects.teamFormation.considerWorkload') }}</span>
               </label>
               <div class="flex items-center gap-2" :class="!store.step2Factors.takeWorkLoad && 'opacity-40 pointer-events-none'">
-                <span class="text-xs text-gray-500">Peso:</span>
+                <span class="text-xs text-gray-500">{{ t('features.projects.teamFormation.factorWeight') }}</span>
                 <input
                   type="number" min="0" max="1" step="0.01"
                   placeholder="0.00"
@@ -620,25 +612,22 @@ function generateMemberProposals() {
               </div>
             </div>
 
-            <!-- Sub-sections (disabled when factor off) -->
             <div :class="!store.step2Factors.takeWorkLoad && 'opacity-40 pointer-events-none'" class="space-y-4">
 
-              <!-- Section 1: Carga de equipos asignados -->
               <div class="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Carga de los equipos asignados</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.assignedTeamsLoadSection') }}</p>
                 <label class="flex items-center gap-2.5 cursor-pointer">
                   <input type="checkbox"
                     :checked="store.step2Factors.notAlreadyBossAssigned"
                     @change="store.updateStep2Factors({ notAlreadyBossAssigned: $event.target.checked })"
                     :disabled="!store.step2Factors.takeWorkLoad"
                     class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                  <span class="text-sm text-gray-700 select-none">No permitir que ya esté asignado como jefe de proyecto</span>
+                  <span class="text-sm text-gray-700 select-none">{{ t('features.projects.teamFormation.notAlreadyBoss') }}</span>
                 </label>
               </div>
 
-              <!-- Section 2: Carga del nuevo proyecto -->
               <div class="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Carga que representa la asignación en el nuevo proyecto</p>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.newProjectLoadSection') }}</p>
                 <div class="flex items-center gap-3 flex-wrap">
                   <label class="flex items-center gap-2.5 cursor-pointer">
                     <input type="checkbox"
@@ -652,7 +641,7 @@ function generateMemberProposals() {
                       :model-value="workLoadRoleLoadId"
                       @update:model-value="onRoleLoadSelect($event)"
                       :options="roleLoadOptions"
-                      placeholder="Seleccionar nivel de carga..."
+                      :placeholder="t('common.select')"
                       :disabled="!store.step2Factors.takeWorkLoad || !considerNewProjectLoad"
                     />
                   </div>
@@ -669,7 +658,7 @@ function generateMemberProposals() {
         <div v-if="selectedFactor === 'rolInterest'" class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
             <Bookmark class="w-5 h-5 text-brand-500" />
-            <h3 class="text-base font-semibold text-gray-800">Interés por el rol</h3>
+            <h3 class="text-base font-semibold text-gray-800">{{ t('features.projects.teamFormation.factorRolInterest') }}</h3>
           </div>
           <div class="p-6">
             <div class="flex items-center gap-5 flex-wrap">
@@ -678,10 +667,10 @@ function generateMemberProposals() {
                   :checked="store.step2Factors.maxInterests"
                   @change="store.updateStep2Factors({ maxInterests: $event.target.checked })"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                <span class="text-sm font-medium text-gray-700 select-none">Tomar en consideración el interés por desempeñar el rol</span>
+                <span class="text-sm font-medium text-gray-700 select-none">{{ t('features.projects.teamFormation.considerRolInterest') }}</span>
               </label>
               <div class="flex items-center gap-2" :class="!store.step2Factors.maxInterests && 'opacity-40 pointer-events-none'">
-                <span class="text-xs text-gray-500">Peso:</span>
+                <span class="text-xs text-gray-500">{{ t('features.projects.teamFormation.factorWeight') }}</span>
                 <input
                   type="number" min="0" max="1" step="0.01"
                   placeholder="0.00"
@@ -700,34 +689,29 @@ function generateMemberProposals() {
         <div v-if="selectedFactor === 'psico'" class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
             <Brain class="w-5 h-5 text-brand-500" />
-            <h3 class="text-base font-semibold text-gray-800">Características psicológicas</h3>
+            <h3 class="text-base font-semibold text-gray-800">{{ t('features.projects.teamFormation.factorPsico') }}</h3>
           </div>
           <div class="p-6 space-y-4">
 
-            <!-- Section 1: Belbin -->
             <div class="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
-              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tomar en cuenta los roles de Belbin</p>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.belbinSection') }}</p>
               <label class="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox"
                   :checked="store.step2Factors.belbinPreference"
                   @change="store.updateStep2Factors({ belbinPreference: $event.target.checked })"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                <span class="text-sm text-gray-700 select-none">Tener preferencia por los roles Impulsor y/o Coordinador</span>
+                <span class="text-sm text-gray-700 select-none">{{ t('features.projects.teamFormation.belbinLabel') }}</span>
               </label>
             </div>
 
-            <!-- Section 2: MBTI -->
             <div class="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
-              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tomar en cuenta el tipo psicológico de Myers-Briggs</p>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.mbtiSection') }}</p>
               <label class="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox"
                   :checked="store.step2Factors.mbtiExtrovertedPlanner"
                   @change="store.updateStep2Factors({ mbtiExtrovertedPlanner: $event.target.checked })"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                <span class="text-sm text-gray-700 select-none">
-                  Ser extrovertido y planificado
-                  <span class="text-gray-400 text-xs ml-1">(Subtipo E, _, _, J)</span>
-                </span>
+                <span class="text-sm text-gray-700 select-none">{{ t('features.projects.teamFormation.mbtiLabel') }}</span>
               </label>
             </div>
 
@@ -740,7 +724,7 @@ function generateMemberProposals() {
         <div v-if="selectedFactor === 'distance'" class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
             <Navigation class="w-5 h-5 text-brand-500" />
-            <h3 class="text-base font-semibold text-gray-800">Costo de trabajar a distancia</h3>
+            <h3 class="text-base font-semibold text-gray-800">{{ t('features.projects.teamFormation.factorDistance') }}</h3>
           </div>
           <div class="p-6">
             <div class="flex items-center gap-5 flex-wrap">
@@ -749,10 +733,10 @@ function generateMemberProposals() {
                   :checked="store.step2Factors.minCostDistance"
                   @change="store.updateStep2Factors({ minCostDistance: $event.target.checked })"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                <span class="text-sm font-medium text-gray-700 select-none">Tomar en consideración el costo de trabajar a distancia</span>
+                <span class="text-sm font-medium text-gray-700 select-none">{{ t('features.projects.teamFormation.considerDistance') }}</span>
               </label>
               <div class="flex items-center gap-2" :class="!store.step2Factors.minCostDistance && 'opacity-40 pointer-events-none'">
-                <span class="text-xs text-gray-500">Peso:</span>
+                <span class="text-xs text-gray-500">{{ t('features.projects.teamFormation.factorWeight') }}</span>
                 <input
                   type="number" min="0" max="1" step="0.01"
                   placeholder="0.00"
@@ -771,21 +755,20 @@ function generateMemberProposals() {
         <div v-if="selectedFactor === 'projectInterest'" class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
             <Lightbulb class="w-5 h-5 text-brand-500" />
-            <h3 class="text-base font-semibold text-gray-800">Interés por el equipo</h3>
+            <h3 class="text-base font-semibold text-gray-800">{{ t('features.projects.teamFormation.factorProjectInterest') }}</h3>
           </div>
           <div class="p-6 space-y-5">
 
-            <!-- Activar + peso -->
             <div class="flex items-center gap-5 flex-wrap">
               <label class="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox"
                   :checked="store.step2Factors.maxProjectInterests"
                   @change="store.updateStep2Factors({ maxProjectInterests: $event.target.checked })"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                <span class="text-sm font-medium text-gray-700 select-none">Tomar en consideración el interés por participar en el equipo</span>
+                <span class="text-sm font-medium text-gray-700 select-none">{{ t('features.projects.teamFormation.considerProjectInterest') }}</span>
               </label>
               <div class="flex items-center gap-2" :class="!store.step2Factors.maxProjectInterests && 'opacity-40 pointer-events-none'">
-                <span class="text-xs text-gray-500">Peso:</span>
+                <span class="text-xs text-gray-500">{{ t('features.projects.teamFormation.factorWeight') }}</span>
                 <input
                   type="number" min="0" max="1" step="0.01"
                   placeholder="0.00"
@@ -798,7 +781,6 @@ function generateMemberProposals() {
 
             <div class="h-px bg-gray-100" />
 
-            <!-- Sub-option -->
             <div :class="!store.step2Factors.maxProjectInterests && 'opacity-40 pointer-events-none'">
               <label class="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox"
@@ -806,7 +788,7 @@ function generateMemberProposals() {
                   @change="store.updateStep2Factors({ bossTeamInterest: $event.target.checked })"
                   :disabled="!store.step2Factors.maxProjectInterests"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
-                <span class="text-sm text-gray-700 select-none">Jefes de equipos interesados en estar en el equipo</span>
+                <span class="text-sm text-gray-700 select-none">{{ t('features.projects.teamFormation.bossTeamInterestLabel') }}</span>
               </label>
             </div>
 
@@ -822,9 +804,8 @@ function generateMemberProposals() {
         <!-- Proposals tree -->
         <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
 
-          <!-- Header with mode toggle -->
           <div class="px-4 py-3 border-b border-gray-200">
-            <h4 class="text-sm font-semibold text-gray-800 mb-2.5">Propuestas</h4>
+            <h4 class="text-sm font-semibold text-gray-800 mb-2.5">{{ t('features.projects.teamFormation.proposalsTitle') }}</h4>
             <div class="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-medium">
               <button
                 type="button"
@@ -833,7 +814,7 @@ function generateMemberProposals() {
                 :class="proposalMode === 'boss' ? 'bg-brand-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'"
               >
                 <Crown class="w-3.5 h-3.5" />
-                Jefes de Equipo
+                {{ t('features.projects.teamFormation.bossMode') }}
               </button>
               <button
                 type="button"
@@ -842,12 +823,11 @@ function generateMemberProposals() {
                 :class="proposalMode === 'member' ? 'bg-brand-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'"
               >
                 <Users class="w-3.5 h-3.5" />
-                Miembros
+                {{ t('features.projects.teamFormation.memberMode') }}
               </button>
             </div>
           </div>
 
-          <!-- Controls by mode -->
           <div class="px-4 pt-3 pb-2 space-y-2.5">
 
             <!-- Boss mode -->
@@ -860,7 +840,7 @@ function generateMemberProposals() {
               >
                 <Loader2 v-if="generatingProposals" class="w-3.5 h-3.5 animate-spin" />
                 <Crown v-else class="w-3.5 h-3.5" />
-                Generar propuestas de Jefe
+                {{ t('features.projects.teamFormation.generateBossProposals') }}
               </button>
               <div v-if="weightError" class="flex items-start gap-2 rounded-lg bg-error-50 border border-error-200 px-3 py-2">
                 <AlertCircle class="w-3.5 h-3.5 text-error-500 flex-shrink-0 mt-0.5" />
@@ -871,21 +851,21 @@ function generateMemberProposals() {
             <!-- Member mode -->
             <template v-else>
               <div class="flex flex-col gap-1.5">
-                <label class="text-xs text-gray-500 font-medium">Proyecto</label>
+                <label class="text-xs text-gray-500 font-medium">{{ t('features.projects.teamFormation.projectLabel') }}</label>
                 <AppSelect
                   v-model="memberProposalProjectId"
                   :options="selectedProjectOptions"
-                  placeholder="Seleccionar proyecto..."
+                  :placeholder="t('common.select')"
                   :searchable="true"
                 />
               </div>
               <div class="flex flex-col gap-1.5">
-                <label class="text-xs text-gray-500 font-medium">Rol</label>
+                <label class="text-xs text-gray-500 font-medium">{{ t('features.projects.teamFormation.roleLabel') }}</label>
                 <AppSelect
                   v-model="memberProposalRoleId"
                   :options="nonBossRoleOptions"
                   :disabled="!memberProposalProjectId"
-                  placeholder="Seleccionar rol..."
+                  :placeholder="t('common.select')"
                   :searchable="true"
                 />
               </div>
@@ -897,7 +877,7 @@ function generateMemberProposals() {
               >
                 <Loader2 v-if="generatingProposals" class="w-3.5 h-3.5 animate-spin" />
                 <Users v-else class="w-3.5 h-3.5" />
-                Generar propuestas de Miembro
+                {{ t('features.projects.teamFormation.generateMemberProposals') }}
               </button>
               <div v-if="weightError" class="flex items-start gap-2 rounded-lg bg-error-50 border border-error-200 px-3 py-2">
                 <AlertCircle class="w-3.5 h-3.5 text-error-500 flex-shrink-0 mt-0.5" />
@@ -911,7 +891,7 @@ function generateMemberProposals() {
           <div class="overflow-y-auto max-h-64 px-2 pb-2">
             <div v-if="!proposalsTree.length" class="py-8 text-center">
               <Users class="w-8 h-8 text-gray-200 mx-auto mb-2" />
-              <p class="text-xs text-gray-400">Sin propuestas. Presiona «Generar propuestas».</p>
+              <p class="text-xs text-gray-400">{{ t('features.projects.teamFormation.noProposalsHint') }}</p>
             </div>
             <template v-else>
               <div v-for="proj in proposalsTree" :key="proj.projectId" class="select-none">
@@ -969,7 +949,7 @@ function generateMemberProposals() {
               class="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 border-amber-400 text-amber-700 bg-amber-50 text-xs font-semibold hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <Crown class="w-3.5 h-3.5" />
-              Fijar como Jefe
+              {{ t('features.projects.teamFormation.assignAsBoss') }}
             </button>
             <button
               v-else
@@ -979,7 +959,7 @@ function generateMemberProposals() {
               class="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 border-brand-400 text-brand-700 bg-brand-50 text-xs font-semibold hover:bg-brand-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <Users class="w-3.5 h-3.5" />
-              Fijar como Miembro
+              {{ t('features.projects.teamFormation.assignAsMember') }}
             </button>
           </div>
         </div>
@@ -987,17 +967,17 @@ function generateMemberProposals() {
         <!-- Fixed members datatable -->
         <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <h4 class="text-sm font-semibold text-gray-800">Asignados Fijados</h4>
-            <span class="text-xs text-gray-400">{{ store.fixedWorkers.length }} asignado(s)</span>
+            <h4 class="text-sm font-semibold text-gray-800">{{ t('features.projects.teamFormation.fixedAssignmentsTitle') }}</h4>
+            <span class="text-xs text-gray-400">{{ store.fixedWorkers.length }} {{ t('features.projects.teamFormation.assignedCount') }}</span>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo</th>
-                  <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Persona</th>
-                  <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Rol</th>
-                  <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Proyecto</th>
+                  <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.typeHeader') }}</th>
+                  <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.personHeader') }}</th>
+                  <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.roleLabel') }}</th>
+                  <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.projectLabel') }}</th>
                   <th class="px-2 py-2.5 w-8"></th>
                 </tr>
               </thead>
@@ -1009,14 +989,14 @@ function generateMemberProposals() {
                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700"
                     >
                       <Crown class="w-3 h-3" />
-                      Jefe
+                      {{ t('features.projects.teamFormation.bossLabel') }}
                     </span>
                     <span
                       v-else
                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-100 text-brand-700"
                     >
                       <Users class="w-3 h-3" />
-                      Miembro
+                      {{ t('features.projects.teamFormation.memberLabel') }}
                     </span>
                   </td>
                   <td class="px-3 py-2.5 text-gray-700 font-medium">{{ m.personName }}</td>
@@ -1034,7 +1014,7 @@ function generateMemberProposals() {
                 </tr>
                 <tr v-if="!store.fixedWorkers.length">
                   <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">
-                    Sin asignaciones fijadas
+                    {{ t('features.projects.teamFormation.noFixedAssignments') }}
                   </td>
                 </tr>
               </tbody>

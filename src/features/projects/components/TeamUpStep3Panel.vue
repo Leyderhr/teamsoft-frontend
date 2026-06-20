@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import {
   Settings2, X, Cog, Loader2, Save, Pin,
   Users, Folder, Briefcase, ChevronRight,
@@ -11,11 +12,10 @@ import { useTeamFormation } from '@/services/team-formation/queries'
 import { useSaveTeams } from '@/services/team-formation/mutations'
 import { parseApiError } from '@/lib/apiError'
 
-// Remove all defineProps and defineEmits
 const store = useTeamFormationStore()
 const toast = useToast()
+const { t } = useI18n()
 
-// Set up team formation query using store payload
 const teamsPayload = computed(() => store.teamsPayload)
 
 const {
@@ -33,7 +33,6 @@ const saving = computed(() => saveTeamsMutation.isPending.value)
 const panelOpen = ref(false)
 const weightError = ref(null)
 
-// Índice de la propuesta seleccionada para guardar
 const selectedProposalIdx = ref(null)
 
 watch(panelOpen, (open) => { if (!open) weightError.value = null })
@@ -68,40 +67,37 @@ async function handleGenerate() {
   selectedProposalIdx.value = null
   const result = await generateTeams()
   if (result?.isError) {
-    const detail = await parseApiError(result.error, 'No se pudieron generar los equipos')
+    const detail = await parseApiError(result.error, t('common.saveError'))
     weightError.value = detail
-    toast.add({ severity: 'error', summary: 'Error al generar equipos', detail, life: 6000 })
+    toast.add({ severity: 'error', summary: t('features.projects.teamFormation.generateErrorSummary'), detail, life: 6000 })
   } else if (!result?.data?.length) {
-    toast.add({ severity: 'info', summary: 'Sin propuestas',
-      detail: 'No se encontraron equipos para la configuración indicada', life: 4000 })
+    toast.add({ severity: 'info', summary: t('features.projects.teamFormation.noTeamsSummary'), detail: t('features.projects.teamFormation.noTeamsDetail'), life: 4000 })
   }
 }
 
 function handleSave() {
   if (selectedProposalIdx.value === null) {
-    toast.add({ severity: 'warn', summary: 'Selecciona una propuesta',
-      detail: 'Marca la propuesta de equipo que deseas guardar', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.teamFormation.noProposalSelected'), detail: t('features.projects.teamFormation.noProposalSelectedDetail'), life: 3000 })
     return
   }
   const selected = proposal.value?.[selectedProposalIdx.value]
   if (!selected) return
   saveTeamsMutation.mutate(selected, {
     onSuccess: () => {
-      toast.add({ severity: 'success', summary: 'Equipo guardado',
-        detail: 'La propuesta seleccionada se guardó correctamente', life: 4000 })
+      toast.add({ severity: 'success', summary: t('features.projects.teamFormation.teamSavedSummary'), detail: t('features.projects.teamFormation.teamSavedDetail'), life: 4000 })
       store.reset()
       selectedProposalIdx.value = null
       panelOpen.value = false
     },
     onError: async (e) => {
-      const detail = await parseApiError(e, 'No se pudo guardar el equipo')
-      toast.add({ severity: 'error', summary: 'Error al guardar', detail, life: 6000 })
+      const detail = await parseApiError(e, t('common.saveError'))
+      toast.add({ severity: 'error', summary: t('features.projects.teamFormation.teamSaveErrorSummary'), detail, life: 6000 })
     },
   })
 }
 
 // ──────────────────────────────────────────────
-// Fixed members - using store.fixedWorkers
+// Fixed members
 // ──────────────────────────────────────────────
 const selectedTreePerson = ref(null)
 
@@ -133,7 +129,7 @@ function fixSelectedMember() {
     m => m.personId === p.personId && m.roleId === p.roleId && m.projectId === p.projectId
   )
   if (isDuplicate) {
-    toast.add({ severity: 'warn', summary: 'Ya fijado', detail: 'Esta persona ya está fijada en ese rol', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.projects.teamFormation.alreadyFixedSummary'), detail: t('features.projects.teamFormation.alreadyFixedDetail'), life: 3000 })
     return
   }
   store.addFixedWorker({
@@ -160,7 +156,7 @@ function removeFixedMember(idx) {
     type="button"
     @click="panelOpen = true"
     class="fixed bottom-24 right-6 z-40 w-14 h-14 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center hover:bg-brand-600 transition-colors cursor-pointer"
-    title="Acciones y propuestas"
+    :title="t('features.projects.teamFormation.actionsTitle')"
   >
     <Settings2 class="w-6 h-6" />
   </button>
@@ -190,7 +186,7 @@ function removeFixedMember(idx) {
       >
         <!-- Header -->
         <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-          <h3 class="text-base font-semibold text-gray-800">Acciones</h3>
+          <h3 class="text-base font-semibold text-gray-800">{{ t('features.projects.teamFormation.actionsTitle') }}</h3>
           <button
             type="button"
             @click="panelOpen = false"
@@ -210,7 +206,7 @@ function removeFixedMember(idx) {
           >
             <Loader2 v-if="generating" class="w-4 h-4 animate-spin" />
             <Cog v-else class="w-4 h-4" />
-            Generar propuestas
+            {{ t('features.projects.teamFormation.generateProposals') }}
           </button>
           <div v-if="weightError" class="flex items-start gap-2 rounded-lg bg-error-50 border border-error-200 px-3 py-2.5">
             <AlertCircle class="w-4 h-4 text-error-500 flex-shrink-0 mt-0.5" />
@@ -224,10 +220,10 @@ function removeFixedMember(idx) {
           >
             <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
             <Save v-else class="w-4 h-4" />
-            Guardar propuesta seleccionada
+            {{ t('features.projects.teamFormation.saveSelectedProposal') }}
           </button>
           <p v-if="proposal?.length && selectedProposalIdx === null" class="text-xs text-gray-400 text-center">
-            Marca una propuesta del listado para poder guardarla.
+            {{ t('features.projects.teamFormation.selectProposalHint') }}
           </p>
           <button
             type="button"
@@ -239,23 +235,23 @@ function removeFixedMember(idx) {
               : 'border-gray-200 text-gray-700 hover:bg-gray-50'"
           >
             <Pin class="w-4 h-4" />
-            Fijar miembro
+            {{ t('features.projects.teamFormation.fixMemberBtn') }}
           </button>
         </div>
 
         <!-- Tabla de miembros fijados -->
         <div v-if="store.fixedWorkers.length" class="px-4 py-3 border-b border-gray-100 flex-shrink-0">
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            Miembros fijados
+            {{ t('features.projects.teamFormation.fixedMembersTitle') }}
             <span class="ml-1.5 text-brand-500 font-bold">{{ store.fixedWorkers.length }}</span>
           </p>
           <div class="overflow-auto max-h-44 rounded-lg border border-gray-200">
             <table class="min-w-full text-xs">
               <thead class="bg-gray-50 sticky top-0">
                 <tr>
-                  <th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">Equipo</th>
-                  <th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">Persona fijada</th>
-                  <th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">Rol</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.teamHeader') }}</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.fixedPersonHeader') }}</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.projects.teamFormation.roleLabel') }}</th>
                   <th class="px-2 py-2 w-7"></th>
                 </tr>
               </thead>
@@ -263,7 +259,7 @@ function removeFixedMember(idx) {
                 <tr v-for="(m, i) in store.fixedWorkers" :key="i" class="hover:bg-gray-50/60">
                   <td class="px-3 py-2 text-gray-700 truncate max-w-[7rem]">{{ m.projectName }}</td>
                   <td class="px-3 py-2 text-gray-700 whitespace-nowrap">{{ m.personName }}{{ m.surName ? ' ' + m.surName : '' }}</td>
-                  <td class="px-3 py-2 text-gray-500 truncate max-w-[6rem]">{{ m.roleName || 'Jefe' }}</td>
+                  <td class="px-3 py-2 text-gray-500 truncate max-w-[6rem]">{{ m.roleName || t('features.projects.teamFormation.bossLabel') }}</td>
                   <td class="px-2 py-2 text-right">
                     <button
                       type="button"
@@ -286,7 +282,7 @@ function removeFixedMember(idx) {
               <Users class="w-6 h-6 text-gray-300" />
             </div>
             <p class="text-xs text-gray-400 text-center leading-relaxed">
-              Aún no hay propuestas. Usa «Generar propuestas» para calcular los equipos.
+              {{ t('features.projects.teamFormation.noTeamsHint') }}
             </p>
           </div>
 
@@ -297,7 +293,6 @@ function removeFixedMember(idx) {
               class="rounded-lg transition-colors"
               :class="selectedProposalIdx === pIdx ? 'bg-brand-50/60 ring-1 ring-brand-200' : ''"
             >
-              <!-- Propuesta (radio para guardar + toggle de expansión) -->
               <div class="w-full flex items-center gap-2 px-2 py-2">
                 <input
                   type="radio"
@@ -305,7 +300,7 @@ function removeFixedMember(idx) {
                   :checked="selectedProposalIdx === pIdx"
                   @change="selectedProposalIdx = pIdx"
                   class="w-3.5 h-3.5 text-brand-500 border-gray-300 focus:ring-brand-500/20 cursor-pointer flex-shrink-0"
-                  title="Seleccionar esta propuesta para guardar"
+                  :title="t('features.projects.teamFormation.selectProposalHint')"
                 />
                 <button
                   type="button"
@@ -317,7 +312,7 @@ function removeFixedMember(idx) {
                     :class="expandedProposals.has(pIdx) ? 'rotate-90' : ''"
                   />
                   <Folder class="w-4 h-4 text-brand-400 flex-shrink-0" />
-                  <span class="text-sm font-semibold text-gray-700 truncate flex-1 text-left">Propuesta {{ pIdx + 1 }}</span>
+                  <span class="text-sm font-semibold text-gray-700 truncate flex-1 text-left">{{ t('features.projects.teamFormation.proposalLabel') }} {{ pIdx + 1 }}</span>
                   <span class="text-xs font-medium text-brand-500 flex-shrink-0 tabular-nums">{{ prop.formattedEval }}</span>
                 </button>
               </div>

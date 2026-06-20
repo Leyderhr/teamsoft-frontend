@@ -1,11 +1,13 @@
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import { useToast } from 'primevue/usetoast'
+import { parseApiError } from '@/lib/apiError'
 import userService from '@/features/users/services/userService.js'
 
 const props = defineProps({
@@ -16,6 +18,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'save', 'cancel'])
 const toast = useToast()
+const { t } = useI18n()
 
 // Form fields
 const personName = ref('')
@@ -33,12 +36,12 @@ onMounted(async () => {
   try {
     const data = await userService.getRoles()
     roleOptions.value = data
-  } catch (error) {
-    console.error('Error cargando roles:', error)
+  } catch (e) {
+    console.error('Error cargando roles:', e)
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: 'No se pudieron cargar los roles',
+      summary: t('common.error'),
+      detail: await parseApiError(e, t('features.users.rolesLoadError')),
       life: 3000
     })
   }
@@ -74,30 +77,30 @@ watch(
 )
 
 const dialogTitle = computed(() =>
-  props.mode === 'create' ? 'Nuevo Usuario' : 'Ver Usuario'
+  props.mode === 'create' ? t('features.users.dialogNewTitle') : t('features.users.dialogViewTitle')
 )
 
 const isEditMode = computed(() => props.mode === 'edit')
 
 const handleSave = () => {
   if (!personName.value?.trim()) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre es requerido', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.users.validationSummary'), detail: t('features.users.nameRequired'), life: 3000 })
     return
   }
   if (!surname.value?.trim()) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'El apellido es requerido', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.users.validationSummary'), detail: t('features.users.surnameRequired'), life: 3000 })
     return
   }
   if (!card.value?.trim()) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'La cédula es requerida', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.users.validationSummary'), detail: t('features.users.cardRequired'), life: 3000 })
     return
   }
   if (!mail.value?.trim()) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'El correo es requerido', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.users.validationSummary'), detail: t('features.users.mailRequired'), life: 3000 })
     return
   }
   if (!selectedRoles.value || selectedRoles.value.length === 0) {
-    toast.add({ severity: 'warn', summary: 'Validación', detail: 'Debe seleccionar al menos un rol', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.users.validationSummary'), detail: t('features.users.rolesRequired'), life: 3000 })
     return
   }
 
@@ -134,11 +137,11 @@ const handleCancel = () => {
       <!-- Nombre -->
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Nombre <span class="text-red-500">*</span>
+          {{ t('features.users.nameLabel') }} <span class="text-red-500">*</span>
         </label>
         <InputText
           v-model="personName"
-          placeholder="Ingrese el nombre"
+          :placeholder="t('features.users.nameLabel')"
           class="w-full"
           :disabled="isEditMode"
         />
@@ -147,11 +150,11 @@ const handleCancel = () => {
       <!-- Apellido -->
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Apellido <span class="text-red-500">*</span>
+          {{ t('features.users.surnameLabel') }} <span class="text-red-500">*</span>
         </label>
         <InputText
           v-model="surname"
-          placeholder="Ingrese el apellido"
+          :placeholder="t('features.users.surnameLabel')"
           class="w-full"
           :disabled="isEditMode"
         />
@@ -160,11 +163,11 @@ const handleCancel = () => {
       <!-- Cédula -->
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Cédula <span class="text-red-500">*</span>
+          {{ t('features.users.cardLabel') }} <span class="text-red-500">*</span>
         </label>
         <InputText
           v-model="card"
-          placeholder="Ingrese la cédula"
+          :placeholder="t('features.users.cardLabel')"
           class="w-full"
           :disabled="isEditMode"
         />
@@ -173,12 +176,12 @@ const handleCancel = () => {
       <!-- Correo -->
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Correo <span class="text-red-500">*</span>
+          {{ t('features.users.mailLabel') }} <span class="text-red-500">*</span>
         </label>
         <InputText
           v-model="mail"
           type="email"
-          placeholder="Ingrese el correo electrónico"
+          :placeholder="t('features.users.mailLabel')"
           class="w-full"
           :disabled="isEditMode"
         />
@@ -187,14 +190,14 @@ const handleCancel = () => {
       <!-- Roles -->
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Roles <span class="text-red-500">*</span>
+          {{ t('features.users.assignedRoles') }} <span class="text-red-500">*</span>
         </label>
         <Select
           v-model="selectedRoles"
           :options="roleOptions"
           optionLabel="name"
           optionValue="id"
-          placeholder="Seleccione roles"
+          :placeholder="t('features.users.availableRoles')"
           multiple
           filter
           class="w-full"
@@ -211,7 +214,7 @@ const handleCancel = () => {
           :disabled="isEditMode"
         />
         <label for="enabled" class="text-sm font-semibold text-[var(--ts-text-primary)]">
-          Usuario habilitado
+          {{ t('features.users.enabledCheckbox') }}
         </label>
       </div>
     </div>
@@ -220,7 +223,7 @@ const handleCancel = () => {
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button
-          label="Cerrar"
+          :label="t('features.users.close')"
           icon="pi pi-times"
           severity="secondary"
           outlined
@@ -228,7 +231,7 @@ const handleCancel = () => {
         />
         <Button
           v-if="!isEditMode"
-          label="Guardar"
+          :label="t('common.save')"
           icon="pi pi-check"
           @click="handleSave"
         />

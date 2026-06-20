@@ -60,7 +60,7 @@ const _baseApi = ky.create({
   prefix: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
   timeout: 100000,
   headers: {
-    'Accept': 'application/json'   // <-- agrega esta línea
+    'Accept': 'application/json'
   },
   hooks: {
     afterResponse: [
@@ -69,6 +69,12 @@ const _baseApi = ky.create({
         const url = response.url || ''
 
         if (response.status === 401 && !isPublicEndpoint(url)) {
+          
+          if (request.headers.has('X-Is-Retry')) {
+            forceLogin()
+            return response
+          }
+          
           const authStore = useAuthStore()
           const failedToken = bearerToken(request.headers.get('Authorization'))
           const currentToken = authStore.getAccessToken()

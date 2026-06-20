@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import {
   Save, Loader2,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
@@ -10,6 +11,7 @@ import {
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import userService from '@/features/users/services/userService.js'
 import userRoleService from '@/features/users/services/userRoleService.js'
+import { parseApiError } from '@/lib/apiError'
 
 const props = defineProps({
   mode: { type: String, default: 'create' },
@@ -18,6 +20,7 @@ const props = defineProps({
 const router = useRouter()
 const route  = useRoute()
 const toast  = useToast()
+const { t }  = useI18n()
 
 // ── Campos básicos ──────────────────────────────────────────────
 const personName = ref('')
@@ -51,7 +54,7 @@ const assignedRolesList = computed(() =>
 
 // ── Computed ────────────────────────────────────────────────────
 const isEditMode = computed(() => props.mode === 'edit')
-const pageTitle  = computed(() => isEditMode.value ? 'Editar Usuario' : 'Nuevo Usuario')
+const pageTitle  = computed(() => isEditMode.value ? t('features.users.editTitle') : t('features.users.newTitle'))
 
 // ── Carga inicial ───────────────────────────────────────────────
 onMounted(async () => {
@@ -60,7 +63,7 @@ onMounted(async () => {
     const rolesData = await userRoleService.getAllRoles()
     roleOptions.value = rolesData
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los roles', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.users.rolesLoadError'), life: 3000 })
   }
 
   // Si estamos en modo edición, cargar datos del usuario
@@ -80,7 +83,7 @@ onMounted(async () => {
         selectedRoles.value = u.roles.map(role => role.id)
       }
     } catch (error) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el usuario', life: 3000 })
+      toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.users.loadError'), life: 3000 })
     }
   }
 })
@@ -140,11 +143,11 @@ async function handleSave() {
   }
 
   if (hasErrors) {
-    toast.add({ 
-      severity: 'warn', 
-      summary: 'Validación', 
-      detail: 'Por favor complete todos los campos requeridos', 
-      life: 4000 
+    toast.add({
+      severity: 'warn',
+      summary: t('common.warning'),
+      detail: t('features.users.completeRequiredFields'),
+      life: 4000
     })
     return
   }
@@ -162,17 +165,17 @@ async function handleSave() {
 
     if (isEditMode.value) {
       await userService.update(route.params.id, payload)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario actualizado correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.users.updated'), life: 3000 })
     } else {
       await userService.create(payload)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario creado correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.users.created'), life: 3000 })
     }
     router.push('/manage-user-role/users')
   } catch (e) {
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: e?.response?.data?.message ?? 'Error al guardar el usuario',
+      summary: t('common.error'),
+      detail: await parseApiError(e, t('common.saveError')),
       life: 3000,
     })
   } finally {
@@ -185,7 +188,7 @@ async function handleSave() {
   <div class="space-y-6">
     <PageBreadcrumb
         :page-title="pageTitle"
-        :items="[{ label: 'Usuarios', path: '/manage-user-role/users' }]"
+        :items="[{ label: t('features.users.editTitle').replace('Editar ', '').replace('Edit ', ''), path: '/manage-user-role/users' }]"
     />
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
@@ -198,10 +201,10 @@ async function handleSave() {
           </div>
           <div>
             <h2 class="text-base font-semibold text-gray-800">
-              {{ isEditMode ? 'Datos del Usuario' : 'Información del Nuevo Usuario' }}
+              {{ isEditMode ? t('features.users.userData') : t('features.users.newUserInfo') }}
             </h2>
             <p class="text-xs text-gray-400 mt-0.5">
-              {{ isEditMode ? 'Modifica los campos y guarda los cambios' : 'Completa los campos para crear el usuario' }}
+              {{ isEditMode ? t('features.users.editSubtitle') : t('features.users.createSubtitle') }}
             </p>
           </div>
         </div>
@@ -209,7 +212,7 @@ async function handleSave() {
         <!-- Toggle habilitado/deshabilitado -->
         <div class="flex items-center gap-3 flex-shrink-0">
           <span class="text-sm font-medium" :class="enabled ? 'text-success-600' : 'text-gray-400'">
-            {{ enabled ? 'Habilitado' : 'Deshabilitado' }}
+            {{ enabled ? t('features.users.enabled') : t('features.users.disabled') }}
           </span>
           <button
               type="button"
@@ -231,79 +234,79 @@ async function handleSave() {
 
         <!-- ── Sección 1: Datos personales (grid 2×2) ─────────────── -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Datos personales</h3>
+          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{{ t('features.users.personalData') }}</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Nombre -->
             <div class="space-y-1">
               <label class="block text-sm font-medium text-gray-700">
-                Nombre <span class="text-error-500">*</span>
+                {{ t('features.users.nameLabel') }} <span class="text-error-500">*</span>
               </label>
               <input
                   v-model="personName"
                   type="text"
-                  placeholder="Ingrese el nombre"
+                  :placeholder="t('features.users.nameLabel')"
                   :class="[
                     'w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
-                    errors.personName 
-                      ? 'border-error-500 focus:ring-error-500/20 focus:border-error-500' 
+                    errors.personName
+                      ? 'border-error-500 focus:ring-error-500/20 focus:border-error-500'
                       : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500'
                   ]"
               />
-              <p v-if="errors.personName" class="text-xs text-error-500 mt-1">El nombre es requerido</p>
+              <p v-if="errors.personName" class="text-xs text-error-500 mt-1">{{ t('features.users.nameRequired') }}</p>
             </div>
             <!-- Apellido -->
             <div class="space-y-1">
               <label class="block text-sm font-medium text-gray-700">
-                Apellido <span class="text-error-500">*</span>
+                {{ t('features.users.surnameLabel') }} <span class="text-error-500">*</span>
               </label>
               <input
                   v-model="surname"
                   type="text"
-                  placeholder="Ingrese el apellido"
+                  :placeholder="t('features.users.surnameLabel')"
                   :class="[
                     'w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
-                    errors.surname 
-                      ? 'border-error-500 focus:ring-error-500/20 focus:border-error-500' 
+                    errors.surname
+                      ? 'border-error-500 focus:ring-error-500/20 focus:border-error-500'
                       : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500'
                   ]"
               />
-              <p v-if="errors.surname" class="text-xs text-error-500 mt-1">El apellido es requerido</p>
+              <p v-if="errors.surname" class="text-xs text-error-500 mt-1">{{ t('features.users.surnameRequired') }}</p>
             </div>
             <!-- Cédula / Carnet de Identidad -->
             <div class="space-y-1">
               <label class="block text-sm font-medium text-gray-700">
-                Cédula / Carnet de Identidad <span class="text-error-500">*</span>
+                {{ t('features.users.cardLabel') }} <span class="text-error-500">*</span>
               </label>
               <input
                   v-model="card"
                   type="text"
-                  placeholder="Ingrese la cédula"
+                  :placeholder="t('features.users.cardLabel')"
                   :class="[
                     'w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
-                    errors.card 
-                      ? 'border-error-500 focus:ring-error-500/20 focus:border-error-500' 
+                    errors.card
+                      ? 'border-error-500 focus:ring-error-500/20 focus:border-error-500'
                       : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500'
                   ]"
               />
-              <p v-if="errors.card" class="text-xs text-error-500 mt-1">La cédula es requerida</p>
+              <p v-if="errors.card" class="text-xs text-error-500 mt-1">{{ t('features.users.cardRequired') }}</p>
             </div>
             <!-- Correo -->
             <div class="space-y-1">
               <label class="block text-sm font-medium text-gray-700">
-                Correo <span class="text-error-500">*</span>
+                {{ t('features.users.mailLabel') }} <span class="text-error-500">*</span>
               </label>
               <input
                   v-model="mail"
                   type="email"
-                  placeholder="Ingrese el correo electrónico"
+                  :placeholder="t('features.users.mailLabel')"
                   :class="[
                     'w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
-                    errors.mail 
-                      ? 'border-error-500 focus:ring-error-500/20 focus:border-error-500' 
+                    errors.mail
+                      ? 'border-error-500 focus:ring-error-500/20 focus:border-error-500'
                       : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500'
                   ]"
               />
-              <p v-if="errors.mail" class="text-xs text-error-500 mt-1">El correo es requerido</p>
+              <p v-if="errors.mail" class="text-xs text-error-500 mt-1">{{ t('features.users.mailRequired') }}</p>
             </div>
           </div>
         </div>
@@ -311,9 +314,9 @@ async function handleSave() {
         <!-- ── Sección 2: Asignación de roles ─────────────────────── -->
         <div>
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Asignación de roles</h3>
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">{{ t('features.users.rolesSection') }}</h3>
             <span v-if="errors.roles" class="text-xs text-error-500 font-medium">
-              Debe seleccionar al menos un rol
+              {{ t('features.users.rolesRequired') }}
             </span>
           </div>
 
@@ -322,7 +325,7 @@ async function handleSave() {
             <!-- Columna izquierda: disponibles -->
             <div class="flex flex-col gap-1">
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700">Roles disponibles</span>
+                <span class="text-sm font-medium text-gray-700">{{ t('features.users.availableRoles') }}</span>
                 <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                   {{ notAssignedRoles.length }}
                 </span>
@@ -346,7 +349,7 @@ async function handleSave() {
                   <span class="text-sm text-gray-700 truncate">{{ role.name }}</span>
                 </div>
                 <div v-if="!notAssignedRoles.length" class="flex items-center justify-center h-full py-8 text-xs text-gray-400">
-                  Sin roles disponibles
+                  {{ t('features.users.noAvailableRoles') }}
                 </div>
               </div>
             </div>
@@ -356,7 +359,7 @@ async function handleSave() {
               <!-- Mover selección → derecha -->
               <button
                   type="button"
-                  title="Agregar seleccionados"
+                  :title="t('features.users.availableRoles')"
                   :disabled="!leftSelected.length"
                   @click="moveOneRight"
                   class="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:border-brand-400 hover:text-brand-500 hover:bg-brand-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -366,7 +369,7 @@ async function handleSave() {
               <!-- Mover todos → derecha -->
               <button
                   type="button"
-                  title="Agregar todos"
+                  :title="t('features.users.availableRoles')"
                   :disabled="!notAssignedRoles.length"
                   @click="moveAllRight"
                   class="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:border-brand-400 hover:text-brand-500 hover:bg-brand-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -376,7 +379,7 @@ async function handleSave() {
               <!-- Mover selección → izquierda -->
               <button
                   type="button"
-                  title="Quitar seleccionados"
+                  :title="t('features.users.assignedRoles')"
                   :disabled="!rightSelected.length"
                   @click="moveOneLeft"
                   class="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:border-error-400 hover:text-error-500 hover:bg-error-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -386,7 +389,7 @@ async function handleSave() {
               <!-- Mover todos → izquierda -->
               <button
                   type="button"
-                  title="Quitar todos"
+                  :title="t('features.users.assignedRoles')"
                   :disabled="!assignedRolesList.length"
                   @click="moveAllLeft"
                   class="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:border-error-400 hover:text-error-500 hover:bg-error-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -398,7 +401,7 @@ async function handleSave() {
             <!-- Columna derecha: asignados -->
             <div class="flex flex-col gap-1">
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700">Roles asignados</span>
+                <span class="text-sm font-medium text-gray-700">{{ t('features.users.assignedRoles') }}</span>
                 <span
                     class="text-xs px-2 py-0.5 rounded-full"
                     :class="assignedRolesList.length
@@ -432,7 +435,7 @@ async function handleSave() {
                   <span class="text-sm text-gray-700 truncate">{{ role.name }}</span>
                 </div>
                 <div v-if="!assignedRolesList.length" class="flex items-center justify-center h-full py-8 text-xs text-gray-400">
-                  Sin roles asignados
+                  {{ t('features.users.noAssignedRoles') }}
                 </div>
               </div>
             </div>
@@ -448,7 +451,7 @@ async function handleSave() {
             @click="router.push('/manage-user-role/users')"
             class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
-          Cancelar
+          {{ t('common.cancel') }}
         </button>
         <button
             type="button"
@@ -458,7 +461,7 @@ async function handleSave() {
         >
           <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
           <Save v-else class="w-4 h-4" />
-          {{ saving ? 'Guardando...' : 'Guardar' }}
+          {{ saving ? t('common.saving') : t('common.save') }}
         </button>
       </div>
 

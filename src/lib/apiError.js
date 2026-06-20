@@ -1,54 +1,90 @@
-// Traduce errores de la API (ky HTTPError) a un mensaje legible para el usuario.
-// Cubre las formas que produce el GlobalExceptionHandler del backend:
-//   { status, error }                              -> regla de negocio / no encontrado
-//   { status, error: 'Validation failed', fieldErrors }
-//   { status, error: 'Validation failed', messages }
-//   { status, error: 'Malformed JSON request', message, details }
-// y la forma antigua { 'Error: ': code } por compatibilidad.
+import { i18n } from '@/i18n'
 
-const CODE_MESSAGES = {
-  fo_weights_most_sum_one:
-    'Los pesos de los factores habilitados deben sumar exactamente 1.0',
-  impossible_get_proposal:
-    'No fue posible generar una propuesta con la configuración y las personas fijadas actuales. Ajusta los factores o revisa los miembros fijados.',
-}
-
-function messageFromBody(body, fallback) {
-  if (!body || typeof body !== 'object') return fallback
-
-  const raw = body.error ?? body.message ?? body['Error: ']
-
-  // Código de negocio conocido -> mensaje amigable
-  if (typeof raw === 'string' && CODE_MESSAGES[raw]) return CODE_MESSAGES[raw]
-
-  // Errores de validación por campo (@Valid)
-  if (body.fieldErrors && typeof body.fieldErrors === 'object') {
-    const parts = Object.values(body.fieldErrors).filter(Boolean)
-    if (parts.length) return parts.join(' · ')
-  }
-
-  // Errores de validación de parámetros
-  if (Array.isArray(body.messages) && body.messages.length) {
-    return body.messages.filter(Boolean).join(' · ')
-  }
-
-  return (typeof raw === 'string' && raw) || body.detail || fallback
-}
-
-/**
- * Extrae un mensaje legible de un error de la API.
- * @param {unknown} error  Error lanzado por ky (HTTPError con .response) u otro.
- * @param {string} fallback Mensaje por defecto si no se puede parsear.
- * @returns {Promise<string>}
- */
 export async function parseApiError(error, fallback = 'Ocurrió un error en el servidor') {
-  const response = error?.response
-  if (response && typeof response.json === 'function') {
-    try {
-      return messageFromBody(await response.json(), fallback)
-    } catch {
-      /* cuerpo no-JSON o ya consumido */
+  // Si el error no trae respuesta del backend, devolvemos el error genérico.
+  if (!error || !error.response) return error?.message || fallback;
+
+  let body;
+  try {
+    // ky v2 pre-reads the response body into error.data before throwing HTTPError,
+    // so error.response.text() would fail (body already consumed). Use error.data directly.
+    if (error.data !== undefined) {
+      body = typeof error.data === 'string' ? JSON.parse(error.data) : error.data;
+    } else {
+      const text = await error.response.text();
+      body = JSON.parse(text);
     }
+  } catch (err) {
+    return error.message || fallback;
   }
-  return error?.message || fallback
+
+  // Envoltorio super seguro para intentar traducir sin que la app crashee
+  const translateSafe = (key, params = []) => {
+    try {
+      if (i18n && i18n.global && typeof i18n.global.t === 'function') {
+        const result = i18n.global.t(key, params);
+        // vue-i18n devuelve la misma llave si no encuentra la traducción
+        return result !== key ? result : null;
+      }
+    } catch (e) {
+      console.warn("Advertencia de traducción:", e);
+    }
+    return null;
+  };
+
+  try {
+    // === 1. NUEVA ESTRUCTURA DEL BACKEND ===
+    if (body && body.errorCode) {
+      const code = String(body.errorCode).trim();
+
+      // DTO Validation Errors
+      if (code === 'VALIDATION_FAILED' && body.parameters) {
+        let fieldCodes = [];
+        
+        if (Array.isArray(body.parameters)) {
+          fieldCodes = body.parameters;
+        } else if (typeof body.parameters === 'object') {
+          fieldCodes = Object.values(body.parameters);
+        }
+
+        if (fieldCodes.length > 0) {
+          const translatedErrors = fieldCodes.filter(Boolean).map(errItem => {
+            const cleanErrCode = String(errItem).trim();
+            const translation = translateSafe(`errors.${cleanErrCode}`);
+            
+            // Si la traducción no existe en tu errors.json, te muestra el código crudo (ej: ERR_VAL_...)
+            return translation ? translation : cleanErrCode; 
+          });
+          return translatedErrors.join(' · ');
+        }
+      }
+
+      // Business Logic Errors (Service)
+      const params = Array.isArray(body.parameters) ? body.parameters : [];
+      const translation = translateSafe(`errors.${code}`, params);
+      return translation ? translation : code;
+    }
+
+    // === 2. ESTRUCTURAS ANTIGUAS Y COMPATIBILIDAD ===
+    const raw = body.error ?? body.message ?? body['Error: '];
+    if (typeof raw === 'string') {
+      const translation = translateSafe(`errors.${raw.trim()}`);
+      if (translation) return translation;
+    }
+
+    // Manejo nativo de Spring Boot
+    if (body.fieldErrors && typeof body.fieldErrors === 'object') {
+      return Object.values(body.fieldErrors).filter(Boolean).join(' · ');
+    }
+
+    if (Array.isArray(body.messages) && body.messages.length) {
+      return body.messages.filter(Boolean).join(' · ');
+    }
+
+    return (typeof raw === 'string' && raw) || body.detail || fallback;
+
+  } catch (e) {
+    // En caso de cualquier otro fallo matemático, devuelve el error por defecto y no rompe tu UI
+    return error.message || fallback;
+  }
 }
