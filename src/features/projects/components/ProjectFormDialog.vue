@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Calendar from 'primevue/calendar'
@@ -19,6 +20,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:visible', 'save', 'cancel'])
+const { t } = useI18n()
 const toast = useToast()
 
 const projectName = ref('')
@@ -34,7 +36,7 @@ const provinceOptions = ref([])
 const projectStructureOptions = ref([])
 
 const dialogTitle = computed(() => {
-  return props.mode === 'create' ? 'Crear Proyectos' : 'Editar Proyecto'
+  return props.mode === 'create' ? t('features.projects.createTitle') : t('features.projects.editTitle')
 })
 
 const canAddProject = computed(() => {
@@ -71,8 +73,8 @@ const loadOptions = async () => {
     console.error('Error loading options:', error)
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: 'No se pudieron cargar las opciones',
+      summary: t('common.error'),
+      detail: t('common.loadOptionsError'),
       life: 3000
     })
   }
@@ -136,8 +138,8 @@ const handleSave = () => {
     if (!canAddProject.value) {
       toast.add({
         severity: 'warn',
-        summary: 'Validación',
-        detail: 'Complete todos los campos requeridos',
+        summary: t('common.validation'),
+        detail: t('common.completeRequired'),
         life: 3000
       })
       return
@@ -157,8 +159,8 @@ const handleSave = () => {
     if (projectsList.value.length === 0) {
       toast.add({
         severity: 'warn',
-        summary: 'Validación',
-        detail: 'Debe agregar al menos un proyecto',
+        summary: t('common.validation'),
+        detail: t('features.projects.addAtLeastOne'),
         life: 3000
       })
       return
@@ -205,19 +207,19 @@ watch(() => props.visible, async (newVal) => {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <div class="field">
           <label for="projectName" class="block mb-2 text-sm font-semibold">
-            Nombre del Proyecto <span class="text-red-500">*</span>
+            {{ t('features.projects.nameLabel') }} <span class="text-red-500">*</span>
           </label>
           <InputText
               id="projectName"
               v-model="projectName"
               class="w-full"
-              placeholder="Nombre"
+              :placeholder="t('features.projects.namePlaceholder')"
           />
         </div>
 
         <div class="field">
           <label for="initialDate" class="block mb-2 text-sm font-semibold">
-            Fecha Inicial <span class="text-red-500">*</span>
+            {{ t('features.projects.startDateLabel') }} <span class="text-red-500">*</span>
           </label>
           <Calendar
               id="initialDate"
@@ -231,7 +233,7 @@ watch(() => props.visible, async (newVal) => {
 
         <div class="field">
           <label for="client" class="block mb-2 text-sm font-semibold">
-            Cliente <span class="text-red-500">*</span>
+            {{ t('features.projects.clientLabel') }} <span class="text-red-500">*</span>
           </label>
           <Dropdown
               id="client"
@@ -239,7 +241,7 @@ watch(() => props.visible, async (newVal) => {
               :options="clientOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Seleccione"
+              :placeholder="t('common.select')"
               class="w-full"
               :filter="true"
           />
@@ -247,7 +249,7 @@ watch(() => props.visible, async (newVal) => {
 
         <div class="field">
           <label for="province" class="block mb-2 text-sm font-semibold">
-            Provincia <span class="text-red-500">*</span>
+            {{ t('common.fields.province') }} <span class="text-red-500">*</span>
           </label>
           <Dropdown
               id="province"
@@ -255,7 +257,7 @@ watch(() => props.visible, async (newVal) => {
               :options="provinceOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Seleccione"
+              :placeholder="t('common.select')"
               class="w-full"
               :filter="true"
           />
@@ -264,7 +266,7 @@ watch(() => props.visible, async (newVal) => {
 
       <div class="field mb-4">
         <label for="projectStructure" class="block mb-2 text-sm font-semibold">
-          Estructura del Proyecto <span class="text-red-500">*</span>
+          {{ t('features.projects.structureLabel') }} <span class="text-red-500">*</span>
         </label>
         <Dropdown
             id="projectStructure"
@@ -272,7 +274,7 @@ watch(() => props.visible, async (newVal) => {
             :options="projectStructureOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Seleccione una estructura"
+            :placeholder="t('features.projects.structurePlaceholder')"
             class="w-full"
             :filter="true"
         />
@@ -280,7 +282,7 @@ watch(() => props.visible, async (newVal) => {
 
       <div v-if="mode === 'create'" class="mb-4">
         <Button
-            label="Agregar Proyecto"
+            :label="t('features.projects.addProject')"
             icon="pi pi-plus"
             @click="addProject"
             :disabled="!canAddProject"
@@ -298,9 +300,9 @@ watch(() => props.visible, async (newVal) => {
         >
           <template #header>
             <div class="flex justify-between items-center">
-              <span class="font-semibold">Proyectos a Crear</span>
+              <span class="font-semibold">{{ t('features.projects.projectsToCreate') }}</span>
               <Button
-                  label="Eliminar Seleccionados"
+                  :label="t('common.deleteSelected')"
                   icon="pi pi-trash"
                   severity="danger"
                   size="small"
@@ -311,10 +313,10 @@ watch(() => props.visible, async (newVal) => {
           </template>
 
           <Column selectionMode="multiple" style="width: 3rem" />
-          <Column field="projectName" header="Nombre" />
-          <Column field="clientName" header="Cliente" />
-          <Column field="provinceName" header="Provincia" />
-          <Column header="Fecha Inicial">
+          <Column field="projectName" :header="t('common.fields.name')" />
+          <Column field="clientName" :header="t('features.projects.clientLabel')" />
+          <Column field="provinceName" :header="t('common.fields.province')" />
+          <Column :header="t('features.projects.startDateLabel')">
             <template #body="slotProps">
               {{ new Date(slotProps.data.initialDate).toLocaleDateString() }}
             </template>
@@ -322,7 +324,7 @@ watch(() => props.visible, async (newVal) => {
 
           <template #empty>
             <div class="text-center py-4 text-gray-500">
-              No hay proyectos agregados
+              {{ t('features.projects.noProjects') }}
             </div>
           </template>
         </DataTable>
@@ -330,8 +332,8 @@ watch(() => props.visible, async (newVal) => {
     </div>
 
     <template #footer>
-      <Button label="Cancelar" icon="pi pi-times" @click="handleCancel" class="p-button-text" />
-      <Button label="Guardar" icon="pi pi-check" @click="handleSave" />
+      <Button :label="t('common.cancel')" icon="pi pi-times" @click="handleCancel" class="p-button-text" />
+      <Button :label="t('common.save')" icon="pi pi-check" @click="handleSave" />
     </template>
   </Dialog>
 </template>

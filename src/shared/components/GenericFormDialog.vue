@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
@@ -17,12 +18,16 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'save', 'cancel'])
 
+const { t } = useI18n()
+
 const formData = ref({})
 const selectOptions = ref({})
 const errors = ref({})
 
 const dialogTitle = computed(() => {
-  return props.mode === 'create' ? `Crear ${props.title}` : `Editar ${props.title}`
+  return props.mode === 'create'
+    ? t('common.create') + ' ' + t(props.title)
+    : t('common.edit') + ' ' + t(props.title)
 })
 
 const initializeForm = () => {
@@ -54,7 +59,7 @@ const validate = () => {
   const newErrors = {}
   props.fields.forEach(field => {
     if (field.required && !formData.value[field.name]) {
-      newErrors[field.name] = `${field.label} es requerido`
+      newErrors[field.name] = t('common.fieldRequired', [t(field.label)])
     }
   })
   errors.value = newErrors
@@ -102,7 +107,7 @@ onMounted(() => {
     <div class="form-container">
       <div v-for="field in fields" :key="field.name" class="field mb-4">
         <label :for="field.name" class="block mb-2 font-semibold text-gray-700">
-          {{ field.label }}
+          {{ t(field.label) }}
           <span v-if="field.required" class="text-red-500">*</span>
         </label>
 
@@ -131,7 +136,7 @@ onMounted(() => {
           :options="selectOptions[field.name] || []"
           optionLabel="label"
           optionValue="value"
-          :placeholder="`Seleccione ${field.label}`"
+          :placeholder="t('common.select')"
           :class="{ 'p-invalid': errors[field.name] }"
           class="w-full"
         />
@@ -150,8 +155,8 @@ onMounted(() => {
     </div>
 
     <template #footer>
-      <Button label="Cancelar" icon="pi pi-times" @click="handleCancel" class="p-button-text" />
-      <Button label="Guardar" icon="pi pi-check" @click="handleSave" />
+      <Button :label="t('common.cancel')" icon="pi pi-times" @click="handleCancel" class="p-button-text" />
+      <Button :label="t('common.save')" icon="pi pi-check" @click="handleSave" />
     </template>
   </Dialog>
 </template>

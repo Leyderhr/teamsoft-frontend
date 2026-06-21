@@ -120,7 +120,8 @@
     "listTitle": "Lista de Competencias",
     "entity": { "singular": "competencia", "plural": "competencias" },
     "columns": { "technical": "Técnica" },
-    "fields": { "name": "Nombre de la Competencia", "technical": "Técnica" }
+    "fields": { "name": "Nombre de la Competencia", "technical": "Técnica" },
+    "associatedCount": "{0} competencia(s) asociada(s)"
   },
   "competenceDimension": {
     "title": "Dimensiones de Competencia",
@@ -163,6 +164,7 @@
     "entity": { "singular": "rol", "plural": "roles" },
     "columns": { "impact": "Impacto", "isBoss": "Jefe de Equipo" },
     "fields": { "roleName": "Nombre del Rol", "impact": "Impacto", "isBoss": "Jefe de Equipo" },
+    "associatedCount": "{0} competencia(s) asociada(s)",
     "roleCompetition": {
       "title": "Competencias del Rol",
       "listTitle": "Lista de Competencias del Rol",
@@ -562,7 +564,10 @@
       "levelLabel": "Nivel",
       "nameHeader": "Nombre",
       "surnameHeader": "Apellidos",
-      "dniHeader": "DNI"
+      "dniHeader": "DNI",
+      "name": "Nombre",
+      "startDate": "Fecha Inicio",
+      "state": "Estado"
     },
     "finalizeTeam": {
       "title": "Finalizar Equipo",
@@ -622,7 +627,10 @@
       "dniHeader": "DNI",
       "roleHeader": "Rol",
       "evaluationHeader": "Evaluación",
-      "confirmMessage": "¿Deseas finalizar el equipo «{0}»? Se registrarán las evaluaciones y el estado pasará a Finalizado."
+      "confirmMessage": "¿Deseas finalizar el equipo «{0}»? Se registrarán las evaluaciones y el estado pasará a Finalizado.",
+      "name": "Nombre",
+      "startDate": "Fecha Inicio",
+      "state": "Estado"
     },
     "teamFormation": {
       "title": "Formar Equipo",
@@ -741,8 +749,33 @@
     }
   },
   "reports": {
-    "personReport": { "title": "Reporte de Personas" },
-    "finishedTeams": { "title": "Equipos Cerrados" },
+    "personReport": {
+      "title": "Reporte de Personas",
+      "workload": "Carga de trabajo",
+      "load": "Carga",
+      "status": "Estado",
+      "assignedProjects": "Proyectos asignados",
+      "backToList": "Volver al listado",
+      "noProjects": "Sin proyectos asignados",
+      "evaluation": "Evaluación",
+      "rolesIn": "Roles en",
+      "selectedProject": "proyecto seleccionado",
+      "selectProjectHint": "Seleccione un proyecto para ver los roles",
+      "noRoles": "Sin roles en este proyecto"
+    },
+    "finishedTeams": {
+      "title": "Equipos Cerrados",
+      "teamTitle": "Equipo del Proyecto",
+      "startDate": "Fecha Inicio",
+      "endDate": "Fecha Fin",
+      "state": "Estado",
+      "name": "Nombre",
+      "evaluation": "Evaluación",
+      "loadError": "No se pudieron cargar los equipos cerrados",
+      "selectTeam": "Seleccione un equipo para ver el reporte",
+      "teamLoadError": "No se pudo cargar el equipo del proyecto",
+      "teamMembers": "Miembros del Equipo"
+    },
     "listWorkers": { "title": "Listar Personas" },
     "searchFilters": "Filtros de búsqueda",
     "selectRole": "Seleccionar Rol",
@@ -803,10 +836,142 @@
   },
   "import": {
     "title": "Importar Personas",
-    "configTitle": "Configuración de Importación"
+    "configTitle": "Configuración de Importación",
+    "wizard": {
+      "title": "Importar Personas",
+      "csvFile": "Archivo CSV",
+      "processing": "Procesando archivo...",
+      "clickToChange": "Haga clic para cambiar",
+      "clickToSelect": "Haga clic para seleccionar un archivo CSV",
+      "maxSize": "Máximo 10 MB",
+      "detectedColumns": "Columnas detectadas en el archivo:",
+      "targetGroup": "Grupo destino",
+      "selectGroup": "Seleccione un grupo",
+      "personMappingHint": "Asocie cada columna del archivo con el campo correspondiente en la entidad Persona.",
+      "csvColumn": "Columna CSV",
+      "targetField": "Campo destino",
+      "addMapping": "Agregar mapeo",
+      "competenceMappingHint": "Asocie cada columna del CSV con una o más competencias que representa.",
+      "competenceWeights": "Pesos de Competencias",
+      "total": "Total",
+      "noCompetencesMapped": "No hay competencias mapeadas.",
+      "numericMaxValues": "Valores Máximos Numéricos",
+      "noNumericColumns": "No se detectaron columnas numéricas.",
+      "roleMappingHint": "Asocie columnas del CSV con el rol que representan.",
+      "selectRole": "Seleccione rol",
+      "fileAndGroup": "Archivo y Grupo",
+      "file": "Archivo",
+      "group": "Grupo",
+      "noGroup": "Sin grupo",
+      "personAttrMapping": "Mapeo de Atributos de Persona",
+      "personField": "Campo de Persona",
+      "competenceMapping": "Mapeo de Competencias",
+      "competences": "Competencias",
+      "roleMapping": "Mapeo de Roles",
+      "role": "Rol",
+      "importCompleted": "Importación completada exitosamente.",
+      "recordsImported": "registros importados.",
+      "stepOf": "Paso {0} de {1}",
+      "importing": "Importando...",
+      "import": "Importar",
+      "newImport": "Nueva Importación",
+      "fileLoaded": "Archivo cargado",
+      "columnsDetected": "{0} columnas detectadas",
+      "demoMode": "Modo demo",
+      "demoColumns": "Columnas simuladas (API no disponible)",
+      "importSuccess": "Importación exitosa",
+      "importSuccessDetail": "Se importaron los datos correctamente",
+      "importError": "No se pudo completar la importación",
+      "competenceFallback": "Competencia",
+      "steps": {
+        "selectFile": "Seleccionar Archivo",
+        "personAttributes": "Atributos de Persona",
+        "competenceAttributes": "Atributos de Competencia",
+        "configureCompetences": "Configurar Competencias",
+        "roleAttributes": "Atributos de Rol",
+        "verifyImport": "Verificar e Importar"
+      },
+      "personFields": {
+        "personName": "Nombre",
+        "surName": "Apellidos",
+        "card": "Carné/CI",
+        "address": "Dirección",
+        "phone": "Teléfono",
+        "email": "Correo electrónico",
+        "sex": "Sexo",
+        "inDate": "Fecha de ingreso",
+        "birthDate": "Fecha de nacimiento",
+        "workload": "Carga laboral",
+        "experience": "Años de experiencia",
+        "status": "Estado",
+        "tipoMB": "Tipo MBTI"
+      }
+    },
+    "config": {
+      "title": "Configuración de Importación",
+      "saved": "Configuración guardada correctamente",
+      "saveError": "No se pudo guardar la configuración",
+      "cutoffPoint": "Punto de Corte",
+      "cutoffHint": "Umbral mínimo de compatibilidad para asignar un trabajador a un rol.",
+      "yearsExperience": "Número de Años de Experiencia",
+      "updateIfExists": "Actualizar si existe",
+      "ignore": "Ignorar",
+      "updateValues": "Actualizar valores",
+      "oldValuesAction": "Acciones en valores antiguos",
+      "keepOldValues": "Mantener valores antiguos",
+      "deleteOldValues": "Eliminar valores antiguos"
+    }
   },
   "experiments": {
-    "configTitle": "Configuración del Experimento"
+    "configTitle": "Configuración del Experimento",
+    "title": "Configuración del Experimento",
+    "teamSoftParams": "Parámetros de TeamSoft",
+    "initialSolutionLabel": "Solución Inicial",
+    "personTries": "Intentos por persona",
+    "operatorLabel": "Operador",
+    "operatorTypeLabel": "Tipo de Operador",
+    "notApplicableRandom": "No aplica para Aleatorio",
+    "configStrategy": "Estrategia de Configuración",
+    "executions": "Ejecuciones",
+    "iterations": "Iteraciones",
+    "calculateTime": "Calcular tiempo",
+    "validate": "Validar",
+    "validationsNumber": "Número de validaciones",
+    "algorithmParams": "Parámetros del Algoritmo (BICIAM)",
+    "hillClimbingRestart": "Reinicio Hill Climbing",
+    "tabuListSize": "Tamaño de Lista Tabú",
+    "multiobjHCRestartNeighbors": "Vecindad HC Multiobjetivo con Reinicio",
+    "multiobjHCDistanceNeighbors": "Distancia HC Multiobjetivo con Reinicio",
+    "multiobjTabuSize": "Tamaño Tabú Multiobjetivo",
+    "initialSolution": {
+      "belbin": "Belbin",
+      "competences": "Competencias",
+      "minRoles": "Mínimo de roles",
+      "teamBoss": "Jefe de equipo",
+      "random": "Aleatorio"
+    },
+    "operator": {
+      "mutation": "Mutación",
+      "crossover": "Cruzamiento",
+      "random": "Aleatorio"
+    },
+    "mutationType": {
+      "substitution": "Sustitución",
+      "rolePermutation": "Permutación de roles",
+      "projectPermutation": "Permutación de proyectos",
+      "bossSubstitution": "Sustitución del jefe",
+      "allRolesPermutation": "Permutación en todos los roles"
+    },
+    "crossoverType": {
+      "projectVector": "Cruce de vector de proyecto",
+      "roleVector": "Cruce de vector de rol",
+      "personVector": "Cruce de vector de persona",
+      "roleExperience": "Cruce de experiencia en rol",
+      "onePoint": "Cruce de un punto",
+      "twoPoint": "Cruce de dos puntos",
+      "bestStateVector": "Cruce de vector de mejor estado",
+      "bestStateGeneral": "Cruce general de mejor estado"
+    }
   },
   "teamUp": {
     "step1": {

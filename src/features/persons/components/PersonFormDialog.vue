@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
@@ -34,6 +35,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:visible', 'save', 'cancel'])
+const { t } = useI18n()
 const toast = useToast()
 
 // Datos básicos
@@ -63,14 +65,14 @@ const raceOptions = ref([])
 const groupOptions = ref([])
 const nacionalityOptions = ref([])
 const religionOptions = ref([])
-const sexOptions = [
-  { label: 'Masculino', value: 'M' },
-  { label: 'Femenino', value: 'F' }
-]
-const statusOptions = [
-  { label: 'Activo', value: 'Activo' },
-  { label: 'Inactivo', value: 'Inactivo' }
-]
+const sexOptions = computed(() => [
+  { label: t('features.persons.sexOptions.male'), value: 'M' },
+  { label: t('features.persons.sexOptions.female'), value: 'F' }
+])
+const statusOptions = computed(() => [
+  { label: t('features.persons.status.active'), value: 'Activo' },
+  { label: t('features.persons.status.inactive'), value: 'Inactivo' }
+])
 
 // Competencias
 const competenceOptions = ref([])
@@ -96,7 +98,7 @@ const selectedProjectInterests = ref([])
 
 // Test psicológico
 const mbtiType = ref('')
-const mbtiOptions = [
+const mbtiOptions = computed(() => [
   { label: 'ESTJ', value: 'ESTJ' },
   { label: 'ENTJ', value: 'ENTJ' },
   { label: 'ESFJ', value: 'ESFJ' },
@@ -113,7 +115,7 @@ const mbtiOptions = [
   { label: 'INTP', value: 'INTP' },
   { label: 'ISFP', value: 'ISFP' },
   { label: 'INFP', value: 'INFP' }
-]
+])
 
 const belbinRoles = ref({
   implementador: 'Indiferente',
@@ -127,11 +129,11 @@ const belbinRoles = ref({
   especialista: 'Indiferente'
 })
 
-const belbinOptions = [
-  { label: 'Preferido', value: 'Preferido' },
-  { label: 'Evitado', value: 'Evitado' },
-  { label: 'Indiferente', value: 'Indiferente' }
-]
+const belbinOptions = computed(() => [
+  { label: t('features.persons.belbinOptions.preferred'), value: 'Preferido' },
+  { label: t('features.persons.belbinOptions.avoided'), value: 'Evitado' },
+  { label: t('features.persons.belbinOptions.indifferent'), value: 'Indiferente' }
+])
 
 const personTest = ref({
   tipoMB: '',
@@ -155,7 +157,7 @@ const personConflicts = ref([])
 const selectedConflicts = ref([])
 
 const dialogTitle = computed(() => {
-  return props.mode === 'create' ? 'Crear Persona' : 'Editar Persona'
+  return props.mode === 'create' ? t('features.persons.createTitle') : t('features.persons.editTitle')
 })
 
 const loadOptions = async () => {
@@ -189,8 +191,8 @@ const loadOptions = async () => {
     console.error('Error loading options:', error)
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: 'No se pudieron cargar las opciones',
+      summary: t('common.error'),
+      detail: t('common.loadOptionsError'),
       life: 3000
     })
   }
@@ -204,8 +206,8 @@ const addCompetence = () => {
   if (exists) {
     toast.add({
       severity: 'warn',
-      summary: 'Competencia duplicada',
-      detail: 'Esta competencia ya ha sido agregada',
+      summary: t('features.persons.toast.duplicateCompetenceTitle'),
+      detail: t('features.persons.toast.duplicateCompetence'),
       life: 3000
     })
     return
@@ -238,8 +240,8 @@ const addRoleInterest = () => {
   if (exists) {
     toast.add({
       severity: 'warn',
-      summary: 'Interés duplicado',
-      detail: 'Este rol ya ha sido agregado',
+      summary: t('features.persons.toast.duplicateInterestTitle'),
+      detail: t('features.persons.toast.duplicateRole'),
       life: 3000
     })
     return
@@ -270,8 +272,8 @@ const addProjectInterest = () => {
   if (exists) {
     toast.add({
       severity: 'warn',
-      summary: 'Interés duplicado',
-      detail: 'Este proyecto ya ha sido agregado',
+      summary: t('features.persons.toast.duplicateInterestTitle'),
+      detail: t('features.persons.toast.duplicateProject'),
       life: 3000
     })
     return
@@ -302,8 +304,8 @@ const addConflict = () => {
   if (exists) {
     toast.add({
       severity: 'warn',
-      summary: 'Persona duplicada',
-      detail: 'Esta persona ya ha sido agregada a las incompatibilidades',
+      summary: t('features.persons.toast.duplicatePersonTitle'),
+      detail: t('features.persons.toast.duplicateConflictPerson'),
       life: 3000
     })
     return
@@ -331,8 +333,8 @@ const removeConflicts = () => {
 const generateTest = () => {
   toast.add({
     severity: 'info',
-    summary: 'Plataforma no disponible',
-    detail: 'La plataforma TestSoft no está disponible por el momento',
+    summary: t('features.persons.toast.platformUnavailableTitle'),
+    detail: t('features.persons.toast.testSoftUnavailable'),
     life: 4000
   })
 }
@@ -443,8 +445,8 @@ const validate = () => {
   if (!personName.value.trim() || !card.value.trim() || !surName.value.trim()) {
     toast.add({
       severity: 'warn',
-      summary: 'Validación',
-      detail: 'Complete los campos obligatorios: Nombre, CI y Apellidos',
+      summary: t('common.validation'),
+      detail: t('features.persons.validation.requiredFields'),
       life: 3000
     })
     return false
@@ -518,83 +520,83 @@ watch(() => props.visible, async (newVal) => {
     <div class="form-container">
       <Tabs value="0">
         <TabList>
-          <Tab value="0">Datos Básicos</Tab>
-          <Tab value="1">Competencias</Tab>
-          <Tab value="2">Intereses</Tab>
-          <Tab value="3">Test Psicológico</Tab>
-          <Tab value="4">Incompatibilidades</Tab>
+          <Tab value="0">{{ t('features.persons.tabs.basic') }}</Tab>
+          <Tab value="1">{{ t('features.persons.tabs.competences') }}</Tab>
+          <Tab value="2">{{ t('features.persons.tabs.interests') }}</Tab>
+          <Tab value="3">{{ t('features.persons.tabs.test') }}</Tab>
+          <Tab value="4">{{ t('features.persons.tabs.conflicts') }}</Tab>
         </TabList>
         <TabPanels>
         <!-- Tab 1: Datos Básicos -->
         <TabPanel value="0">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Nombre <span class="text-red-500">*</span></label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.name') }} <span class="text-red-500">*</span></label>
               <InputText v-model="personName" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Apellidos <span class="text-red-500">*</span></label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.surname') }} <span class="text-red-500">*</span></label>
               <InputText v-model="surName" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">CI <span class="text-red-500">*</span></label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.card') }} <span class="text-red-500">*</span></label>
               <InputText v-model="card" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Dirección</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.address') }}</label>
               <InputText v-model="address" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Teléfono</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.phone') }}</label>
               <InputText v-model="phone" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Email</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.email') }}</label>
               <InputText v-model="email" type="email" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Sexo</label>
-              <Select v-model="sex" :options="sexOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.sex') }}</label>
+              <Select v-model="sex" :options="sexOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Fecha de Nacimiento</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.birthDate') }}</label>
               <DatePicker v-model="birthDate" dateFormat="dd/mm/yy" showIcon class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Fecha de Ingreso</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.inDate') }}</label>
               <DatePicker v-model="inDate" dateFormat="dd/mm/yy" showIcon class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Carga de Trabajo</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.workload') }}</label>
               <InputNumber v-model="workload" :min="0" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Experiencia (años)</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.experience') }}</label>
               <InputNumber v-model="experience" :min="0" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Estado</label>
-              <Select v-model="status" :options="statusOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('common.fields.status') }}</label>
+              <Select v-model="status" :options="statusOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Provincia</label>
-              <Select v-model="selectedCounty" :options="countyOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('common.fields.province') }}</label>
+              <Select v-model="selectedCounty" :options="countyOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Raza</label>
-              <Select v-model="selectedRace" :options="raceOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.race') }}</label>
+              <Select v-model="selectedRace" :options="raceOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Grupo</label>
-              <Select v-model="selectedGroup" :options="groupOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.group') }}</label>
+              <Select v-model="selectedGroup" :options="groupOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Nacionalidad</label>
-              <Select v-model="selectedNacionality" :options="nacionalityOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.nacionality') }}</label>
+              <Select v-model="selectedNacionality" :options="nacionalityOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Religión</label>
-              <Select v-model="selectedReligion" :options="religionOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.religion') }}</label>
+              <Select v-model="selectedReligion" :options="religionOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
           </div>
         </TabPanel>
@@ -603,90 +605,90 @@ watch(() => props.visible, async (newVal) => {
         <TabPanel value="1">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Competencia</label>
-              <Select v-model="selectedCompetence" :options="competenceOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.competence') }}</label>
+              <Select v-model="selectedCompetence" :options="competenceOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Nivel</label>
-              <Select v-model="selectedLevel" :options="levelOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.level') }}</label>
+              <Select v-model="selectedLevel" :options="levelOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
           </div>
           <DataTable v-model:selection="selectedCompetences" :value="competenceValues" selectionMode="multiple" dataKey="competenceId" class="p-datatable-sm">
             <template #header>
               <div class="flex justify-between items-center gap-2">
-                <span class="font-semibold">Competencias Asignadas</span>
+                <span class="font-semibold">{{ t('features.persons.headers.assignedCompetences') }}</span>
                 <div class="flex gap-2">
-                  <Button label="Agregar" icon="pi pi-plus" severity="success" size="small" @click="addCompetence" :disabled="!selectedCompetence || !selectedLevel" />
-                  <Button label="Eliminar Seleccionados" icon="pi pi-trash" severity="danger" size="small" @click="removeCompetences" :disabled="selectedCompetences.length === 0" />
+                  <Button :label="t('common.add')" icon="pi pi-plus" severity="success" size="small" @click="addCompetence" :disabled="!selectedCompetence || !selectedLevel" />
+                  <Button :label="t('common.deleteSelected')" icon="pi pi-trash" severity="danger" size="small" @click="removeCompetences" :disabled="selectedCompetences.length === 0" />
                 </div>
               </div>
             </template>
             <Column selectionMode="multiple" headerStyle="width: 3rem" style="width: 3rem" />
-            <Column field="competenceName" header="Competencia" />
-            <Column field="levelName" header="Nivel" />
+            <Column field="competenceName" :header="t('features.persons.fields.competence')" />
+            <Column field="levelName" :header="t('features.persons.fields.level')" />
           </DataTable>
         </TabPanel>
 
         <!-- Tab 3: Intereses -->
         <TabPanel value="2">
-          <h4 class="text-sm font-semibold mb-2">Intereses en Roles</h4>
+          <h4 class="text-sm font-semibold mb-2">{{ t('features.persons.headers.roleInterests') }}</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Rol</label>
-              <Select v-model="selectedRole" :options="roleOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.role') }}</label>
+              <Select v-model="selectedRole" :options="roleOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
             <div class="field flex items-center">
               <label for="rolePreference" class="cursor-pointer flex items-center">
                 <Checkbox v-model="rolePreference" :binary="true" inputId="rolePreference" />
-                <span class="ml-2">Preferencia</span>
+                <span class="ml-2">{{ t('features.persons.fields.preference') }}</span>
               </label>
             </div>
           </div>
           <DataTable v-model:selection="selectedRoleInterests" :value="personalInterests" selectionMode="multiple" dataKey="roleId" class="p-datatable-sm mb-4">
             <template #header>
               <div class="flex justify-between items-center gap-2">
-                <span class="font-semibold">Intereses en Roles Asignados</span>
+                <span class="font-semibold">{{ t('features.persons.headers.assignedRoleInterests') }}</span>
                 <div class="flex gap-2">
-                  <Button label="Agregar" icon="pi pi-plus" severity="success" size="small" @click="addRoleInterest" :disabled="!selectedRole" />
-                  <Button label="Eliminar Seleccionados" icon="pi pi-trash" severity="danger" size="small" @click="removeRoleInterests" :disabled="selectedRoleInterests.length === 0" />
+                  <Button :label="t('common.add')" icon="pi pi-plus" severity="success" size="small" @click="addRoleInterest" :disabled="!selectedRole" />
+                  <Button :label="t('common.deleteSelected')" icon="pi pi-trash" severity="danger" size="small" @click="removeRoleInterests" :disabled="selectedRoleInterests.length === 0" />
                 </div>
               </div>
             </template>
             <Column selectionMode="multiple" headerStyle="width: 3rem" style="width: 3rem" />
-            <Column field="roleName" header="Rol" />
-            <Column field="preference" header="Preferencia">
+            <Column field="roleName" :header="t('features.persons.fields.role')" />
+            <Column field="preference" :header="t('features.persons.fields.preference')">
               <template #body="slotProps">
                 <Checkbox :modelValue="slotProps.data.preference" :binary="true" disabled />
               </template>
             </Column>
           </DataTable>
 
-          <h4 class="text-sm font-semibold mb-2">Intereses en Proyectos</h4>
+          <h4 class="text-sm font-semibold mb-2">{{ t('features.persons.headers.projectInterests') }}</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Proyecto</label>
-              <Select v-model="selectedProject" :options="projectOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('common.fields.project') }}</label>
+              <Select v-model="selectedProject" :options="projectOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
             </div>
             <div class="field flex items-center">
               <label for="projectPreference" class="cursor-pointer flex items-center">
                 <Checkbox v-model="projectPreference" :binary="true" inputId="projectPreference" />
-                <span class="ml-2">Preferencia</span>
+                <span class="ml-2">{{ t('features.persons.fields.preference') }}</span>
               </label>
             </div>
           </div>
           <DataTable v-model:selection="selectedProjectInterests" :value="personalProjectInterests" selectionMode="multiple" dataKey="projectId" class="p-datatable-sm">
             <template #header>
               <div class="flex justify-between items-center gap-2">
-                <span class="font-semibold">Intereses en Proyectos Asignados</span>
+                <span class="font-semibold">{{ t('features.persons.headers.assignedProjectInterests') }}</span>
                 <div class="flex gap-2">
-                  <Button label="Agregar" icon="pi pi-plus" severity="success" size="small" @click="addProjectInterest" :disabled="!selectedProject" />
-                  <Button label="Eliminar Seleccionados" icon="pi pi-trash" severity="danger" size="small" @click="removeProjectInterests" :disabled="selectedProjectInterests.length === 0" />
+                  <Button :label="t('common.add')" icon="pi pi-plus" severity="success" size="small" @click="addProjectInterest" :disabled="!selectedProject" />
+                  <Button :label="t('common.deleteSelected')" icon="pi pi-trash" severity="danger" size="small" @click="removeProjectInterests" :disabled="selectedProjectInterests.length === 0" />
                 </div>
               </div>
             </template>
             <Column selectionMode="multiple" headerStyle="width: 3rem" style="width: 3rem" />
-            <Column field="projectName" header="Proyecto" />
-            <Column field="preference" header="Preferencia">
+            <Column field="projectName" :header="t('common.fields.project')" />
+            <Column field="preference" :header="t('features.persons.fields.preference')">
               <template #body="slotProps">
                 <Checkbox :modelValue="slotProps.data.preference" :binary="true" disabled />
               </template>
@@ -699,57 +701,57 @@ watch(() => props.visible, async (newVal) => {
           <div class="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-sm font-semibold text-blue-900 mb-1">Tests Psicológicos</p>
-                <p class="text-xs text-blue-700">Genere los tests MBTI y Belbin mediante la plataforma TestSoft</p>
+                <p class="text-sm font-semibold text-blue-900 mb-1">{{ t('features.persons.headers.psychTests') }}</p>
+                <p class="text-xs text-blue-700">{{ t('features.persons.psychTest.description') }}</p>
               </div>
-              <Button label="Generar Tests" icon="pi pi-cog" @click="generateTest" severity="info" />
+              <Button :label="t('features.persons.psychTest.generateButton')" icon="pi pi-cog" @click="generateTest" severity="info" />
             </div>
           </div>
 
-          <h4 class="text-sm font-semibold mb-2">Tipo MBTI</h4>
+          <h4 class="text-sm font-semibold mb-2">{{ t('features.persons.fields.mbtiType') }}</h4>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Tipo MBTI</label>
-              <Select v-model="mbtiType" :options="mbtiOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione tipo MBTI" class="w-full" />
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.mbtiType') }}</label>
+              <Select v-model="mbtiType" :options="mbtiOptions" filter optionLabel="label" optionValue="value" :placeholder="t('features.persons.fields.mbtiPlaceholder')" class="w-full" />
             </div>
           </div>
 
-          <h4 class="text-sm font-semibold mb-2 mt-4">Roles de Belbin</h4>
+          <h4 class="text-sm font-semibold mb-2 mt-4">{{ t('features.persons.headers.belbinRoles') }}</h4>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Implementador</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.belbinRoles.implementer') }}</label>
               <Select v-model="belbinRoles.implementador" :options="belbinOptions" filter optionLabel="label" optionValue="value" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Coordinador</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.belbinRoles.coordinator') }}</label>
               <Select v-model="belbinRoles.coordinador" :options="belbinOptions" filter optionLabel="label" optionValue="value" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Cerebro</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.belbinRoles.plant') }}</label>
               <Select v-model="belbinRoles.cerebro" :options="belbinOptions" filter optionLabel="label" optionValue="value" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Investigador</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.belbinRoles.resourceInvestigator') }}</label>
               <Select v-model="belbinRoles.investigador" :options="belbinOptions" filter optionLabel="label" optionValue="value" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Monitor</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.belbinRoles.monitor') }}</label>
               <Select v-model="belbinRoles.monitor" :options="belbinOptions" filter optionLabel="label" optionValue="value" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Cohesionador</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.belbinRoles.teamworker') }}</label>
               <Select v-model="belbinRoles.cohesionador" :options="belbinOptions" filter optionLabel="label" optionValue="value" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Impulsor</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.belbinRoles.shaper') }}</label>
               <Select v-model="belbinRoles.impulsor" :options="belbinOptions" filter optionLabel="label" optionValue="value" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Finalizador</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.belbinRoles.finisher') }}</label>
               <Select v-model="belbinRoles.finalizador" :options="belbinOptions" filter optionLabel="label" optionValue="value" class="w-full" />
             </div>
             <div class="field">
-              <label class="block mb-1 text-xs font-semibold">Especialista</label>
+              <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.belbinRoles.specialist') }}</label>
               <Select v-model="belbinRoles.especialista" :options="belbinOptions" filter optionLabel="label" optionValue="value" class="w-full" />
             </div>
           </div>
@@ -760,12 +762,12 @@ watch(() => props.visible, async (newVal) => {
           <div class="incompatibilidades-container">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
               <div class="field">
-                <label class="block mb-1 text-xs font-semibold">Índice de Conflicto</label>
-                <Select v-model="selectedConflictIndex" :options="conflictIndexOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+                <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.conflictIndex') }}</label>
+                <Select v-model="selectedConflictIndex" :options="conflictIndexOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
               </div>
               <div class="field">
-                <label class="block mb-1 text-xs font-semibold">Persona en Conflicto</label>
-                <Select v-model="selectedConflictPerson" :options="personOptions" filter optionLabel="label" optionValue="value" placeholder="Seleccione" class="w-full" />
+                <label class="block mb-1 text-xs font-semibold">{{ t('features.persons.fields.conflictPerson') }}</label>
+                <Select v-model="selectedConflictPerson" :options="personOptions" filter optionLabel="label" optionValue="value" :placeholder="t('common.select')" class="w-full" />
               </div>
             </div>
             <DataTable 
@@ -779,16 +781,16 @@ watch(() => props.visible, async (newVal) => {
             >
               <template #header>
                 <div class="flex justify-between items-center gap-2">
-                  <span class="font-semibold">Incompatibilidades Asignadas</span>
+                  <span class="font-semibold">{{ t('features.persons.headers.assignedIncompatibilities') }}</span>
                   <div class="flex gap-2">
-                    <Button label="Agregar" icon="pi pi-plus" severity="success" size="small" @click="addConflict" :disabled="!selectedConflictIndex || !selectedConflictPerson" />
-                    <Button label="Eliminar Seleccionados" icon="pi pi-trash" severity="danger" size="small" @click="removeConflicts" :disabled="selectedConflicts.length === 0" />
+                    <Button :label="t('common.add')" icon="pi pi-plus" severity="success" size="small" @click="addConflict" :disabled="!selectedConflictIndex || !selectedConflictPerson" />
+                    <Button :label="t('common.deleteSelected')" icon="pi pi-trash" severity="danger" size="small" @click="removeConflicts" :disabled="selectedConflicts.length === 0" />
                   </div>
                 </div>
               </template>
               <Column selectionMode="multiple" headerStyle="width: 3rem" style="width: 3rem" />
-              <Column field="conflictName" header="Índice de Conflicto" />
-              <Column field="personConflictName" header="Persona" />
+              <Column field="conflictName" :header="t('features.persons.fields.conflictIndex')" />
+              <Column field="personConflictName" :header="t('features.persons.fields.person')" />
             </DataTable>
           </div>
         </TabPanel>
@@ -797,8 +799,8 @@ watch(() => props.visible, async (newVal) => {
     </div>
 
     <template #footer>
-      <Button label="Cancelar" icon="pi pi-times" @click="handleCancel" class="p-button-text" />
-      <Button label="Guardar" icon="pi pi-check" @click="handleSave" />
+      <Button :label="t('common.cancel')" icon="pi pi-times" @click="handleCancel" class="p-button-text" />
+      <Button :label="t('common.save')" icon="pi pi-check" @click="handleSave" />
     </template>
   </Dialog>
 </template>

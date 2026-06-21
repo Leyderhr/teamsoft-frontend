@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { ArrowLeft, User, Mail, CreditCard, Activity, Loader2 } from 'lucide-vue-next'
@@ -19,7 +19,7 @@ const rolesInProject = ref([])
 const showDetail = ref(false)
 
 // Columnas para la tabla de trabajadores
-const workerColumns = [
+const workerColumns = computed(() => [
   { field: 'personName', header: t('features.persons.fields.name'), sortable: true },
   { field: 'surName', header: t('features.persons.fields.surname'), sortable: true },
   { field: 'card', header: t('features.persons.fields.card'), sortable: true },
@@ -27,14 +27,14 @@ const workerColumns = [
   { field: 'phone', header: t('features.persons.fields.phone') },
   { field: 'sex', header: t('features.persons.fields.sex') },
   { field: 'inDate', header: t('features.persons.fields.inDate'), sortable: true },
-  { field: 'workload', header: 'Carga' },
+  { field: 'workload', header: t('features.reports.personReport.load') },
   { field: 'experience', header: t('features.persons.fields.experience') },
-  { field: 'status', header: 'Estado', type: 'badge', sortable: true },
+  { field: 'status', header: t('features.reports.personReport.status'), type: 'badge', sortable: true },
   { field: 'county.countyName', header: t('features.persons.fields.county'), sortable: true },
   { field: 'group.name', header: t('features.persons.fields.group'), sortable: true },
   { field: 'race.raceName', header: t('features.persons.fields.race'), sortable: true },
   { field: 'nacionality.gentilicioNac', header: t('features.persons.fields.nacionality'), sortable: true },
-]
+])
 
 const loadWorkers = async () => {
   loading.value = true
@@ -104,8 +104,8 @@ onMounted(loadWorkers)
 
     <!-- Breadcrumb + título -->
     <PageBreadcrumb
-      :page-title="showDetail ? (selectedWorker?.personName + ' ' + selectedWorker?.surName) : 'Reporte de Personas'"
-      :items="showDetail ? [{ label: 'Reporte de Personas' }] : []"
+      :page-title="showDetail ? (selectedWorker?.personName + ' ' + selectedWorker?.surName) : t('features.reports.personReport.title')"
+      :items="showDetail ? [{ label: t('features.reports.personReport.title') }] : []"
     />
 
     <!-- ── Vista principal: lista de trabajadores ── -->
@@ -131,7 +131,7 @@ onMounted(loadWorkers)
           class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-brand-500 transition-colors"
         >
           <ArrowLeft class="w-4 h-4" />
-          Volver al listado
+          {{ t('features.reports.personReport.backToList') }}
         </button>
       </div>
 
@@ -166,7 +166,7 @@ onMounted(loadWorkers)
           <div class="flex items-center gap-2">
             <Activity class="w-4 h-4 text-gray-400 flex-shrink-0" />
             <div>
-              <p class="text-xs text-gray-400">Carga de trabajo</p>
+              <p class="text-xs text-gray-400">{{ t('features.reports.personReport.workload') }}</p>
               <p class="text-sm font-medium text-gray-700">{{ selectedWorker.workload || '—' }}</p>
             </div>
           </div>
@@ -179,7 +179,7 @@ onMounted(loadWorkers)
         <!-- Proyectos del trabajador -->
         <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-xs overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-200 bg-gray-50">
-            <h4 class="text-sm font-semibold text-gray-700">Proyectos asignados</h4>
+            <h4 class="text-sm font-semibold text-gray-700">{{ t('features.reports.personReport.assignedProjects') }}</h4>
           </div>
 
           <div v-if="loadingDetail" class="flex items-center justify-center py-10">
@@ -187,7 +187,7 @@ onMounted(loadWorkers)
           </div>
 
           <div v-else-if="!workerProjects.length" class="px-5 py-10 text-center text-sm text-gray-400">
-            Sin proyectos asignados
+            {{ t('features.reports.personReport.noProjects') }}
           </div>
 
           <ul v-else class="divide-y divide-gray-100">
@@ -201,7 +201,7 @@ onMounted(loadWorkers)
               <div class="min-w-0">
                 <p class="text-sm font-medium text-gray-700 truncate">{{ project.projectName }}</p>
                 <p v-if="project.evaluation != null" class="text-xs text-gray-400">
-                  Evaluación: {{ project.evaluation }}
+                  {{ t('features.reports.personReport.evaluation') }} {{ project.evaluation }}
                 </p>
               </div>
               <div
@@ -216,8 +216,8 @@ onMounted(loadWorkers)
         <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-xs overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-200 bg-gray-50">
             <h4 class="text-sm font-semibold text-gray-700">
-              Roles en
-              <span class="text-brand-600">{{ selectedProject?.projectName || 'proyecto seleccionado' }}</span>
+              {{ t('features.reports.personReport.rolesIn') }}
+              <span class="text-brand-600">{{ selectedProject?.projectName || t('features.reports.personReport.selectedProject') }}</span>
             </h4>
           </div>
 
@@ -226,11 +226,11 @@ onMounted(loadWorkers)
           </div>
 
           <div v-else-if="!selectedProject" class="px-5 py-10 text-center text-sm text-gray-400">
-            Seleccione un proyecto para ver los roles
+            {{ t('features.reports.personReport.selectProjectHint') }}
           </div>
 
           <div v-else-if="!rolesInProject.length" class="px-5 py-10 text-center text-sm text-gray-400">
-            Sin roles en este proyecto
+            {{ t('features.reports.personReport.noRoles') }}
           </div>
 
           <ul v-else class="divide-y divide-gray-100">
@@ -241,7 +241,7 @@ onMounted(loadWorkers)
             >
               <p class="text-sm font-medium text-gray-700">{{ role.roleName || '—' }}</p>
               <p v-if="role.roleEvaluation != null" class="text-xs text-gray-400">
-                Evaluación: {{ role.roleEvaluation }}
+                {{ t('features.reports.personReport.evaluation') }} {{ role.roleEvaluation }}
               </p>
             </li>
           </ul>

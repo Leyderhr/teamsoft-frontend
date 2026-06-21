@@ -1,15 +1,18 @@
 <script setup>
 import { ref, computed, nextTick, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ChevronDown, Check, Search, X } from 'lucide-vue-next'
+
+const { t } = useI18n()
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   options: { type: Array, default: () => [] },
-  placeholder: { type: String, default: 'Seleccione...' },
+  placeholder: { type: String, default: 'common.selectPlaceholder' },
   disabled: { type: Boolean, default: false },
   size: { type: String, default: 'md' },
   searchable: { type: Boolean, default: false },
-  searchPlaceholder: { type: String, default: 'Buscar...' },
+  searchPlaceholder: { type: String, default: 'common.searchPlaceholder' },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -36,7 +39,7 @@ const triggerLabel = computed(() => {
   if (count === 1) {
     return props.options.find(o => o.value === props.modelValue[0])?.label ?? null
   }
-  return `${count} seleccionado(s)`
+  return t('common.selectedCount', [count])
 })
 
 async function open() {
@@ -183,7 +186,7 @@ onUnmounted(close)
       ]"
     >
       <span class="truncate flex-1" :class="triggerLabel ? 'text-gray-700' : 'text-gray-400'">
-        {{ triggerLabel ?? placeholder }}
+        {{ triggerLabel ?? t(placeholder) }}
       </span>
       <button
         v-if="modelValue.length > 0 && !disabled"
@@ -223,7 +226,7 @@ onUnmounted(close)
                 ref="searchRef"
                 v-model="searchQuery"
                 type="text"
-                :placeholder="searchPlaceholder"
+                :placeholder="t(searchPlaceholder)"
                 class="w-full pl-8 pr-3 py-1.5 rounded-md border border-gray-200 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
                 @click.stop
                 @keydown="onSearchKeydown"
@@ -258,7 +261,7 @@ onUnmounted(close)
               v-if="!filteredOptions.length"
               class="px-3 py-3 text-sm text-gray-400 text-center"
             >
-              {{ searchQuery ? 'Sin resultados' : 'Sin opciones' }}
+              {{ searchQuery ? t('common.noResults') : t('common.noOptions') }}
             </div>
           </div>
         </div>

@@ -1,6 +1,9 @@
 <script setup>
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { X, Upload, AlertCircle } from 'lucide-vue-next'
+
+const { t } = useI18n()
 
 const props = defineProps({
   visible: { type: Boolean, required: true },
@@ -51,7 +54,7 @@ function validateAndSetFile(file) {
   const validExtension = file.name.toLowerCase().endsWith('.csv')
   const validMime = allowedMimes.includes(file.type) || file.type === ''
   if (!validExtension || !validMime) {
-    fileError.value = 'Solo se aceptan archivos .csv'
+    fileError.value = t('common.import.invalidFileType')
     selectedFile.value = null
     return
   }
@@ -78,7 +81,7 @@ async function handleImport() {
     state.value = 'result'
     emit('success', result)
   } catch (err) {
-    errorMessage.value = err?.message || 'Error al importar. Por favor intenta de nuevo.'
+    errorMessage.value = err?.message || t('common.import.genericError')
     state.value = 'error'
   }
 }
@@ -113,7 +116,7 @@ function onKeydown(event) {
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-semibold text-gray-900">{{ title }}</h2>
           <button
-            aria-label="Cerrar"
+            :aria-label="t('common.close')"
             @click="closeModal"
             class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
@@ -136,8 +139,8 @@ function onKeydown(event) {
           >
             <Upload class="w-8 h-8 mx-auto mb-2 text-gray-400" />
             <p class="text-sm text-gray-600">
-              Arrastra un archivo CSV o
-              <span class="text-brand-500 font-medium">haz clic para seleccionar</span>
+              {{ t('common.import.dragPrompt') }}
+              <span class="text-brand-500 font-medium">{{ t('common.import.clickToSelect') }}</span>
             </p>
             <input
               ref="fileInput"
@@ -150,7 +153,7 @@ function onKeydown(event) {
 
           <!-- Archivo seleccionado -->
           <p v-if="selectedFile" class="text-sm text-gray-700 mb-2">
-            Archivo: <span class="font-medium">{{ selectedFile.name }}</span>
+            {{ t('common.import.fileLabel') }} <span class="font-medium">{{ selectedFile.name }}</span>
           </p>
 
           <!-- Error de validación -->
@@ -163,7 +166,7 @@ function onKeydown(event) {
               type="checkbox"
               class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
             />
-            <span class="text-sm text-gray-700">Actualizar registros existentes</span>
+            <span class="text-sm text-gray-700">{{ t('common.import.updateExisting') }}</span>
           </label>
 
           <!-- Botones footer -->
@@ -172,7 +175,7 @@ function onKeydown(event) {
               @click="closeModal"
               class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Cancelar
+              {{ t('common.cancel') }}
             </button>
             <button
               @click="handleImport"
@@ -182,7 +185,7 @@ function onKeydown(event) {
                 ? 'bg-brand-500 text-white hover:bg-brand-600'
                 : 'bg-gray-100 text-gray-300 cursor-not-allowed'"
             >
-              Importar
+              {{ t('common.import.importButton') }}
             </button>
           </div>
         </div>
@@ -193,7 +196,7 @@ function onKeydown(event) {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
           </svg>
-          <p class="text-sm text-gray-600">Importando...</p>
+          <p class="text-sm text-gray-600">{{ t('common.import.importing') }}</p>
         </div>
 
         <!-- Estado: result -->
@@ -201,19 +204,19 @@ function onKeydown(event) {
           <div class="grid grid-cols-2 gap-3 mb-4">
             <div class="rounded-xl p-3 bg-success-50 text-center">
               <p class="text-2xl font-bold text-success-700">{{ importResult.created }}</p>
-              <p class="text-xs text-success-600 font-medium mt-0.5">Creados</p>
+              <p class="text-xs text-success-600 font-medium mt-0.5">{{ t('common.import.created') }}</p>
             </div>
             <div class="rounded-xl p-3 bg-brand-50 text-center">
               <p class="text-2xl font-bold text-brand-700">{{ importResult.updated }}</p>
-              <p class="text-xs text-brand-600 font-medium mt-0.5">Actualizados</p>
+              <p class="text-xs text-brand-600 font-medium mt-0.5">{{ t('common.import.updated') }}</p>
             </div>
             <div class="rounded-xl p-3 bg-gray-50 text-center">
               <p class="text-2xl font-bold text-gray-700">{{ importResult.skipped }}</p>
-              <p class="text-xs text-gray-500 font-medium mt-0.5">Omitidos</p>
+              <p class="text-xs text-gray-500 font-medium mt-0.5">{{ t('common.import.skipped') }}</p>
             </div>
             <div class="rounded-xl p-3 bg-error-50 text-center">
               <p class="text-2xl font-bold text-error-700">{{ importResult.errors }}</p>
-              <p class="text-xs text-error-600 font-medium mt-0.5">Errores</p>
+              <p class="text-xs text-error-600 font-medium mt-0.5">{{ t('common.import.errors') }}</p>
             </div>
           </div>
 
@@ -236,7 +239,7 @@ function onKeydown(event) {
               @click="closeModal"
               class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
             >
-              Cerrar
+              {{ t('common.close') }}
             </button>
           </div>
         </div>
@@ -250,13 +253,13 @@ function onKeydown(event) {
               @click="closeModal"
               class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Cancelar
+              {{ t('common.cancel') }}
             </button>
             <button
               @click="retryImport"
               class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
             >
-              Reintentar
+              {{ t('common.retry') }}
             </button>
           </div>
         </div>

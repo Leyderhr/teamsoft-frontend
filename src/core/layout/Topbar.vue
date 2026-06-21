@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/lib/auth-store'
 import { useLocaleStore } from '@/core/store/locale.store.js'
@@ -7,6 +8,7 @@ import Button from 'primevue/button'
 import Menu from 'primevue/menu'
 import Avatar from 'primevue/avatar'
 
+const { t } = useI18n()
 const router = useRouter()
 const userStore = useAuthStore()
 const localeStore = useLocaleStore()
@@ -24,19 +26,19 @@ const toggleLanguageMenu = (event) => {
 
 const profileItems = computed(() => [
   {
-    label: userStore.username || 'Usuario',
+    label: userStore.username || t('common.user'),
     icon: 'pi pi-user',
     disabled: true,
     class: 'profile-header-item'
   },
   { separator: true },
   {
-    label: 'Cambiar contrase\u00f1a',
+    label: t('common.changePassword'),
     icon: 'pi pi-key',
     command: () => router.push('/change-password')
   },
   {
-    label: 'Cerrar sesi\u00f3n',
+    label: t('common.logout'),
     icon: 'pi pi-sign-out',
     command: async () => {
       await userStore.logout()
@@ -85,7 +87,7 @@ defineEmits(['toggle-menu'])
       <div class="topbar-item">
         <button class="topbar-action-btn" @click="toggleProfileMenu">
           <Avatar icon="pi pi-user" shape="circle" size="small" class="avatar" />
-          <span class="username-label">{{ userStore.username || 'Usuario' }}</span>
+          <span class="username-label">{{ userStore.username || t('common.user') }}</span>
           <i class="pi pi-chevron-down chevron" />
         </button>
         <Menu ref="profileMenuRef" :model="profileItems" :popup="true" />

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { Search, RefreshCw, Plus, Trash2, Loader2 } from 'lucide-vue-next'
 import AppSelect from '@/components/ui/AppSelect.vue'
@@ -10,6 +11,7 @@ import projectService from '@/features/projects/services/projectService.js'
 import competenceService from '@/features/competences/services/competenceService.js'
 import levelsService from '@/features/nomenclatives/services/levelsService.js'
 
+const { t } = useI18n()
 const toast = useToast()
 const loading = ref(false)
 const loadingFilters = ref(false)
@@ -38,11 +40,11 @@ const tempProjectId = ref(null)
 const rolePreferences = ref({}) // { roleId: true/false }
 const projectPreferences = ref({}) // { projectId: true/false }
 
-const belbinOptions = [
-  { label: 'Favorito', value: 'F' },
-  { label: 'Evitado', value: 'E' },
-  { label: 'Indiferente', value: 'I' }
-]
+const belbinOptions = computed(() => [
+  { label: t('features.reports.belbin.favorite'), value: 'F' },
+  { label: t('features.reports.belbin.avoided'), value: 'E' },
+  { label: t('features.reports.belbin.indifferent'), value: 'I' }
+])
 const belbin = ref({ e_S: null, i_M: null, c_O: null, i_S: null, c_E: null, i_R: null, m_E: null, c_H: null, i_F: null })
 
 const filterCompetences = ref([])
@@ -55,36 +57,36 @@ const mbtiOptions = [
 const workers = ref([])
 const searched = ref(false)
 
-const belbinRoleLabels = [
-  { key: 'e_S', label: 'Especialista (ES)' },
-  { key: 'i_M', label: 'Implementador (ID)' },
-  { key: 'c_O', label: 'Coordinador (CO)' },
-  { key: 'i_S', label: 'Cohesionador (IS)' },
-  { key: 'c_E', label: 'Cerebro (CE)' },
-  { key: 'i_R', label: 'Investigador Rec. (IR)' },
-  { key: 'm_E', label: 'Monitor Evaluador (ME)' },
-  { key: 'c_H', label: 'Impulsor (CH)' },
-  { key: 'i_F', label: 'Finalizador (IF)' }
-]
+const belbinRoleLabels = computed(() => [
+  { key: 'e_S', label: t('features.reports.belbin.roles.specialist') },
+  { key: 'i_M', label: t('features.reports.belbin.roles.implementer') },
+  { key: 'c_O', label: t('features.reports.belbin.roles.coordinator') },
+  { key: 'i_S', label: t('features.reports.belbin.roles.teamworker') },
+  { key: 'c_E', label: t('features.reports.belbin.roles.plant') },
+  { key: 'i_R', label: t('features.reports.belbin.roles.resourceInvestigator') },
+  { key: 'm_E', label: t('features.reports.belbin.roles.monitorEvaluator') },
+  { key: 'c_H', label: t('features.reports.belbin.roles.shaper') },
+  { key: 'i_F', label: t('features.reports.belbin.roles.completerFinisher') }
+])
 
-const filterTabs = [
-  { key: 'roles', label: 'Roles' },
-  { key: 'proyectos', label: 'Proyectos' },
-  { key: 'competencias', label: 'Competencias' },
-  { key: 'mbti', label: 'MBTI' },
-  { key: 'belbin', label: 'Belbin' },
-]
+const filterTabs = computed(() => [
+  { key: 'roles', label: t('features.reports.tabs.roles') },
+  { key: 'proyectos', label: t('features.reports.tabs.projects') },
+  { key: 'competencias', label: t('features.reports.tabs.competences') },
+  { key: 'mbti', label: t('features.reports.tabs.mbti') },
+  { key: 'belbin', label: t('features.reports.tabs.belbin') },
+])
 
-const workerColumns = [
-  { field: 'card', header: 'Carné', sortable: true },
-  { field: 'personName', header: 'Nombre', sortable: true },
-  { field: 'surName', header: 'Apellidos', sortable: true },
-  { field: 'sex', header: 'Sexo', sortable: false },
-  { field: 'age', header: 'Edad', sortable: true },
-  { field: 'ageGroup.ageGroupName', header: 'Grupo de Edad', sortable: true },
-  { field: 'nacionality.gentilicioNac', header: 'Nacionalidad', sortable: true },
-  { field: 'personTest.mbtiType', header: 'MBTI', sortable: true },
-]
+const workerColumns = computed(() => [
+  { field: 'card', header: t('common.columns.idCard'), sortable: true },
+  { field: 'personName', header: t('common.columns.name'), sortable: true },
+  { field: 'surName', header: t('common.fields.surname'), sortable: true },
+  { field: 'sex', header: t('common.fields.sex'), sortable: false },
+  { field: 'age', header: t('common.fields.age'), sortable: true },
+  { field: 'ageGroup.ageGroupName', header: t('common.fields.ageGroup'), sortable: true },
+  { field: 'nacionality.gentilicioNac', header: t('common.fields.nationality'), sortable: true },
+  { field: 'personTest.mbtiType', header: t('features.reports.fields.mbti'), sortable: true },
+])
 
 // Computed options for AppSelect
 const roleSelectOptions = computed(() => 
@@ -96,18 +98,18 @@ const projectSelectOptions = computed(() =>
 )
 
 const competenceSelectOptions = computed(() => [
-  { value: '', label: 'Seleccionar competencia' },
+  { value: '', label: t('features.reports.placeholders.selectCompetence') },
   ...competenceOptions.value.map(c => ({ value: c.id, label: c.competitionName }))
 ])
 
 const levelSelectOptions = computed(() => [
-  { value: '', label: 'Sin nivel' },
+  { value: '', label: t('features.reports.options.noLevel') },
   ...levelOptions.value.map(l => ({ value: l.id, label: l.significance }))
 ])
 
 const belbinSelectOptions = computed(() => [
-  { value: null, label: 'Sin filtro' },
-  ...belbinOptions.map(opt => ({ value: opt.value, label: opt.label }))
+  { value: null, label: t('features.reports.options.noFilter') },
+  ...belbinOptions.value.map(opt => ({ value: opt.value, label: opt.label }))
 ])
 
 const loadFilterOptions = async () => {
@@ -154,11 +156,11 @@ const removeProject = (projectId) => {
 
 const addCompetenceFilter = () => {
   if (!selectedCompetence.value || !selectedLevel.value) {
-    toast.add({ 
-      severity: 'warn', 
-      summary: 'Validación', 
-      detail: 'Debe seleccionar una competencia y un nivel', 
-      life: 3000 
+    toast.add({
+      severity: 'warn',
+      summary: t('common.validation'),
+      detail: t('features.reports.validation.competenceLevelRequired'),
+      life: 3000
     })
     return
   }
@@ -231,19 +233,19 @@ const handleSearch = async () => {
     }
     
     workers.value = await reportService.getFilteredWorkers(payload)
-    toast.add({ 
-      severity: 'success', 
-      summary: 'Búsqueda completada', 
-      detail: `Se encontraron ${workers.value.length} persona(s)`, 
-      life: 3000 
+    toast.add({
+      severity: 'success',
+      summary: t('features.reports.search.completed'),
+      detail: t('features.reports.search.resultCount', [workers.value.length]),
+      life: 3000
     })
   } catch (error) {
     console.error('Error filtrando trabajadores:', error)
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Error', 
-      detail: error?.response?.data?.message || 'No se pudo realizar la búsqueda', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: t('common.error'),
+      detail: error?.response?.data?.message || t('features.reports.search.error'),
+      life: 3000
     })
     workers.value = []
   } finally {
@@ -273,7 +275,7 @@ onMounted(loadFilterOptions)
     <!-- Filters Card -->
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden mb-6">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-base font-semibold text-gray-800">Filtros de búsqueda</h3>
+        <h3 class="text-base font-semibold text-gray-800">{{ t('features.reports.searchFilters') }}</h3>
       </div>
 
       <div class="p-6 space-y-5">
@@ -296,13 +298,13 @@ onMounted(loadFilterOptions)
         <div v-if="activeFilterTab === 'roles'" class="flex flex-col gap-4">
           <div class="flex flex-wrap gap-3 items-end">
             <div class="flex flex-col gap-1.5 flex-1 min-w-[250px]">
-              <label class="text-sm font-medium text-gray-700">Seleccionar Rol</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.reports.selectRole') }}</label>
               <AppSelect
                 v-model="tempRoleId"
                 :options="roleSelectOptions.filter(r => !selectedRoles.includes(r.value))"
-                placeholder="Seleccione un rol"
+                :placeholder="t('features.reports.placeholders.selectRole')"
                 searchable
-                search-placeholder="Buscar rol..."
+                :search-placeholder="t('features.reports.placeholders.searchRole')"
               />
             </div>
             <button
@@ -311,7 +313,7 @@ onMounted(loadFilterOptions)
               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus class="w-4 h-4" />
-              Agregar
+              {{ t('common.add') }}
             </button>
           </div>
 
@@ -320,10 +322,10 @@ onMounted(loadFilterOptions)
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rol
+                    {{ t('common.fields.role') }}
                   </th>
                   <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Preferencia
+                    {{ t('features.reports.preference') }}
                   </th>
                   <th class="w-14 px-4 py-3"></th>
                 </tr>
@@ -341,7 +343,7 @@ onMounted(loadFilterOptions)
                         class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20"
                       />
                       <span class="text-sm text-gray-600">
-                        {{ rolePreferences[roleId] ? 'Interesado' : 'No interesado' }}
+                        {{ rolePreferences[roleId] ? t('features.reports.interested') : t('features.reports.notInterested') }}
                       </span>
                     </label>
                   </td>
@@ -357,20 +359,20 @@ onMounted(loadFilterOptions)
               </tbody>
             </table>
           </div>
-          <p v-else class="text-sm text-gray-400">Sin roles agregados</p>
+          <p v-else class="text-sm text-gray-400">{{ t('features.reports.emptyRoles') }}</p>
         </div>
 
         <!-- Tab: Proyectos -->
         <div v-if="activeFilterTab === 'proyectos'" class="flex flex-col gap-4">
           <div class="flex flex-wrap gap-3 items-end">
             <div class="flex flex-col gap-1.5 flex-1 min-w-[250px]">
-              <label class="text-sm font-medium text-gray-700">Seleccionar Proyecto</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.reports.selectProject') }}</label>
               <AppSelect
                 v-model="tempProjectId"
                 :options="projectSelectOptions.filter(p => !selectedProjects.includes(p.value))"
-                placeholder="Seleccione un proyecto"
+                :placeholder="t('features.reports.placeholders.selectProject')"
                 searchable
-                search-placeholder="Buscar proyecto..."
+                :search-placeholder="t('features.reports.placeholders.searchProject')"
               />
             </div>
             <button
@@ -379,7 +381,7 @@ onMounted(loadFilterOptions)
               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus class="w-4 h-4" />
-              Agregar
+              {{ t('common.add') }}
             </button>
           </div>
 
@@ -388,10 +390,10 @@ onMounted(loadFilterOptions)
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Proyecto
+                    {{ t('common.fields.project') }}
                   </th>
                   <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Preferencia
+                    {{ t('features.reports.preference') }}
                   </th>
                   <th class="w-14 px-4 py-3"></th>
                 </tr>
@@ -409,7 +411,7 @@ onMounted(loadFilterOptions)
                         class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20"
                       />
                       <span class="text-sm text-gray-600">
-                        {{ projectPreferences[projectId] ? 'Interesado' : 'No interesado' }}
+                        {{ projectPreferences[projectId] ? t('features.reports.interested') : t('features.reports.notInterested') }}
                       </span>
                     </label>
                   </td>
@@ -425,28 +427,28 @@ onMounted(loadFilterOptions)
               </tbody>
             </table>
           </div>
-          <p v-else class="text-sm text-gray-400">Sin proyectos agregados</p>
+          <p v-else class="text-sm text-gray-400">{{ t('features.reports.emptyProjects') }}</p>
         </div>
 
         <!-- Tab: Competencias -->
         <div v-if="activeFilterTab === 'competencias'" class="flex flex-col gap-4">
           <div class="flex flex-wrap gap-3 items-end">
             <div class="flex flex-col gap-1.5 flex-1 min-w-[200px]">
-              <label class="text-sm font-medium text-gray-700">Competencia</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('common.fields.competence') }}</label>
               <AppSelect
                 v-model="selectedCompetence"
                 :options="competenceSelectOptions"
-                placeholder="Seleccionar competencia"
+                :placeholder="t('features.reports.placeholders.selectCompetence')"
                 searchable
-                search-placeholder="Buscar competencia..."
+                :search-placeholder="t('features.reports.placeholders.searchCompetence')"
               />
             </div>
             <div class="flex flex-col gap-1.5 w-48">
-              <label class="text-sm font-medium text-gray-700">Nivel <span class="text-error-500">*</span></label>
+              <label class="text-sm font-medium text-gray-700">{{ t('common.fields.level') }} <span class="text-error-500">*</span></label>
               <AppSelect
                 v-model="selectedLevel"
                 :options="levelSelectOptions"
-                placeholder="Seleccionar nivel"
+                :placeholder="t('features.reports.placeholders.selectLevel')"
               />
             </div>
             <button
@@ -455,7 +457,7 @@ onMounted(loadFilterOptions)
               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus class="w-4 h-4" />
-              Agregar
+              {{ t('common.add') }}
             </button>
           </div>
 
@@ -464,7 +466,7 @@ onMounted(loadFilterOptions)
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Competencia — Nivel
+                    {{ t('features.reports.competenceLevel') }}
                   </th>
                   <th class="w-14 px-4 py-3"></th>
                 </tr>
@@ -484,12 +486,12 @@ onMounted(loadFilterOptions)
               </tbody>
             </table>
           </div>
-          <p v-else class="text-sm text-gray-400">Sin competencias agregadas</p>
+          <p v-else class="text-sm text-gray-400">{{ t('features.reports.emptyCompetences') }}</p>
         </div>
 
         <!-- Tab: MBTI -->
         <div v-if="activeFilterTab === 'mbti'" class="flex flex-col gap-3">
-          <label class="text-sm font-medium text-gray-700">Tipos MBTI</label>
+          <label class="text-sm font-medium text-gray-700">{{ t('features.reports.mbtiTypes') }}</label>
           <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
             <label
               v-for="m in mbtiOptions"
@@ -521,7 +523,7 @@ onMounted(loadFilterOptions)
             <AppSelect
               v-model="belbin[role.key]"
               :options="belbinSelectOptions"
-              placeholder="Sin filtro"
+              :placeholder="t('features.reports.options.noFilter')"
             />
           </div>
         </div>
@@ -529,12 +531,12 @@ onMounted(loadFilterOptions)
         <!-- Age range -->
         <div class="flex flex-wrap items-end gap-4 pt-4 border-t border-gray-200">
           <div class="flex flex-col gap-1.5">
-            <label class="text-sm font-medium text-gray-700">Rango de edad</label>
+            <label class="text-sm font-medium text-gray-700">{{ t('features.reports.ageRange') }}</label>
             <div class="flex items-center gap-3">
               <input
                 v-model.number="minAge"
                 type="number"
-                placeholder="Mín."
+                :placeholder="t('features.reports.placeholders.minAge')"
                 min="0"
                 max="100"
                 class="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
@@ -543,7 +545,7 @@ onMounted(loadFilterOptions)
               <input
                 v-model.number="maxAge"
                 type="number"
-                placeholder="Máx."
+                :placeholder="t('features.reports.placeholders.maxAge')"
                 min="0"
                 max="100"
                 class="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
@@ -559,7 +561,7 @@ onMounted(loadFilterOptions)
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             <RefreshCw class="w-4 h-4" />
-            Limpiar
+            {{ t('common.clear') }}
           </button>
           <button
             @click="handleSearch"
@@ -568,7 +570,7 @@ onMounted(loadFilterOptions)
           >
             <Loader2 v-if="loading" class="w-4 h-4 animate-spin" />
             <Search v-else class="w-4 h-4" />
-            Buscar
+            {{ t('common.search') }}
           </button>
         </div>
       </div>
@@ -577,9 +579,9 @@ onMounted(loadFilterOptions)
     <!-- Results -->
     <div v-if="searched">
       <div class="flex items-center gap-3 mb-4">
-        <h3 class="text-base font-semibold text-gray-800">Resultados</h3>
+        <h3 class="text-base font-semibold text-gray-800">{{ t('features.reports.results') }}</h3>
         <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-600">
-          {{ workers.length }} persona(s)
+          {{ t('features.reports.personCount', [workers.length]) }}
         </span>
       </div>
       <DataTable
