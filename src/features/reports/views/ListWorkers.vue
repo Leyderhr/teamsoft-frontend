@@ -41,7 +41,9 @@ const rolePreferences = ref({}) // { roleId: true/false }
 const projectPreferences = ref({}) // { projectId: true/false }
 
 const belbinOptions = computed(() => [
-  { label: t('features.reports.belbin.favorite'), value: 'F' },
+  // Los roles Belbin se almacenan como la inicial de Preferido/Evitado/Indiferente
+  // (P/E/I), por eso "favorito" debe ser 'P' y no 'F' (ver PersonFormPage.vue).
+  { label: t('features.reports.belbin.favorite'), value: 'P' },
   { label: t('features.reports.belbin.avoided'), value: 'E' },
   { label: t('features.reports.belbin.indifferent'), value: 'I' }
 ])
@@ -232,7 +234,7 @@ const handleSearch = async () => {
       }
     }
     
-    workers.value = await reportService.getPersonReport()
+    workers.value = await reportService.filterPersons(payload)
     toast.add({
       severity: 'success',
       summary: t('features.reports.search.completed'),
