@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { useRouter } from 'vue-router'
 import { Upload, FileText, ChevronRight, Trash2, Plus, Check, Loader2, ArrowLeft, ArrowRight } from 'lucide-vue-next'
@@ -9,6 +10,7 @@ import competenceService from '@/features/competences/services/competenceService
 import roleService from '@/features/roles/services/roleService.js'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 
+const { t } = useI18n()
 const toast = useToast()
 const router = useRouter()
 
@@ -30,21 +32,21 @@ const groupOptions = ref([])
 const uploadingFile = ref(false)
 
 // Field options for person mapping
-const personFieldOptions = [
-    { label: 'Nombre', value: 'personName' },
-    { label: 'Apellidos', value: 'surName' },
-    { label: 'Carné/CI', value: 'card' },
-    { label: 'Dirección', value: 'address' },
-    { label: 'Teléfono', value: 'phone' },
-    { label: 'Correo electrónico', value: 'email' },
-    { label: 'Sexo', value: 'sex' },
-    { label: 'Fecha de ingreso', value: 'inDate' },
-    { label: 'Fecha de nacimiento', value: 'birthDate' },
-    { label: 'Carga laboral', value: 'workload' },
-    { label: 'Años de experiencia', value: 'experience' },
-    { label: 'Estado', value: 'status' },
-    { label: 'Tipo MBTI', value: 'tipoMB' }
-]
+const personFieldOptions = computed(() => [
+    { label: t('features.import.wizard.personFields.personName'), value: 'personName' },
+    { label: t('features.import.wizard.personFields.surName'), value: 'surName' },
+    { label: t('features.import.wizard.personFields.card'), value: 'card' },
+    { label: t('features.import.wizard.personFields.address'), value: 'address' },
+    { label: t('features.import.wizard.personFields.phone'), value: 'phone' },
+    { label: t('features.import.wizard.personFields.email'), value: 'email' },
+    { label: t('features.import.wizard.personFields.sex'), value: 'sex' },
+    { label: t('features.import.wizard.personFields.inDate'), value: 'inDate' },
+    { label: t('features.import.wizard.personFields.birthDate'), value: 'birthDate' },
+    { label: t('features.import.wizard.personFields.workload'), value: 'workload' },
+    { label: t('features.import.wizard.personFields.experience'), value: 'experience' },
+    { label: t('features.import.wizard.personFields.status'), value: 'status' },
+    { label: t('features.import.wizard.personFields.tipoMB'), value: 'tipoMB' }
+])
 
 // =====================
 // STEP 2 — Mapeo de Persona
@@ -82,7 +84,7 @@ const initCompetenceWeights = () => {
     competenceMappings.value.forEach(m => m.competenceIds.forEach(id => allCompetenceIds.add(id)))
     competenceWeights.value = Array.from(allCompetenceIds).map(id => {
         const comp = competenceOptions.value.find(c => c.id === id)
-        return { competenceId: id, competenceName: comp?.competitionName || `Competencia ${id}`, weight: 1.0 }
+        return { competenceId: id, competenceName: comp?.competitionName || (t('features.import.wizard.competenceFallback') + ' ' + id), weight: 1.0 }
     })
     // Numeric columns
     numericMaxValues.value = fileColumns.value
@@ -114,14 +116,14 @@ const importResult = ref(null)
 // =====================
 // Navigation
 // =====================
-const stepTitles = [
-    'Seleccionar Archivo',
-    'Atributos de Persona',
-    'Atributos de Competencia',
-    'Configurar Competencias',
-    'Atributos de Rol',
-    'Verificar e Importar'
-]
+const stepTitles = computed(() => [
+    t('features.import.wizard.steps.selectFile'),
+    t('features.import.wizard.steps.personAttributes'),
+    t('features.import.wizard.steps.competenceAttributes'),
+    t('features.import.wizard.steps.configureCompetences'),
+    t('features.import.wizard.steps.roleAttributes'),
+    t('features.import.wizard.steps.verifyImport')
+])
 
 const canNext = computed(() => {
     if (currentStep.value === 1) return uploadedFile.value !== null
@@ -153,7 +155,7 @@ const handleFileSelect = async (event) => {
         personMappings.value = fileColumns.value.slice(0, Math.min(3, fileColumns.value.length)).map(col => ({
             csvColumn: col, personField: null
         }))
-        toast.add({ severity: 'success', summary: 'Archivo cargado', detail: `${fileColumns.value.length} columnas detectadas`, life: 3000 })
+        toast.add({ severity: 'success', summary: t('features.import.wizard.fileLoaded'), detail: t('features.import.wizard.columnsDetected', [fileColumns.value.length]), life: 3000 })
     } catch (error) {
         console.error('Error uploading file:', error)
         // Demo mode: simulate columns from file name
@@ -161,7 +163,7 @@ const handleFileSelect = async (event) => {
         fileColumns.value = ['nombre', 'apellidos', 'carnet', 'email', 'telefono', 'sexo', 'experiencia']
         filePreview.value = []
         personMappings.value = fileColumns.value.map(col => ({ csvColumn: col, personField: null }))
-        toast.add({ severity: 'info', summary: 'Modo demo', detail: 'Columnas simuladas (API no disponible)', life: 3000 })
+        toast.add({ severity: 'info', summary: t('features.import.wizard.demoMode'), detail: t('features.import.wizard.demoColumns'), life: 3000 })
     } finally {
         uploadingFile.value = false
     }
@@ -184,10 +186,10 @@ const handleImport = async () => {
             roleMappings: roleMappings.value.filter(m => m.csvColumn && m.roleId)
         }
         importResult.value = await importService.executeImport(payload)
-        toast.add({ severity: 'success', summary: 'Importación exitosa', detail: `Se importaron los datos correctamente`, life: 5000 })
+        toast.add({ severity: 'success', summary: t('features.import.wizard.importSuccess'), detail: t('features.import.wizard.importSuccessDetail'), life: 5000 })
     } catch (error) {
         console.error('Error importando:', error)
-        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo completar la importación', life: 4000 })
+        toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.import.wizard.importError'), life: 4000 })
     } finally {
         importing.value = false
     }
@@ -209,7 +211,7 @@ onMounted(loadOptions)
 
 <template>
   <div class="space-y-6">
-    <PageBreadcrumb page-title="Importar Personas" />
+    <PageBreadcrumb :page-title="t('features.import.wizard.title')" />
 
     <!-- Stepper -->
     <div class="flex items-center gap-1 overflow-x-auto pb-1">
@@ -249,7 +251,7 @@ onMounted(loadOptions)
 
           <!-- File upload zone -->
           <div class="flex flex-col gap-3">
-            <label class="text-sm font-medium text-gray-700">Archivo CSV</label>
+            <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.csvFile') }}</label>
             <label
               class="flex flex-col items-center justify-center gap-3 w-full rounded-xl border-2 border-dashed border-gray-300 px-6 py-10 cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition-colors"
               :class="uploadedFile ? 'border-brand-400 bg-brand-50/20' : ''"
@@ -262,24 +264,24 @@ onMounted(loadOptions)
               />
               <div v-if="uploadingFile" class="flex flex-col items-center gap-2 text-brand-500">
                 <Loader2 class="w-8 h-8 animate-spin" />
-                <span class="text-sm font-medium">Procesando archivo...</span>
+                <span class="text-sm font-medium">{{ t('features.import.wizard.processing') }}</span>
               </div>
               <div v-else-if="uploadedFile" class="flex flex-col items-center gap-2">
                 <FileText class="w-8 h-8 text-brand-500" />
                 <span class="text-sm font-semibold text-gray-800">{{ uploadedFile.name }}</span>
-                <span class="text-xs text-gray-500">{{ Math.round(uploadedFile.size / 1024) }} KB — Haga clic para cambiar</span>
+                <span class="text-xs text-gray-500">{{ Math.round(uploadedFile.size / 1024) }} KB — {{ t('features.import.wizard.clickToChange') }}</span>
               </div>
               <div v-else class="flex flex-col items-center gap-2 text-gray-400">
                 <Upload class="w-8 h-8" />
-                <span class="text-sm font-medium text-gray-600">Haga clic para seleccionar un archivo CSV</span>
-                <span class="text-xs text-gray-400">Máximo 10 MB</span>
+                <span class="text-sm font-medium text-gray-600">{{ t('features.import.wizard.clickToSelect') }}</span>
+                <span class="text-xs text-gray-400">{{ t('features.import.wizard.maxSize') }}</span>
               </div>
             </label>
           </div>
 
           <!-- Detected columns -->
           <div v-if="fileColumns.length" class="flex flex-col gap-2">
-            <label class="text-sm font-medium text-gray-700">Columnas detectadas en el archivo:</label>
+            <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.detectedColumns') }}</label>
             <div class="flex flex-wrap gap-2">
               <span
                 v-for="col in fileColumns"
@@ -293,12 +295,12 @@ onMounted(loadOptions)
 
           <!-- Group select -->
           <div class="flex flex-col gap-2 max-w-sm">
-            <label class="text-sm font-medium text-gray-700">Grupo destino <span class="text-gray-400 font-normal">(opcional)</span></label>
+            <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.targetGroup') }} <span class="text-gray-400 font-normal">{{ t('common.optional') }}</span></label>
             <select
               v-model="selectedGroup"
               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
             >
-              <option :value="null">Seleccione un grupo</option>
+              <option :value="null">{{ t('features.import.wizard.selectGroup') }}</option>
               <option v-for="g in groupOptions" :key="g.id" :value="g.id">{{ g.name }}</option>
             </select>
           </div>
@@ -307,7 +309,7 @@ onMounted(loadOptions)
         <!-- ======================== STEP 2: Mapeo de Persona ======================== -->
         <div v-else-if="currentStep === 2" class="flex flex-col gap-4">
           <p class="text-sm text-gray-500">
-            Asocie cada columna del archivo con el campo correspondiente en la entidad Persona.
+            {{ t('features.import.wizard.personMappingHint') }}
           </p>
 
           <div class="space-y-3">
@@ -320,7 +322,7 @@ onMounted(loadOptions)
                 v-model="mapping.csvColumn"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
               >
-                <option :value="null">Columna CSV</option>
+                <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
                 <option v-for="col in fileColumns" :key="col" :value="col">{{ col }}</option>
               </select>
 
@@ -330,7 +332,7 @@ onMounted(loadOptions)
                 v-model="mapping.personField"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
               >
-                <option :value="null">Campo destino</option>
+                <option :value="null">{{ t('features.import.wizard.targetField') }}</option>
                 <option v-for="opt in personFieldOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
 
@@ -351,7 +353,7 @@ onMounted(loadOptions)
               @click="addPersonMapping"
             >
               <Plus class="w-4 h-4" />
-              Agregar mapeo
+              {{ t('features.import.wizard.addMapping') }}
             </button>
           </div>
         </div>
@@ -372,7 +374,7 @@ onMounted(loadOptions)
                 v-model="mapping.csvColumn"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
               >
-                <option :value="null">Columna CSV</option>
+                <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
                 <option v-for="col in fileColumns" :key="col" :value="col">{{ col }}</option>
               </select>
 
@@ -413,7 +415,7 @@ onMounted(loadOptions)
               @click="addCompetenceMapping"
             >
               <Plus class="w-4 h-4" />
-              Agregar mapeo
+              {{ t('features.import.wizard.addMapping') }}
             </button>
           </div>
         </div>
@@ -497,7 +499,7 @@ onMounted(loadOptions)
                 v-model="mapping.csvColumn"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
               >
-                <option :value="null">Columna CSV</option>
+                <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
                 <option v-for="col in fileColumns" :key="col" :value="col">{{ col }}</option>
               </select>
 
@@ -528,7 +530,7 @@ onMounted(loadOptions)
               @click="addRoleMapping"
             >
               <Plus class="w-4 h-4" />
-              Agregar mapeo
+              {{ t('features.import.wizard.addMapping') }}
             </button>
           </div>
         </div>
@@ -569,7 +571,7 @@ onMounted(loadOptions)
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-gray-100">
-                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">Columna CSV</th>
+                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.csvColumn') }}</th>
                     <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Campo de Persona</th>
                   </tr>
                 </thead>
@@ -603,7 +605,7 @@ onMounted(loadOptions)
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-gray-100">
-                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">Columna CSV</th>
+                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.csvColumn') }}</th>
                     <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Competencias</th>
                   </tr>
                 </thead>
@@ -645,7 +647,7 @@ onMounted(loadOptions)
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-gray-100">
-                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">Columna CSV</th>
+                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.csvColumn') }}</th>
                     <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Rol</th>
                   </tr>
                 </thead>
@@ -706,7 +708,7 @@ onMounted(loadOptions)
           :disabled="!canNext"
           @click="goNext"
         >
-          Siguiente
+          {{ t('common.next') }}
           <ArrowRight class="w-4 h-4" />
         </button>
 

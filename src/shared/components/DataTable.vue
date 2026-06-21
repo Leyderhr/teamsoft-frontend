@@ -12,7 +12,7 @@
             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
           >
             <Plus class="w-4 h-4" />
-            Crear
+            {{ t('common.create') }}
           </button>
           <button
             @click="handleEdit"
@@ -23,7 +23,7 @@
               : 'text-gray-300 cursor-not-allowed bg-gray-50'"
           >
             <Pencil class="w-4 h-4" />
-            Editar
+            {{ t('common.edit') }}
           </button>
           <button
             @click="handleDeleteRequest"
@@ -34,7 +34,7 @@
               : 'text-gray-300 cursor-not-allowed bg-gray-50'"
           >
             <Trash2 class="w-4 h-4" />
-            Eliminar
+            {{ t('common.delete') }}
           </button>
           <button
             v-if="showImportButton"
@@ -42,7 +42,7 @@
             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             <Upload class="w-4 h-4" />
-            Importar
+            {{ t('common.import.importButton') }}
           </button>
           <button
             v-if="showImportButton"
@@ -54,7 +54,7 @@
               : 'text-gray-300 cursor-not-allowed bg-gray-50'"
           >
             <Download class="w-4 h-4" />
-            Exportar
+            {{ t('common.export') }}
           </button>
           <!-- Slot para botones adicionales -->
           <slot name="extraButtons"></slot>
@@ -68,7 +68,7 @@
             class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <FileText class="w-4 h-4" />
-            {{ reportButtonLabel }}
+            {{ t(reportButtonLabel) }}
           </button>
         </div>
 
@@ -79,7 +79,7 @@
             v-model="searchQuery"
             @input="currentPage = 1"
             type="text"
-            placeholder="Buscar..."
+            :placeholder="t('common.search')"
             class="pl-9 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors w-56"
           />
         </div>
@@ -101,7 +101,7 @@
                 @click="col.sortable !== false && toggleSort(col.field)"
               >
                 <div class="flex items-center gap-1">
-                  {{ col.header }}
+                  {{ t(col.header) }}
                   <ChevronUp
                     v-if="sortField === col.field && sortOrder === 1"
                     class="w-3.5 h-3.5 text-brand-500"
@@ -141,9 +141,9 @@
               <td :colspan="columns.length + 1" class="px-5 py-14 text-center">
                 <div class="flex flex-col items-center gap-2">
                   <Inbox class="w-12 h-12 text-gray-200" />
-                  <p class="text-sm text-gray-400 font-medium">Sin resultados</p>
+                  <p class="text-sm text-gray-400 font-medium">{{ t('common.table.noResults') }}</p>
                   <p v-if="searchQuery" class="text-xs text-gray-400">
-                    Intenta con otros términos de búsqueda
+                    {{ t('common.table.noResultsHint') }}
                   </p>
                 </div>
               </td>
@@ -227,11 +227,11 @@
       >
         <!-- Info -->
         <p class="text-sm text-gray-500">
-          Mostrando
+          {{ t('common.table.showing') }}
           <span class="font-medium text-gray-700">{{ paginationStart }}–{{ paginationEnd }}</span>
-          de
+          {{ t('common.table.of') }}
           <span class="font-medium text-gray-700">{{ totalRecordsFiltered }}</span>
-          registros
+          {{ t('common.table.records') }}
         </p>
 
         <!-- Controls -->
@@ -240,7 +240,7 @@
           <div class="w-32">
             <AppSelect
               v-model="rowsPerPage"
-              :options="rowsPerPageOptions.map(n => ({ label: `${n} / pág`, value: n }))"
+              :options="rowsPerPageOptions.map(n => ({ label: `${n} / ${t('common.table.perPage')}`, value: n }))"
               size="sm"
             />
           </div>
@@ -294,23 +294,23 @@
           <div class="w-10 h-10 rounded-full bg-error-50 flex items-center justify-center flex-shrink-0">
             <AlertTriangle class="w-5 h-5 text-error-600" />
           </div>
-          <h3 class="text-base font-semibold text-gray-800">Confirmar eliminación</h3>
+          <h3 class="text-base font-semibold text-gray-800">{{ t('common.confirm.deleteTitle') }}</h3>
         </div>
         <p class="text-sm text-gray-500 mb-6">
-          ¿Está seguro de eliminar este registro? Esta acción no se puede deshacer.
+          {{ t('common.confirm.deleteMessage') }}
         </p>
         <div class="flex justify-end gap-3">
           <button
             @click="confirmVisible = false"
             class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Cancelar
+            {{ t('common.cancel') }}
           </button>
           <button
             @click="confirmDelete"
             class="px-4 py-2 rounded-lg bg-error-600 text-white text-sm font-medium hover:bg-error-700 transition-colors"
           >
-            Eliminar
+            {{ t('common.delete') }}
           </button>
         </div>
       </div>
@@ -320,6 +320,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   Plus, Pencil, Trash2, Upload, Download, Search,
   ChevronUp, ChevronDown, ChevronsUpDown,
@@ -327,6 +328,8 @@ import {
   CheckCircle2, XCircle, Inbox, AlertTriangle, FileText,
 } from 'lucide-vue-next'
 import AppSelect from '@/components/ui/AppSelect.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   columns: { type: Array, required: true },
@@ -336,7 +339,7 @@ const props = defineProps({
   showActions: { type: Boolean, default: true },
   showImportButton: { type: Boolean, default: false },
   showReportButton: { type: Boolean, default: false },
-  reportButtonLabel: { type: String, default: 'Ver Reporte' },
+  reportButtonLabel: { type: String, default: 'common.table.viewReport' },
   rowsPerPageOptions: { type: Array, default: () => [10, 20, 30, 50] },
   defaultRows: { type: Number, default: 10 },
 })

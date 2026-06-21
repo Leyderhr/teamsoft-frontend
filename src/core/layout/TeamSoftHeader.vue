@@ -52,7 +52,7 @@
               </div>
               <div class="min-w-0">
                 <span class="block font-semibold text-gray-800 text-sm truncate">
-                  {{ authStore.user?.username || 'Usuario' }}
+                  {{ authStore.user?.username || t('common.user') }}
                 </span>
                 <span
                   class="block text-xs text-gray-500 mt-0.5 truncate"
@@ -72,7 +72,7 @@
                   @click="mobileProfileMenuOpen = false"
                 >
                   <Key class="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  Cambiar contraseña
+                  {{ t('common.changePassword') }}
                 </router-link>
               </li>
               <li>
@@ -81,7 +81,7 @@
                   class="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-gray-700 rounded-xl hover:bg-gray-100"
                 >
                   <LogOut class="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  Cerrar sesión
+                  {{ t('common.logout') }}
                 </button>
               </li>
             </ul>
@@ -134,7 +134,7 @@
             <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center">
               <User class="w-4 h-4 text-white" />
             </div>
-            <span class="font-medium text-sm">{{ authStore.user?.username || 'Usuario' }}</span>
+            <span class="font-medium text-sm">{{ authStore.user?.username || t('common.user') }}</span>
             <ChevronDown
               class="w-4 h-4 transition-transform duration-200"
               :class="{ 'rotate-180': profileMenuOpen }"
@@ -147,7 +147,7 @@
           >
             <div class="pb-3 border-b border-gray-200">
               <span class="block font-semibold text-gray-800 text-sm">
-                {{ authStore.user?.username || 'Usuario' }}
+                {{ authStore.user?.username || t('common.user') }}
               </span>
               <span
                 class="block text-xs text-gray-500 mt-0.5"
@@ -164,7 +164,7 @@
                   @click="profileMenuOpen = false"
                 >
                   <Key class="w-4 h-4 text-gray-400" />
-                  Cambiar contraseña
+                  {{ t('common.changePassword') }}
                 </router-link>
               </li>
               <li>
@@ -173,7 +173,7 @@
                   class="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100"
                 >
                   <LogOut class="w-4 h-4 text-gray-400" />
-                  Cerrar sesión
+                  {{ t('common.logout') }}
                 </button>
               </li>
             </ul>
@@ -186,6 +186,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/lib/auth-store'
 import { useLocaleStore } from '@/core/store/locale.store.js'
@@ -194,6 +195,7 @@ import { User, ChevronDown, Key, LogOut, Check } from 'lucide-vue-next'
 import LanguageSwitcher from '@/core/layout/LanguageSwitcher.vue'
 import FlagIcon from '@/core/layout/FlagIcon.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 const localeStore = useLocaleStore()

@@ -44,7 +44,7 @@
           </tr>
           <tr v-if="paginatedData.length === 0">
             <td :colspan="columns.length" class="px-5 py-8 text-center" style="color: var(--ts-text-muted);">
-              {{ emptyText }}
+              {{ t(emptyText) }}
             </td>
           </tr>
         </tbody>
@@ -58,7 +58,7 @@
       style="border-color: var(--ts-border);"
     >
       <div class="text-sm" style="color: var(--ts-text-secondary);">
-        Mostrando {{ startItem }} - {{ endItem }} de {{ totalItems }} resultados
+        {{ t('common.table.showingRange', [startItem, endItem, totalItems]) }}
       </div>
       <div class="flex items-center gap-2">
         <!-- Previous -->
@@ -69,7 +69,7 @@
           :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'"
           style="border-color: var(--ts-border); color: var(--ts-text-secondary);"
         >
-          Anterior
+          {{ t('common.previous') }}
         </button>
         
         <!-- Page Numbers -->
@@ -96,7 +96,7 @@
           :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'"
           style="border-color: var(--ts-border); color: var(--ts-text-secondary);"
         >
-          Siguiente
+          {{ t('common.next') }}
         </button>
       </div>
     </div>
@@ -108,7 +108,7 @@
       style="border-color: var(--ts-border);"
     >
       <div class="flex items-center gap-2">
-        <span class="text-sm" style="color: var(--ts-text-secondary);">Ver</span>
+        <span class="text-sm" style="color: var(--ts-text-secondary);">{{ t('common.table.show') }}</span>
         <select
           v-model="itemsPerPage"
           class="px-2 py-1 rounded-lg border text-sm"
@@ -119,7 +119,7 @@
           <option :value="25">25</option>
           <option :value="50">50</option>
         </select>
-        <span class="text-sm" style="color: var(--ts-text-secondary);">por página</span>
+        <span class="text-sm" style="color: var(--ts-text-secondary);">{{ t('common.table.perPage') }}</span>
       </div>
     </div>
   </div>
@@ -127,11 +127,14 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   columns: { type: Array, required: true },
   data: { type: Array, default: () => [] },
-  emptyText: { type: String, default: 'No hay datos disponibles' },
+  emptyText: { type: String, default: 'common.table.empty' },
   showPagination: { type: Boolean, default: true },
   defaultItemsPerPage: { type: Number, default: 10 }
 })

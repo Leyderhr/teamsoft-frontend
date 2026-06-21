@@ -2,6 +2,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import { AlertCircle, Save, Loader2, Plus, Pencil, Trash2, X } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
@@ -10,6 +11,7 @@ import roleService from '@/features/roles/services/roleService.js'
 import competenceService from '@/features/competences/services/competenceService.js'
 import levelsService from '@/features/nomenclatives/services/levelsService.js'
 import competenceImportanceService from '@/features/nomenclatives/services/competenceImportanceService.js'
+import { parseApiError } from '@/lib/apiError'
 
 const props = defineProps({
   mode: { type: String, default: 'create' },
@@ -19,6 +21,7 @@ const props = defineProps({
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
+const { t } = useI18n()
 
 // ── Form data ──────────────────────────────────────────────────────────────
 const form = reactive({ roleName: '', roleDesc: '', impact: null, isBoss: false })
@@ -153,7 +156,7 @@ onMounted(async () => {
     allImportances.value = importancesRes?.data ?? importancesRes
     allRoles.value = rolesRes?.data ?? rolesRes
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los catálogos', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.roles.catalogsLoadError'), life: 3000 })
   }
 
   if (props.mode === 'edit' && route.params.id) {
@@ -181,7 +184,7 @@ onMounted(async () => {
         selectedIncompatibleIds.value = data.incompatibleRoles.map(r => r.id)
       }
     } catch {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el rol', life: 3000 })
+      toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.roles.loadError'), life: 3000 })
     }
   }
   loadingData.value = false
@@ -189,7 +192,9 @@ onMounted(async () => {
 
 // ── Save ───────────────────────────────────────────────────────────────────
 const formTitle = computed(() =>
-  props.mode === 'create' ? 'Crear Rol' : 'Editar Rol'
+  props.mode === 'create'
+    ? `${t('common.add')} ${t('features.roles.formTitle')}`
+    : `${t('common.edit')} ${t('features.roles.formTitle')}`
 )
 
 async function handleSave() {
@@ -197,15 +202,15 @@ async function handleSave() {
   let valid = true
 
   if (!form.roleName.trim()) {
-    errors.roleName = 'El nombre del rol es requerido'
+    errors.roleName = t('features.roles.roleNameRequired')
     valid = false
   }
   if (!form.roleDesc.trim()) {
-    errors.roleDesc = 'La descripción es requerida'
+    errors.roleDesc = t('features.roles.descRequired')
     valid = false
   }
   if (form.impact === null || form.impact === '' || form.impact === undefined) {
-    errors.impact = 'El impacto es requerido'
+    errors.impact = t('features.roles.impactRequired')
     valid = false
   }
   if (!valid) return
@@ -227,17 +232,17 @@ async function handleSave() {
   try {
     if (props.mode === 'create') {
       await roleService.create(payload)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Rol creado correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.roles.created'), life: 3000 })
     } else {
       await roleService.update(route.params.id, payload)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Rol actualizado correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.roles.updated'), life: 3000 })
     }
     router.push('/manage-roles/role')
   } catch (e) {
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: e?.response?.data?.message ?? e?.message ?? 'Error al guardar',
+      summary: t('common.error'),
+      detail: await parseApiError(e, t('common.saveError')),
       life: 3000,
     })
   } finally {
@@ -250,7 +255,7 @@ async function handleSave() {
   <div>
     <PageBreadcrumb
       :page-title="formTitle"
-      :items="[{ label: 'Roles', path: '/manage-roles/role' }]"
+      :items="[{ label: t('features.roles.formTitle'), path: '/manage-roles/role' }]"
     />
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
@@ -268,19 +273,19 @@ async function handleSave() {
         <!-- ── Sección: Datos básicos ── -->
         <div class="px-6 pt-6 pb-5">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-            Datos básicos
+            {{ t('features.roles.basicData') }}
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <!-- Nombre del Rol -->
             <div class="space-y-1">
               <label class="block text-sm font-medium text-gray-700">
-                Nombre del Rol <span class="text-error-500 ml-0.5">*</span>
+                {{ t('features.roles.roleNameLabel') }} <span class="text-error-500 ml-0.5">*</span>
               </label>
               <input
                 v-model="form.roleName"
                 type="text"
-                placeholder="Nombre del rol"
+                :placeholder="t('features.roles.roleNameLabel')"
                 class="w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
                 :class="errors.roleName ? 'border-error-400' : 'border-gray-300 hover:border-gray-400'"
               />
@@ -293,7 +298,7 @@ async function handleSave() {
             <!-- Impacto de trabajar a distancia -->
             <div class="space-y-1">
               <label class="block text-sm font-medium text-gray-700">
-                Impacto de trabajar a distancia <span class="text-error-500 ml-0.5">*</span>
+                {{ t('features.roles.impactLabel') }} <span class="text-error-500 ml-0.5">*</span>
               </label>
               <input
                 v-model="form.impact"
@@ -319,18 +324,18 @@ async function handleSave() {
                   v-model="form.isBoss"
                   class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20"
                 />
-                <span class="text-sm font-medium text-gray-700">Jefe de Equipo</span>
+                <span class="text-sm font-medium text-gray-700">{{ t('features.roles.bossLabel') }}</span>
               </label>
             </div>
 
             <!-- Descripción – full width -->
             <div class="space-y-1 sm:col-span-2 lg:col-span-3">
               <label class="block text-sm font-medium text-gray-700">
-                Descripción <span class="text-error-500 ml-0.5">*</span>
+                {{ t('features.roles.descriptionLabel') }} <span class="text-error-500 ml-0.5">*</span>
               </label>
               <AppAutoGrow
                 v-model="form.roleDesc"
-                placeholder="Descripción del rol"
+                :placeholder="t('features.roles.descriptionLabel')"
                 :max-length="300"
                 :has-error="!!errors.roleDesc"
               />
@@ -348,35 +353,35 @@ async function handleSave() {
         <!-- ── Sección: Competencias genéricas ── -->
         <div class="px-6 pt-6 pb-5">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-            Competencias genéricas
+            {{ t('features.roles.genericCompetences') }}
           </p>
 
           <!-- Mini-formulario -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2 items-end">
             <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Competencia</label>
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.roles.competenceLabel') }}</label>
               <AppSelect
                 v-model="selCompetenceId"
                 :options="competenceOptions"
-                placeholder="Seleccione competencia"
+                :placeholder="t('common.select')"
                 :searchable="true"
               />
             </div>
             <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Nivel mínimo requerido</label>
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.roles.minLevelLabel') }}</label>
               <AppSelect
                 v-model="selLevelsId"
                 :options="levelOptions"
-                placeholder="Seleccione nivel"
+                :placeholder="t('common.select')"
                 :searchable="true"
               />
             </div>
             <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Nivel de importancia</label>
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.roles.importanceLabel') }}</label>
               <AppSelect
                 v-model="selImportanceId"
                 :options="importanceOptions"
-                placeholder="Seleccione importancia"
+                :placeholder="t('common.select')"
               />
             </div>
           </div>
@@ -394,7 +399,7 @@ async function handleSave() {
             >
               <Pencil v-if="isEditingComp" class="w-4 h-4" />
               <Plus v-else class="w-4 h-4" />
-              {{ isEditingComp ? 'Actualizar' : 'Agregar' }}
+              {{ isEditingComp ? t('common.edit') : t('common.add') }}
             </button>
             <button
               v-if="isEditingComp"
@@ -403,7 +408,7 @@ async function handleSave() {
               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               <X class="w-4 h-4" />
-              Cancelar
+              {{ t('common.cancel') }}
             </button>
           </div>
 
@@ -420,7 +425,7 @@ async function handleSave() {
                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-error-200 text-xs font-medium text-error-600 hover:bg-error-50 transition-colors cursor-pointer"
               >
                 <Trash2 class="w-3.5 h-3.5" />
-                Eliminar
+                {{ t('common.delete') }}
               </button>
             </div>
             <div class="overflow-x-auto">
@@ -428,20 +433,20 @@ async function handleSave() {
                 <thead>
                   <tr class="border-b border-gray-200 bg-white">
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Competencia
+                      {{ t('features.roles.competenceHeader') }}
                     </th>
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nivel mínimo
+                      {{ t('features.roles.minLevelHeader') }}
                     </th>
                     <th class="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Importancia
+                      {{ t('features.roles.importanceHeader') }}
                     </th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                   <tr v-if="!competitions.length">
                     <td colspan="3" class="px-4 py-10 text-center text-sm text-gray-400">
-                      No hay competencias asociadas. Agregue una usando el formulario de arriba.
+                      {{ t('features.roles.noCompetences') }}
                     </td>
                   </tr>
                   <tr
@@ -467,20 +472,20 @@ async function handleSave() {
         <!-- ── Sección: Incompatibilidades ── -->
         <div class="px-6 pt-6 pb-6">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-            Incompatibilidades
+            {{ t('features.roles.incompatibilities') }}
           </p>
           <p class="text-xs text-gray-400 mb-4">
-            Roles que no pueden coexistir con este rol en el mismo equipo.
+            {{ t('features.roles.incompatibilitiesDetail') }}
           </p>
 
           <!-- Select + Agregar -->
           <div class="flex items-end gap-3 mb-4">
             <div class="space-y-1 flex-1 max-w-sm">
-              <label class="block text-sm font-medium text-gray-700">Rol incompatible</label>
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.roles.incompatibleRoleLabel') }}</label>
               <AppSelect
                 v-model="selIncompatibleId"
                 :options="incompatibleRoleOptions"
-                placeholder="Seleccione un rol"
+                :placeholder="t('common.select')"
                 :searchable="true"
               />
             </div>
@@ -494,7 +499,7 @@ async function handleSave() {
                 : 'bg-brand-500 text-white hover:bg-brand-600'"
             >
               <Plus class="w-4 h-4" />
-              Agregar
+              {{ t('common.add') }}
             </button>
           </div>
 
@@ -516,7 +521,7 @@ async function handleSave() {
             </span>
           </div>
           <p v-else class="text-sm text-gray-400">
-            No hay roles incompatibles definidos.
+            {{ t('features.roles.noIncompatibleRoles') }}
           </p>
         </div>
 
@@ -527,7 +532,7 @@ async function handleSave() {
             @click="router.back()"
             class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
           >
-            Cancelar
+            {{ t('common.cancel') }}
           </button>
           <button
             type="button"
@@ -537,7 +542,7 @@ async function handleSave() {
           >
             <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
             <Save v-else class="w-4 h-4" />
-            {{ saving ? 'Guardando...' : 'Guardar' }}
+            {{ saving ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </template>

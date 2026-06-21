@@ -1,11 +1,14 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { Save, Loader2, RefreshCw } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import experimentService from '@/features/experiments/services/experimentService.js'
+import { parseApiError } from '@/lib/apiError'
 
+const { t } = useI18n()
 const toast = useToast()
 const saving = ref(false)
 
@@ -113,10 +116,10 @@ const handleSave = async () => {
       multiobjectiveHCDistanceSizeNeighbors: multiobjectiveHCDistanceSizeNeighbors.value,
       multiobjectiveTabuSolutionsMaxelements: multiobjectiveTabuSolutionsMaxelements.value,
     })
-    toast.add({ severity: 'success', summary: 'Guardado', detail: 'Configuración guardada correctamente', life: 3000 })
+    toast.add({ severity: 'success', summary: t('common.success'), detail: t('common.recordUpdated'), life: 3000 })
   } catch (error) {
     console.error('Error guardando configuración:', error)
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración', life: 5000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: await parseApiError(error, t('common.saveError')), life: 5000 })
   } finally {
     saving.value = false
   }
@@ -326,7 +329,7 @@ const handleSave = async () => {
         >
           <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
           <Save v-else class="w-4 h-4" />
-          Guardar Cambios
+          {{ t('common.save') }}
         </button>
       </div>
 

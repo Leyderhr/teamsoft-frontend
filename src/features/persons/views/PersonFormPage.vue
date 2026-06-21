@@ -1,83 +1,15 @@
 <script setup>
-import { ref, reactive, computed, onMounted, defineComponent, h } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { Plus, Save, Loader2, Trash2, CheckCircle2, XCircle, ChevronRight, AlertCircle } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
+import { Plus, Save, Loader2, ChevronRight, AlertCircle } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import AppDatePicker from '@/components/ui/AppDatePicker.vue'
+import MiniTable from '@/components/common/MiniTable.vue'
 import { api } from '@/lib/api'
-
-// Inline mini-table component for sub-collections
-const MiniTable = defineComponent({
-  name: 'MiniTable',
-  props: {
-    rows: { type: Array, default: () => [] },
-    columns: { type: Array, required: true },
-    selected: { type: Array, default: () => [] },
-  },
-  emits: ['update:selected', 'remove'],
-  setup(props, { emit }) {
-    function toggleRow(row) {
-      const idx = props.selected.indexOf(row)
-      const next = [...props.selected]
-      if (idx >= 0) next.splice(idx, 1)
-      else next.push(row)
-      emit('update:selected', next)
-    }
-    return () => {
-      if (!props.rows.length) {
-        return h('div', { class: 'text-sm text-gray-400 p-4 text-center bg-gray-50 rounded-lg' }, 'Sin registros')
-      }
-      return h('div', { class: 'overflow-hidden rounded-lg border border-gray-200' }, [
-        h('div', { class: 'flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200' }, [
-          h('span', { class: 'text-xs font-medium text-gray-500' }, `${props.rows.length} registro(s)`),
-          props.selected.length
-            ? h('button', {
-                class: 'inline-flex items-center gap-1 px-2 py-1 rounded text-xs text-error-600 hover:bg-error-50 transition-colors',
-                onClick: () => emit('remove'),
-              }, 'Eliminar seleccionados')
-            : null,
-        ]),
-        h('table', { class: 'min-w-full' }, [
-          h('thead', {}, [
-            h('tr', { class: 'border-b border-gray-200' }, [
-              h('th', { class: 'w-8 px-3 py-2' }),
-              ...props.columns.map(col =>
-                h('th', { class: 'px-3 py-2 text-left text-xs font-medium text-gray-500' }, col.header)
-              ),
-            ])
-          ]),
-          h('tbody', { class: 'divide-y divide-gray-100' }, props.rows.map((row, i) =>
-            h('tr', {
-              key: i,
-              class: 'hover:bg-gray-50 cursor-pointer ' + (props.selected.includes(row) ? 'bg-brand-50' : ''),
-              onClick: () => toggleRow(row),
-            }, [
-              h('td', { class: 'w-8 px-3 py-2' }, [
-                h('input', {
-                  type: 'checkbox',
-                  checked: props.selected.includes(row),
-                  class: 'w-3.5 h-3.5 rounded border-gray-300 text-brand-500',
-                  onChange: () => toggleRow(row),
-                })
-              ]),
-              ...props.columns.map(col =>
-                h('td', { class: 'px-3 py-2 text-sm text-gray-700' },
-                  col.type === 'boolean'
-                    ? h(row[col.field] ? CheckCircle2 : XCircle, {
-                        class: row[col.field] ? 'w-4 h-4 text-success-500' : 'w-4 h-4 text-gray-300'
-                      })
-                    : String(row[col.field] ?? '—')
-                )
-              ),
-            ])
-          ))
-        ])
-      ])
-    }
-  }
-})
+import { parseApiError } from '@/lib/apiError'
 
 const props = defineProps({
   mode: { type: String, default: 'create' },
@@ -86,32 +18,33 @@ const props = defineProps({
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
+const { t } = useI18n()
 
 const activeTab = ref('basic')
-const tabs = [
-  { key: 'basic', label: 'Datos Básicos' },
-  { key: 'competences', label: 'Competencias' },
-  { key: 'interests', label: 'Intereses' },
-  { key: 'test', label: 'Test Psicológico' },
-  { key: 'conflicts', label: 'Incompatibilidades' },
-]
+const tabs = computed(() => [
+  { key: 'basic', label: t('features.persons.tabs.basic') },
+  { key: 'competences', label: t('features.persons.tabs.competences') },
+  { key: 'interests', label: t('features.persons.tabs.interests') },
+  { key: 'test', label: t('features.persons.tabs.test') },
+  { key: 'conflicts', label: t('features.persons.tabs.conflicts') },
+])
 
 // Static options
-const sexOptions = [
-  { label: 'Prefiero no decirlo', value: '' },
-  { label: 'Masculino', value: 'M' },
-  { label: 'Femenino', value: 'F' },
-]
+const sexOptions = computed(() => [
+  { label: t('features.persons.sexOptions.preferNotToSay'), value: '' },
+  { label: t('features.persons.sexOptions.male'), value: 'M' },
+  { label: t('features.persons.sexOptions.female'), value: 'F' },
+])
 const mbtiValues = [
   'ESTJ','ENTJ','ESFJ','ENFJ','ESTP','ENTP','ESFP','ENFP',
   'ISTJ','INTJ','ISFJ','INFJ','ISTP','INTP','ISFP','INFP',
 ]
 const mbtiOptions = mbtiValues.map(v => ({ label: v, value: v }))
-const belbinOptions = [
-  { label: 'Preferido', value: 'Preferido' },
-  { label: 'Evitado', value: 'Evitado' },
-  { label: 'Indiferente', value: 'Indiferente' },
-]
+const belbinOptions = computed(() => [
+  { label: t('features.persons.belbinOptions.preferred'), value: 'Preferido' },
+  { label: t('features.persons.belbinOptions.avoided'), value: 'Evitado' },
+  { label: t('features.persons.belbinOptions.indifferent'), value: 'Indiferente' },
+])
 
 // Basic data
 const personName = ref('')
@@ -201,39 +134,14 @@ const selectedConflicts = ref([])
 const saving = ref(false)
 const errors = reactive({})
 
-const ERROR_ES = {
-  'Person name is required': 'El nombre es obligatorio',
-  'Only letters and spaces are allowed': 'Solo se permiten letras y espacios',
-  'ID card is required': 'El CI es obligatorio',
-  'Card must contain at least 8 digits': 'El CI debe tener al menos 8 dígitos',
-  'Surname is required': 'Los apellidos son obligatorios',
-  'Address is required': 'La dirección es obligatoria',
-  'Phone is required': 'El teléfono es obligatorio',
-  'Phone must contain at least 8 digits': 'El teléfono debe tener al menos 8 dígitos',
-  'Sex is required': 'El sexo es obligatorio',
-  "Sex must be 'M' or 'F'": "El sexo debe ser 'M' o 'F'",
-  'Email is required': 'El correo es obligatorio',
-  'Email should be valid': 'El correo no es válido',
-  'In date is required': 'La fecha de ingreso es obligatoria',
-  'Experience is required': 'La experiencia es obligatoria',
-  'Birth date is required': 'La fecha de nacimiento es obligatoria',
-  'Birth date must be in the past': 'La fecha de nacimiento debe ser en el pasado',
-  'County ID is required': 'La provincia es obligatoria',
-  'Race ID is required': 'La raza es obligatoria',
-  'Person group ID is required': 'El grupo es obligatorio',
-  'Nacionality ID is required': 'La nacionalidad es obligatoria',
-  'Religion ID is required': 'La religión es obligatoria',
-  'Person test is required': 'El test psicológico es obligatorio',
-}
-const te = msg => ERROR_ES[msg] ?? msg
 const isEditMode = computed(() => props.mode === 'edit')
-const pageTitle = computed(() => isEditMode.value ? 'Editar Persona' : 'Crear Persona')
+const pageTitle = computed(() => isEditMode.value ? t('features.persons.editTitle') : t('features.persons.createTitle'))
 
-const activeTabIndex = computed(() => tabs.findIndex(t => t.key === activeTab.value))
-const isLastTab = computed(() => activeTabIndex.value === tabs.length - 1)
+const activeTabIndex = computed(() => tabs.value.findIndex(tab => tab.key === activeTab.value))
+const isLastTab = computed(() => activeTabIndex.value === tabs.value.length - 1)
 
 function goToNextTab() {
-  if (!isLastTab.value) activeTab.value = tabs[activeTabIndex.value + 1].key
+  if (!isLastTab.value) activeTab.value = tabs.value[activeTabIndex.value + 1].key
 }
 
 onMounted(async () => {
@@ -254,10 +162,10 @@ onMounted(async () => {
       ])
 
     countyOptions.value = counties.map(c => ({ label: c.countyName, value: c.id }))
-    raceOptions.value = [{ label: 'Prefiero no decirlo', value: '' }, ...races.map(r => ({ label: r.raceName, value: r.id }))]
+    raceOptions.value = [{ label: t('features.persons.sexOptions.preferNotToSay'), value: '' }, ...races.map(r => ({ label: r.raceName, value: r.id }))]
     groupOptions.value = groups.map(g => ({ label: g.name, value: g.id }))
     nacionalityOptions.value = nats.map(n => ({ label: n.paisNac, value: n.id }))
-    religionOptions.value = [{ label: 'Prefiero no decirlo', value: '' }, ...rels.map(r => ({ label: r.religionName, value: r.id }))]
+    religionOptions.value = [{ label: t('features.persons.sexOptions.preferNotToSay'), value: '' }, ...rels.map(r => ({ label: r.religionName, value: r.id }))]
     competenceOptions.value = competences.map(c => ({ label: c.competitionName, value: c.id }))
     levelOptions.value = levels.map(l => ({ label: l.significance, value: l.id }))
     roleOptions.value = roles.map(r => ({ label: r.roleName, value: r.id }))
@@ -265,7 +173,7 @@ onMounted(async () => {
     conflictIndexOptions.value = conflicts.map(c => ({ label: c.description, value: c.id }))
     personOptions.value = persons.map(p => ({ label: `${p.personName} ${p.surName}`, value: p.id }))
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las opciones', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.persons.optionsLoadError'), life: 3000 })
   }
 
   if (isEditMode.value && route.params.id) {
@@ -361,7 +269,7 @@ onMounted(async () => {
         }
       })
     } catch {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la persona', life: 3000 })
+      toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.persons.loadError'), life: 3000 })
     }
   }
 })
@@ -369,7 +277,7 @@ onMounted(async () => {
 function addCompetence() {
   if (!selectedCompetence.value || !selectedLevel.value) return
   if (competenceValues.value.some(cv => cv.competenceId === selectedCompetence.value)) {
-    toast.add({ severity: 'warn', summary: 'Duplicado', detail: 'Esta competencia ya fue agregada', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.persons.duplicateSummary'), detail: t('features.persons.duplicateCompetence'), life: 3000 })
     return
   }
   competenceValues.value.push({
@@ -390,7 +298,7 @@ function removeCompetences() {
 function addRoleInterest() {
   if (!selectedRole.value) return
   if (personalInterests.value.some(pi => pi.roleId === selectedRole.value)) {
-    toast.add({ severity: 'warn', summary: 'Duplicado', detail: 'Este rol ya fue agregado', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.persons.duplicateSummary'), detail: t('features.persons.duplicateRole'), life: 3000 })
     return
   }
   personalInterests.value.push({
@@ -410,7 +318,7 @@ function removeRoleInterests() {
 function addProjectInterest() {
   if (!selectedProject.value) return
   if (personalProjectInterests.value.some(ppi => ppi.projectId === selectedProject.value)) {
-    toast.add({ severity: 'warn', summary: 'Duplicado', detail: 'Este proyecto ya fue agregado', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.persons.duplicateSummary'), detail: t('features.persons.duplicateProject'), life: 3000 })
     return
   }
   personalProjectInterests.value.push({
@@ -430,7 +338,7 @@ function removeProjectInterests() {
 function addConflict() {
   if (!selectedConflictIndex.value || !selectedConflictPerson.value) return
   if (personConflicts.value.some(pc => pc.personConflictId === selectedConflictPerson.value)) {
-    toast.add({ severity: 'warn', summary: 'Duplicado', detail: 'Esta persona ya fue agregada', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('features.persons.duplicateSummary'), detail: t('features.persons.duplicateConflict'), life: 3000 })
     return
   }
   personConflicts.value.push({
@@ -455,46 +363,46 @@ async function handleSave() {
   // Validación client-side de campos obligatorios
   let hasErrors = false
   if (!personName.value.trim()) {
-    errors.personName = 'El nombre es obligatorio'
+    errors.personName = t('features.persons.fieldErrors')
     hasErrors = true
   }
   if (!surName.value.trim()) {
-    errors.surName = 'Los apellidos son obligatorios'
+    errors.surName = t('features.persons.fieldErrors')
     hasErrors = true
   }
   if (!card.value.trim()) {
-    errors.card = 'El CI es obligatorio'
+    errors.card = t('features.persons.fieldErrors')
     hasErrors = true
   }
   if (!address.value.trim()) {
-    errors.address = 'La dirección es obligatoria'
+    errors.address = t('features.persons.fieldErrors')
     hasErrors = true
   }
   if (!phone.value.trim()) {
-    errors.phone = 'El teléfono es obligatorio'
+    errors.phone = t('features.persons.fieldErrors')
     hasErrors = true
   }
   if (!email.value.trim()) {
-    errors.email = 'El correo electrónico es obligatorio'
+    errors.email = t('features.persons.fieldErrors')
     hasErrors = true
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
-    errors.email = 'El correo electrónico no es válido'
+    errors.email = t('features.persons.fieldErrors')
     hasErrors = true
   }
   if (!inDate.value.trim()) {
-    errors.inDate = 'La fecha de ingreso es obligatoria'
+    errors.inDate = t('features.persons.fieldErrors')
     hasErrors = true
   }
   if (experience.value === '' || experience.value === null || experience.value === undefined || Number.isNaN(experience.value)) {
-    errors.experience = 'La experiencia es obligatoria'
+    errors.experience = t('features.persons.fieldErrors')
     hasErrors = true
   }
   if (!birthDate.value.trim()) {
-    errors.birthDate = 'La fecha de nacimiento es obligatoria'
+    errors.birthDate = t('features.persons.fieldErrors')
     hasErrors = true
   }
   if (!selectedGroup.value) {
-    errors.group = 'El grupo es obligatorio'
+    errors.group = t('features.persons.fieldErrors')
     hasErrors = true
   }
 
@@ -557,48 +465,49 @@ async function handleSave() {
       : await api.post('person', { json: payload, throwHttpErrors: false })
 
     if (!response.ok) {
-      let detail = 'Error al guardar la persona'
+      let detail = t('common.saveError')
       try {
         const body = await response.json()
         if (body?.fieldErrors && typeof body.fieldErrors === 'object') {
           Object.entries(body.fieldErrors).forEach(([field, msg]) => {
-            errors[field] = te(msg)
+            errors[field] = msg
           })
-          detail = 'Corrija los errores marcados en el formulario'
+          detail = t('features.persons.fieldErrors')
         } else if (body?.message) {
-          detail = te(body.message)
+          detail = body.message
           const msg = body.message.toLowerCase()
           if (msg.includes('ci') || msg.includes('carnet') || msg.includes('card') || msg.includes('duplicad') || msg.includes('ya exist')) {
-            errors.card = te(body.message)
+            errors.card = body.message
           } else if (msg.includes('email') || msg.includes('correo')) {
-            errors.email = te(body.message)
+            errors.email = body.message
           } else if (msg.includes('nombre') || msg.includes('name')) {
-            errors.personName = te(body.message)
+            errors.personName = body.message
           } else if (msg.includes('apellido') || msg.includes('surname')) {
-            errors.surName = te(body.message)
+            errors.surName = body.message
           } else if (msg.includes('tel') || msg.includes('phone')) {
-            errors.phone = te(body.message)
+            errors.phone = body.message
           }
         }
         if (errors.personName || errors.surName || errors.card || errors.email || errors.phone || errors.address) {
           activeTab.value = 'basic'
         }
       } catch {}
-      toast.add({ severity: 'error', summary: 'Error al guardar', detail, life: 4000 })
+      toast.add({ severity: 'error', summary: t('features.persons.fieldErrorsSummary'), detail, life: 4000 })
       return
     }
 
     toast.add({
       severity: 'success',
-      summary: 'Éxito',
-      detail: isEditMode.value ? 'Persona actualizada correctamente' : 'Persona creada correctamente',
+      summary: t('common.success'),
+      detail: isEditMode.value ? t('features.persons.updated') : t('features.persons.created'),
       life: 3000
     })
     router.push('/person')
   } catch (e) {
-    let detail = 'Error al guardar la persona'
-    if (e?.name === 'TypeError') detail = 'Sin conexión con el servidor'
-    toast.add({ severity: 'error', summary: 'Error al guardar', detail, life: 4000 })
+    const detail = e?.name === 'TypeError'
+      ? t('features.persons.connectionError')
+      : await parseApiError(e, t('common.saveError'))
+    toast.add({ severity: 'error', summary: t('features.persons.fieldErrorsSummary'), detail, life: 4000 })
   } finally {
     saving.value = false
   }
@@ -609,7 +518,7 @@ async function handleSave() {
   <div>
     <PageBreadcrumb
       :page-title="pageTitle"
-      :items="[{ label: 'Personas', path: '/person' }]"
+      :items="[{ label: t('features.persons.title'), path: '/person' }]"
     />
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
@@ -618,7 +527,7 @@ async function handleSave() {
         <h2 class="text-base font-semibold text-gray-800">{{ pageTitle }}</h2>
         <div class="flex items-center gap-3 flex-shrink-0">
           <span class="text-sm font-medium" :class="enabled ? 'text-success-600' : 'text-gray-400'">
-            {{ enabled ? 'Activo' : 'Inactivo' }}
+            {{ enabled ? t('features.persons.status.active') : t('features.persons.status.inactive') }}
           </span>
           <button
             type="button"
@@ -659,126 +568,126 @@ async function handleSave() {
         <!-- Tab: Datos Básicos -->
         <div v-show="activeTab === 'basic'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Nombre <span class="text-error-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.name') }} <span class="text-error-500">*</span></label>
             <input
               v-model="personName"
               @input="delete errors.personName"
               type="text"
               :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
                 errors.personName ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
-              placeholder="Nombre"
+              :placeholder="t('features.persons.fields.name')"
             />
             <p v-if="errors.personName" class="flex items-center gap-1 text-xs text-error-600">
               <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.personName }}
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Apellidos <span class="text-error-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.surname') }} <span class="text-error-500">*</span></label>
             <input
               v-model="surName"
               @input="delete errors.surName"
               type="text"
               :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
                 errors.surName ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
-              placeholder="Apellidos"
+              :placeholder="t('features.persons.fields.surname')"
             />
             <p v-if="errors.surName" class="flex items-center gap-1 text-xs text-error-600">
               <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.surName }}
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">CI <span class="text-error-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.card') }} <span class="text-error-500">*</span></label>
             <input
               v-model="card"
               @input="delete errors.card"
               type="text"
               :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
                 errors.card ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
-              placeholder="Carnet de identidad"
+              :placeholder="t('features.persons.fields.card')"
             />
             <p v-if="errors.card" class="flex items-center gap-1 text-xs text-error-600">
               <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.card }}
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Dirección <span class="text-error-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.address') }} <span class="text-error-500">*</span></label>
             <input
               v-model="address"
               @input="delete errors.address"
               type="text"
               :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
                 errors.address ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
-              placeholder="Dirección"
+              :placeholder="t('features.persons.fields.address')"
             />
             <p v-if="errors.address" class="flex items-center gap-1 text-xs text-error-600">
               <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.address }}
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Teléfono <span class="text-error-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.phone') }} <span class="text-error-500">*</span></label>
             <input
               v-model="phone"
               @input="delete errors.phone"
               type="text"
               :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
                 errors.phone ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
-              placeholder="Teléfono"
+              :placeholder="t('features.persons.fields.phone')"
             />
             <p v-if="errors.phone" class="flex items-center gap-1 text-xs text-error-600">
               <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.phone }}
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Correo <span class="text-error-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.email') }} <span class="text-error-500">*</span></label>
             <input
               v-model="email"
               @input="delete errors.email"
               type="email"
               :class="['w-full rounded-lg border px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 transition-colors',
                 errors.email ? 'border-error-400 focus:ring-error-500/20 focus:border-error-400' : 'border-gray-300 focus:ring-brand-500/20 focus:border-brand-500']"
-              placeholder="Correo electrónico"
+              :placeholder="t('features.persons.fields.email')"
             />
             <p v-if="errors.email" class="flex items-center gap-1 text-xs text-error-600">
               <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.email }}
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Sexo</label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.sex') }}</label>
             <AppSelect v-model="sex" :options="sexOptions" />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha de ingreso <span class="text-error-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.inDate') }} <span class="text-error-500">*</span></label>
             <AppDatePicker v-model="inDate" placeholder="dd/mm/aaaa" />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha de nacimiento</label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.birthDate') }}</label>
             <AppDatePicker v-model="birthDate" placeholder="dd/mm/aaaa" />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Experiencia (años) <span class="text-error-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.experience') }} <span class="text-error-500">*</span></label>
             <input v-model.number="experience" type="number" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" placeholder="0" min="0" />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Provincia</label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.county') }}</label>
             <AppSelect v-model="selectedCounty" :options="countyOptions" searchable />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Raza</label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.race') }}</label>
             <AppSelect v-model="selectedRace" :options="raceOptions" searchable />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Grupo <span class="text-error-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.group') }} <span class="text-error-500">*</span></label>
             <AppSelect v-model="selectedGroup" :options="groupOptions" searchable @update:model-value="delete errors.group" />
             <p v-if="errors.group" class="flex items-center gap-1 text-xs text-error-600">
               <AlertCircle class="w-3 h-3 flex-shrink-0" />{{ errors.group }}
             </p>
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Nacionalidad</label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.nacionality') }}</label>
             <AppSelect v-model="selectedNacionality" :options="nacionalityOptions" searchable />
           </div>
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">Religión</label>
+            <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.fields.religion') }}</label>
             <AppSelect v-model="selectedReligion" :options="religionOptions" searchable />
           </div>
         </div>
@@ -787,23 +696,23 @@ async function handleSave() {
         <div v-show="activeTab === 'competences'" class="space-y-4">
           <div class="flex gap-3 flex-wrap">
             <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Competencia</label>
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.tabs.competences') }}</label>
               <AppSelect v-model="selectedCompetence" :options="competenceOptions" searchable />
             </div>
             <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Nivel</label>
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.competences.levelLabel') }}</label>
               <AppSelect v-model="selectedLevel" :options="levelOptions" searchable />
             </div>
             <div class="flex items-end">
               <button @click="addCompetence" :disabled="!selectedCompetence || !selectedLevel"
                 class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                <Plus class="w-4 h-4" /> Agregar
+                <Plus class="w-4 h-4" /> {{ t('common.add') }}
               </button>
             </div>
           </div>
           <MiniTable
             :rows="competenceValues"
-            :columns="[{ field: 'competenceName', header: 'Competencia' }, { field: 'levelName', header: 'Nivel' }]"
+            :columns="[{ field: 'competenceName', header: t('features.persons.tabs.competences') }, { field: 'levelName', header: t('features.competences.levelLabel') }]"
             v-model:selected="selectedCompetences"
             @remove="removeCompetences"
           />
@@ -813,29 +722,29 @@ async function handleSave() {
         <div v-show="activeTab === 'interests'" class="space-y-6">
           <!-- Roles -->
           <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Roles</h3>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ t('features.persons.interests.rolesSection') }}</h3>
             <div class="flex gap-3 flex-wrap mb-3">
               <div class="flex-1 min-w-48 space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Rol</label>
+                <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.interests.roleLabel') }}</label>
                 <AppSelect v-model="selectedRole" :options="roleOptions" searchable />
               </div>
               <div class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
+                <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.interests.preferenceLabel') }}</label>
                 <label class="flex items-center gap-2 h-10 cursor-pointer">
                   <input type="checkbox" v-model="rolePreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
-                  <span class="text-sm text-gray-600">Preferido</span>
+                  <span class="text-sm text-gray-600">{{ t('features.persons.belbinOptions.preferred') }}</span>
                 </label>
               </div>
               <div class="flex items-end">
                 <button @click="addRoleInterest" :disabled="!selectedRole"
                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                  <Plus class="w-4 h-4" /> Agregar
+                  <Plus class="w-4 h-4" /> {{ t('common.add') }}
                 </button>
               </div>
             </div>
             <MiniTable
               :rows="personalInterests"
-              :columns="[{ field: 'roleName', header: 'Rol' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
+              :columns="[{ field: 'roleName', header: t('features.persons.interests.roleLabel') }, { field: 'preference', header: t('features.persons.belbinOptions.preferred'), type: 'boolean' }]"
               v-model:selected="selectedRoleInterests"
               @remove="removeRoleInterests"
             />
@@ -843,29 +752,29 @@ async function handleSave() {
 
           <!-- Proyectos -->
           <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Intereses en Proyectos</h3>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ t('features.persons.interests.projectsSection') }}</h3>
             <div class="flex gap-3 flex-wrap mb-3">
               <div class="flex-1 min-w-48 space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Proyecto</label>
+                <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.interests.projectLabel') }}</label>
                 <AppSelect v-model="selectedProject" :options="projectOptions" searchable />
               </div>
               <div class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">Preferencia</label>
+                <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.interests.preferenceLabel') }}</label>
                 <label class="flex items-center gap-2 h-10 cursor-pointer">
                   <input type="checkbox" v-model="projectPreference" class="w-4 h-4 rounded border-gray-300 text-brand-500" />
-                  <span class="text-sm text-gray-600">Preferido</span>
+                  <span class="text-sm text-gray-600">{{ t('features.persons.belbinOptions.preferred') }}</span>
                 </label>
               </div>
               <div class="flex items-end">
                 <button @click="addProjectInterest" :disabled="!selectedProject"
                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                  <Plus class="w-4 h-4" /> Agregar
+                  <Plus class="w-4 h-4" /> {{ t('common.add') }}
                 </button>
               </div>
             </div>
             <MiniTable
               :rows="personalProjectInterests"
-              :columns="[{ field: 'projectName', header: 'Proyecto' }, { field: 'preference', header: 'Preferido', type: 'boolean' }]"
+              :columns="[{ field: 'projectName', header: t('features.persons.interests.projectLabel') }, { field: 'preference', header: t('features.persons.belbinOptions.preferred'), type: 'boolean' }]"
               v-model:selected="selectedProjectInterests"
               @remove="removeProjectInterests"
             />
@@ -875,15 +784,15 @@ async function handleSave() {
         <!-- Tab: Test Psicológico -->
         <div v-show="activeTab === 'test'" class="space-y-6">
           <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Tipo MBTI</h3>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ t('features.persons.test.mbtiSection') }}</h3>
             <div class="w-64 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Tipo</label>
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.test.typeLabel') }}</label>
               <AppSelect v-model="mbtiType" :options="mbtiOptions" />
             </div>
           </div>
 
           <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Roles Belbin</h3>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ t('features.persons.test.belbinSection') }}</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div v-for="(key, label) in belbinRoleLabels" :key="key" class="space-y-1">
                 <label class="block text-sm font-medium text-gray-700">{{ label }}</label>
@@ -897,23 +806,23 @@ async function handleSave() {
         <div v-show="activeTab === 'conflicts'" class="space-y-4">
           <div class="flex gap-3 flex-wrap">
             <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Índice de conflicto</label>
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.conflicts.indexLabel') }}</label>
               <AppSelect v-model="selectedConflictIndex" :options="conflictIndexOptions" searchable />
             </div>
             <div class="flex-1 min-w-48 space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Persona</label>
-              <AppSelect v-model="selectedConflictPerson" :options="personOptions" searchable search-placeholder="Buscar persona..." />
+              <label class="block text-sm font-medium text-gray-700">{{ t('features.persons.conflicts.personLabel') }}</label>
+              <AppSelect v-model="selectedConflictPerson" :options="personOptions" searchable :search-placeholder="t('common.search')" />
             </div>
             <div class="flex items-end">
               <button @click="addConflict" :disabled="!selectedConflictIndex || !selectedConflictPerson"
                 class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-600 disabled:opacity-40 transition-colors">
-                <Plus class="w-4 h-4" /> Agregar
+                <Plus class="w-4 h-4" /> {{ t('common.add') }}
               </button>
             </div>
           </div>
           <MiniTable
             :rows="personConflicts"
-            :columns="[{ field: 'conflictName', header: 'Índice conflicto' }, { field: 'personConflictName', header: 'Persona' }]"
+            :columns="[{ field: 'conflictName', header: t('features.persons.conflicts.indexLabel') }, { field: 'personConflictName', header: t('features.persons.conflicts.personLabel') }]"
             v-model:selected="selectedConflicts"
             @remove="removeConflicts"
           />
@@ -927,7 +836,7 @@ async function handleSave() {
           @click="router.push('/person')"
           class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
-          Cancelar
+          {{ t('common.cancel') }}
         </button>
         <!-- En modo crear: avanza tabs hasta el último, luego guarda -->
         <button
@@ -936,7 +845,7 @@ async function handleSave() {
           @click="goToNextTab"
           class="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors flex items-center gap-2"
         >
-          Siguiente
+          {{ t('common.next') }}
           <ChevronRight class="w-4 h-4" />
         </button>
         <button
@@ -948,7 +857,7 @@ async function handleSave() {
         >
           <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
           <Save v-else class="w-4 h-4" />
-          {{ saving ? 'Guardando...' : 'Guardar' }}
+          {{ saving ? t('common.saving') : t('common.save') }}
         </button>
       </div>
     </div>

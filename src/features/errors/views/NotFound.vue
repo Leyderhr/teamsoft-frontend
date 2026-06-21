@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { SearchX } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const router = useRouter()
 const currentYear = ref(new Date().getFullYear())
 </script>
@@ -32,7 +34,7 @@ const currentYear = ref(new Date().getFullYear())
     <div class="mx-auto w-full max-w-[242px] text-center sm:max-w-[472px]">
 
       <h1 class="mb-8 font-bold text-error-500 text-title-md xl:text-title-2xl">
-        ERROR
+        {{ t('errors.common.errorLabel') }}
       </h1>
 
       <!-- Icon illustration replacing 404.svg -->
@@ -41,10 +43,10 @@ const currentYear = ref(new Date().getFullYear())
       </div>
 
       <!-- Sub-label -->
-      <p class="text-sm font-semibold text-error-500 tracking-widest uppercase mb-4">404 — Página no encontrada</p>
+      <p class="text-sm font-semibold text-error-500 tracking-widest uppercase mb-4">{{ t('errors.notFound.subtitle') }}</p>
 
       <p class="mt-6 mb-6 text-base text-gray-700 sm:text-lg">
-        No podemos encontrar la página que buscas. Verifica la URL o regresa al inicio.
+        {{ t('errors.notFound.message') }}
       </p>
 
       <div class="flex flex-wrap items-center justify-center gap-3">
@@ -52,14 +54,14 @@ const currentYear = ref(new Date().getFullYear())
           to="/"
           class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 transition-colors"
         >
-          Ir al Inicio
+          {{ t('common.goHome') }}
         </router-link>
         <button
           type="button"
           @click="router.back()"
           class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 transition-colors cursor-pointer"
         >
-          Volver Atrás
+          {{ t('common.goBack') }}
         </button>
       </div>
     </div>

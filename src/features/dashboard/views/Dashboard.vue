@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/lib/auth-store'
 import { useSecurityStore } from '@/core/store/security.store.js'
@@ -10,6 +11,7 @@ import {
   User, Star, UserPlus, BarChart3, Zap, History, Network, Loader2, Inbox
 } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 const securityStore = useSecurityStore()
@@ -38,28 +40,28 @@ const stats = computed(() => ({
 
 const statCards = computed(() => [
   {
-    label: 'Proyectos Totales',
+    label: t('features.dashboard.stats.total'),
     value: stats.value.total,
     icon: FolderOpen,
     iconBg: 'bg-brand-50',
     iconColor: 'text-brand-500',
   },
   {
-    label: 'Activos',
+    label: t('features.dashboard.stats.active'),
     value: stats.value.active,
     icon: Play,
     iconBg: 'bg-success-50',
     iconColor: 'text-success-600',
   },
   {
-    label: 'Finalizados',
+    label: t('features.dashboard.stats.finalized'),
     value: stats.value.finalized,
     icon: CheckCircle,
     iconBg: 'bg-blue-light-50',
     iconColor: 'text-blue-light-600',
   },
   {
-    label: 'Cerrados',
+    label: t('features.dashboard.stats.closed'),
     value: stats.value.closed,
     icon: Lock,
     iconBg: 'bg-gray-100',
@@ -76,20 +78,20 @@ const quickActions = computed(() => {
   const actions = []
   if (securityStore.isDirectivoTecnico || securityStore.isExperimentador) {
     actions.push(
-      { label: 'Formar Equipo', icon: Users, route: '/manage-projects/team-formation' },
-      { label: 'Proyectos', icon: Briefcase, route: '/manage-projects/project' }
+      { label: t('features.dashboard.actions.teamFormation'), icon: Users, route: '/manage-projects/team-formation' },
+      { label: t('features.dashboard.actions.projects'), icon: Briefcase, route: '/manage-projects/project' }
     )
   }
   if (securityStore.isGestor) {
     actions.push(
-      { label: 'Personas', icon: User, route: '/person' },
-      { label: 'Competencias', icon: Star, route: '/manage-competences/competence' }
+      { label: t('features.dashboard.actions.persons'), icon: User, route: '/person' },
+      { label: t('features.dashboard.actions.competences'), icon: Star, route: '/manage-competences/competence' }
     )
   }
   if (securityStore.isAdmin) {
     actions.push(
-      { label: 'Usuarios', icon: UserPlus, route: '/manage-user-role/users' },
-      { label: 'Reportes', icon: BarChart3, route: '/reports/person-report' }
+      { label: t('features.dashboard.actions.users'), icon: UserPlus, route: '/manage-user-role/users' },
+      { label: t('features.dashboard.actions.reports'), icon: BarChart3, route: '/reports/person-report' }
     )
   }
   return actions
@@ -106,10 +108,10 @@ function getBadgeClass(project) {
 
 function getBadgeLabel(project) {
   switch (project.state) {
-    case 'CLOSED':    return 'Cerrado'
-    case 'FINALIZED': return 'Finalizado'
-    case 'FORMED':    return 'Formado'
-    default:          return 'Creado'
+    case 'CLOSED':    return t('features.projects.state.closed')
+    case 'FINALIZED': return t('features.projects.state.finalized')
+    case 'FORMED':    return t('features.projects.state.formed')
+    default:          return t('features.projects.state.created')
   }
 }
 
@@ -145,10 +147,10 @@ onMounted(loadData)
     >
       <div class="relative z-10">
         <h1 class="text-2xl font-semibold mb-1">
-          Bienvenido, {{ authStore.username }}
+          {{ t('features.dashboard.welcome', [authStore.username]) }}
         </h1>
         <p class="text-white/70 text-sm capitalize">
-          {{ formatRole(authStore.roles?.[0]) }} &mdash; TeamSoft+ Sistema de Formaci&oacute;n de Equipos
+          {{ formatRole(authStore.roles?.[0]) }} &mdash; {{ t('features.dashboard.subtitle') }}
         </p>
       </div>
       <div class="absolute -right-6 -top-6 w-36 h-36 rounded-full bg-white/10 pointer-events-none"></div>
@@ -178,7 +180,7 @@ onMounted(loadData)
       <div v-if="quickActions.length" class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-theme-xs">
         <div class="flex items-center gap-2 px-5 py-4 border-b border-gray-100 bg-brand-500 text-white">
           <Zap class="w-4 h-4" />
-          <span class="text-sm font-semibold">Acciones R&aacute;pidas</span>
+          <span class="text-sm font-semibold">{{ t('features.dashboard.quickActions') }}</span>
         </div>
         <div class="p-4 grid grid-cols-2 gap-3">
           <button
@@ -197,7 +199,7 @@ onMounted(loadData)
       <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-theme-xs">
         <div class="flex items-center gap-2 px-5 py-4 border-b border-gray-100 bg-brand-500 text-white">
           <History class="w-4 h-4" />
-          <span class="text-sm font-semibold">Proyectos Recientes</span>
+          <span class="text-sm font-semibold">{{ t('features.dashboard.recentProjects') }}</span>
         </div>
 
         <!-- Loading -->
@@ -208,7 +210,7 @@ onMounted(loadData)
         <!-- Empty -->
         <div v-else-if="projects.length === 0" class="flex flex-col items-center justify-center py-12 gap-2 text-gray-400">
           <Inbox class="w-10 h-10" />
-          <p class="text-sm">No hay proyectos registrados</p>
+          <p class="text-sm">{{ t('features.dashboard.noProjects') }}</p>
         </div>
 
         <!-- List -->
@@ -237,7 +239,7 @@ onMounted(loadData)
     <div v-if="groups.length" class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-theme-xs">
       <div class="flex items-center gap-2 px-5 py-4 border-b border-gray-100 bg-brand-500 text-white">
         <Network class="w-4 h-4" />
-        <span class="text-sm font-semibold">Grupos de Personas ({{ stats.groups }})</span>
+        <span class="text-sm font-semibold">{{ t('features.dashboard.personGroups', [stats.groups]) }}</span>
       </div>
       <div class="flex flex-wrap gap-2 p-5">
         <span
@@ -252,7 +254,7 @@ onMounted(loadData)
           v-if="groups.length > 8"
           class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-medium"
         >
-          +{{ groups.length - 8 }} m&aacute;s
+          +{{ groups.length - 8 }} {{ t('common.more') }}
         </span>
       </div>
     </div>

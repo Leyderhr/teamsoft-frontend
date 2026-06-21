@@ -1,10 +1,13 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+
+const { t, tm, rt } = useI18n()
 
 const props = defineProps({
   modelValue: { type: String, default: '' }, // YYYY-MM-DD o ''
-  placeholder: { type: String, default: 'Seleccionar fecha' },
+  placeholder: { type: String, default: 'common.datePlaceholder' },
   minDate: { type: String, default: '' }, // YYYY-MM-DD
   maxDate: { type: String, default: '' }, // YYYY-MM-DD
   disabled: { type: Boolean, default: false },
@@ -23,11 +26,8 @@ const viewYear = ref(new Date().getFullYear())
 const viewMonth = ref(new Date().getMonth()) // 0–11
 
 // ---- Helpers de fecha ----
-const WEEK_DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-const MONTH_NAMES = [
-  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
-]
+const weekDays = computed(() => tm('common.calendar.weekDays').map(rt))
+const months = computed(() => tm('common.calendar.months').map(rt))
 
 function parseLocalDate(str) {
   if (!str) return null
@@ -203,7 +203,7 @@ function dayInnerClass(item) {
       @click="openPanel"
     >
       <span class="flex-1 truncate" :class="!modelValue ? 'text-gray-400' : ''">
-        {{ modelValue ? formatDisplay(modelValue) : placeholder }}
+        {{ modelValue ? formatDisplay(modelValue) : t(placeholder) }}
       </span>
       <button
         v-if="modelValue && !disabled"
@@ -234,7 +234,7 @@ function dayInnerClass(item) {
           </button>
 
           <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold text-gray-900">{{ MONTH_NAMES[viewMonth] }}</span>
+            <span class="text-sm font-semibold text-gray-900">{{ months[viewMonth] }}</span>
             <input
               type="number"
               :value="viewYear"
@@ -258,7 +258,7 @@ function dayInnerClass(item) {
         <!-- Cabecera días de la semana -->
         <div class="grid grid-cols-7 mb-2">
           <div
-            v-for="d in WEEK_DAYS"
+            v-for="d in weekDays"
             :key="d"
             class="text-center text-xs font-medium text-gray-500 py-1"
           >

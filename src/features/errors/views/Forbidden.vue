@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Lock } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const router = useRouter()
 const currentYear = ref(new Date().getFullYear())
 </script>
@@ -32,7 +34,7 @@ const currentYear = ref(new Date().getFullYear())
     <div class="mx-auto w-full max-w-[242px] text-center sm:max-w-[472px]">
 
       <h1 class="mb-8 font-bold text-warning-500 text-title-md xl:text-title-2xl">
-        ERROR
+        {{ t('errors.common.errorLabel') }}
       </h1>
 
       <div class="mx-auto mb-2 flex items-center justify-center w-[220px] h-[220px] sm:w-[300px] sm:h-[300px] rounded-full bg-warning-50">
@@ -40,11 +42,10 @@ const currentYear = ref(new Date().getFullYear())
       </div>
 
       <!-- Sub-label -->
-      <p class="text-sm font-semibold text-warning-500 tracking-widest uppercase mb-4">403 — Acceso Denegado</p>
+      <p class="text-sm font-semibold text-warning-500 tracking-widest uppercase mb-4">{{ t('errors.forbidden.subtitle') }}</p>
 
       <p class="mt-6 mb-6 text-base text-gray-700 sm:text-lg">
-        No tienes los permisos necesarios para acceder a esta página.
-        Contacta al administrador si crees que esto es un error.
+        {{ t('errors.forbidden.message') }}
       </p>
 
       <div class="flex flex-wrap items-center justify-center gap-3">
@@ -53,14 +54,14 @@ const currentYear = ref(new Date().getFullYear())
           @click="router.push('/')"
           class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 transition-colors cursor-pointer"
         >
-          Ir al Inicio
+          {{ t('common.goHome') }}
         </button>
         <button
           type="button"
           @click="router.back()"
           class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 transition-colors cursor-pointer"
         >
-          Volver Atrás
+          {{ t('common.goBack') }}
         </button>
       </div>
     </div>

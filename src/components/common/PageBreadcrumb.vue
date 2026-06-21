@@ -11,14 +11,14 @@
           class="transition-colors hover:text-primary"
           style="color: var(--ts-text-secondary);"
         >
-          {{ crumb.name }}
+          {{ t(crumb.name) }}
         </router-link>
         <span
           v-else
           class="font-medium"
           :style="{ color: index === breadcrumbs.length - 1 ? 'var(--ts-text-primary)' : 'var(--ts-text-secondary)' }"
         >
-          {{ crumb.name }}
+          {{ t(crumb.name) }}
         </span>
         <ChevronRight v-if="index < breadcrumbs.length - 1" class="w-4 h-4" style="color: var(--ts-text-muted);" />
       </template>
@@ -29,6 +29,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ChevronRight } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -36,11 +37,12 @@ const props = defineProps({
 })
 
 const route = useRoute()
+const { t } = useI18n()
 
 const breadcrumbs = computed(() => {
   const crumbList = []
   
-  crumbList.push({ name: 'Inicio', path: '/', disable: false })
+  crumbList.push({ name: 'menu.home', path: '/', disable: false })
   
   if (route.meta?.breadcrumb) {
     route.meta.breadcrumb.forEach(item => {

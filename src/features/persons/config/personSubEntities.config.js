@@ -9,23 +9,23 @@ import levelsService from '@/features/nomenclatives/services/levelsService.js'
 export const workerConflictConfig = {
     key: 'worker-conflict',
     routePath: 'person-management/worker-conflict',
-    title: 'Conflictos entre Trabajadores',
-    listTitle: 'Lista de Conflictos',
+    title: 'features.persons.workerConflict.title',
+    listTitle: 'features.persons.workerConflict.listTitle',
     entityName: {
         singular: 'conflicto',
         plural: 'conflictos'
     },
     service: workerConflictService,
     columns: [
-        { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'indexFk.description', header: 'Índice de Conflicto', width: '200px', sortable: true, filterable: true },
-        { field: 'workerFk.personName', header: 'Trabajador', width: '160px', sortable: true, filterable: true },
-        { field: 'workerConflictFk.personName', header: 'Trabajador en Conflicto', width: '200px', sortable: true, filterable: true }
+        { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+        { field: 'indexFk.description', header: 'features.persons.workerConflict.columns.index', width: '200px', sortable: true, filterable: true },
+        { field: 'workerFk.personName', header: 'common.columns.worker', width: '160px', sortable: true, filterable: true },
+        { field: 'workerConflictFk.personName', header: 'features.persons.workerConflict.columns.workerInConflict', width: '200px', sortable: true, filterable: true }
     ],
     fields: [
         {
             name: 'indexId',
-            label: 'Índice de Conflicto',
+            label: 'features.persons.workerConflict.fields.index',
             type: 'select',
             required: true,
             optionsService: conflictIndexService,
@@ -35,7 +35,7 @@ export const workerConflictConfig = {
         },
         {
             name: 'workerId',
-            label: 'Trabajador',
+            label: 'common.fields.worker',
             type: 'select',
             required: true,
             optionsService: personService,
@@ -45,7 +45,7 @@ export const workerConflictConfig = {
         },
         {
             name: 'workerConflictId',
-            label: 'Trabajador en Conflicto',
+            label: 'features.persons.workerConflict.fields.workerInConflict',
             type: 'select',
             required: true,
             optionsService: personService,
@@ -54,30 +54,30 @@ export const workerConflictConfig = {
             initialValuePath: 'workerConflictFk.id'
         }
     ],
-    breadcrumb: [{ name: 'Conflictos entre Trabajadores', disable: true }],
+    breadcrumb: [{ name: 'features.persons.workerConflict.title', disable: true }],
     showImportButton: false
 }
 
 export const competenceValueConfig = {
     key: 'competence-value',
     routePath: 'person-management/competence-value',
-    title: 'Valores de Competencia',
-    listTitle: 'Lista de Valores de Competencia',
+    title: 'features.persons.competenceValue.title',
+    listTitle: 'features.persons.competenceValue.listTitle',
     entityName: {
         singular: 'valor de competencia',
         plural: 'valores de competencia'
     },
     service: competenceValueService,
     columns: [
-        { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'workerFk.personName', header: 'Trabajador', width: '160px', sortable: true, filterable: true },
-        { field: 'competenceFk.competitionName', header: 'Competencia', width: '200px', sortable: true, filterable: true },
-        { field: 'levelFk.significance', header: 'Nivel', width: '150px', sortable: true, filterable: true }
+        { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+        { field: 'workerFk.personName', header: 'common.columns.worker', width: '160px', sortable: true, filterable: true },
+        { field: 'competenceFk.competitionName', header: 'common.columns.competence', width: '200px', sortable: true, filterable: true },
+        { field: 'levelFk.significance', header: 'common.columns.level', width: '150px', sortable: true, filterable: true }
     ],
     fields: [
         {
             name: 'workerId',
-            label: 'Trabajador',
+            label: 'common.fields.worker',
             type: 'select',
             required: true,
             optionsService: personService,
@@ -87,7 +87,7 @@ export const competenceValueConfig = {
         },
         {
             name: 'competenceId',
-            label: 'Competencia',
+            label: 'common.fields.competence',
             type: 'select',
             required: true,
             optionsService: competenceService,
@@ -97,7 +97,7 @@ export const competenceValueConfig = {
         },
         {
             name: 'levelId',
-            label: 'Nivel',
+            label: 'common.fields.level',
             type: 'select',
             required: true,
             optionsService: levelsService,
@@ -106,24 +106,24 @@ export const competenceValueConfig = {
             initialValuePath: 'levelFk.id'
         }
     ],
-    breadcrumb: [{ name: 'Valores de Competencia', disable: true }],
+    breadcrumb: [{ name: 'features.persons.competenceValue.title', disable: true }],
     showImportButton: false
 }
 
 export const workerTestConfig = {
     key: 'worker-test',
     routePath: 'person-management/worker-test',
-    title: 'Tests Psicológicos',
-    listTitle: 'Lista de Tests Psicológicos',
+    title: 'features.persons.workerTest.title',
+    listTitle: 'features.persons.workerTest.listTitle',
     entityName: {
         singular: 'test psicológico',
         plural: 'tests psicológicos'
     },
     service: workerTestService,
     columns: [
-        { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'workerFk.personName', header: 'Trabajador', width: '160px', sortable: true, filterable: true },
-        { field: 'tipoMB', header: 'Tipo MBTI', width: '110px', sortable: true },
+        { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+        { field: 'workerFk.personName', header: 'common.columns.worker', width: '160px', sortable: true, filterable: true },
+        { field: 'tipoMB', header: 'features.persons.workerTest.columns.mbtiType', width: '110px', sortable: true },
         { field: 'ES', header: 'ES', width: '60px', sortable: true },
         { field: 'ID', header: 'ID', width: '60px', sortable: true },
         { field: 'CO', header: 'CO', width: '60px', sortable: true },
@@ -133,7 +133,7 @@ export const workerTestConfig = {
     fields: [
         {
             name: 'workerId',
-            label: 'Trabajador',
+            label: 'common.fields.worker',
             type: 'select',
             required: true,
             optionsService: personService,
@@ -141,17 +141,17 @@ export const workerTestConfig = {
             optionValue: 'id',
             initialValuePath: 'workerFk.id'
         },
-        { name: 'tipoMB', label: 'Tipo MBTI', type: 'text', required: false },
-        { name: 'ES', label: 'ES (Belbin)', type: 'number', required: false, min: 0 },
-        { name: 'ID', label: 'ID (Belbin)', type: 'number', required: false, min: 0 },
-        { name: 'CO', label: 'CO (Belbin)', type: 'number', required: false, min: 0 },
-        { name: 'IS', label: 'IS (Belbin)', type: 'number', required: false, min: 0 },
-        { name: 'CE', label: 'CE (Belbin)', type: 'number', required: false, min: 0 },
-        { name: 'IR', label: 'IR (Belbin)', type: 'number', required: false, min: 0 },
-        { name: 'ME', label: 'ME (Belbin)', type: 'number', required: false, min: 0 },
-        { name: 'CH', label: 'CH (Belbin)', type: 'number', required: false, min: 0 },
-        { name: 'IF', label: 'IF (Belbin)', type: 'number', required: false, min: 0 }
+        { name: 'tipoMB', label: 'features.persons.workerTest.fields.mbtiType', type: 'text', required: false },
+        { name: 'ES', label: 'features.persons.workerTest.fields.es', type: 'number', required: false, min: 0 },
+        { name: 'ID', label: 'features.persons.workerTest.fields.belbinId', type: 'number', required: false, min: 0 },
+        { name: 'CO', label: 'features.persons.workerTest.fields.co', type: 'number', required: false, min: 0 },
+        { name: 'IS', label: 'features.persons.workerTest.fields.is', type: 'number', required: false, min: 0 },
+        { name: 'CE', label: 'features.persons.workerTest.fields.ce', type: 'number', required: false, min: 0 },
+        { name: 'IR', label: 'features.persons.workerTest.fields.ir', type: 'number', required: false, min: 0 },
+        { name: 'ME', label: 'features.persons.workerTest.fields.me', type: 'number', required: false, min: 0 },
+        { name: 'CH', label: 'features.persons.workerTest.fields.ch', type: 'number', required: false, min: 0 },
+        { name: 'IF', label: 'features.persons.workerTest.fields.if', type: 'number', required: false, min: 0 }
     ],
-    breadcrumb: [{ name: 'Tests Psicológicos', disable: true }],
+    breadcrumb: [{ name: 'features.persons.workerTest.title', disable: true }],
     showImportButton: false
 }

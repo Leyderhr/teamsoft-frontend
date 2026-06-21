@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { KeyRound } from 'lucide-vue-next'
@@ -8,6 +9,7 @@ import { userConfig } from '@/features/users/config/user.config.js'
 import { useUsers } from '@/services/users/queries'
 import { useResetPassword } from '@/services/users/mutations'
 
+const { t } = useI18n()
 const toast = useToast()
 const confirm = useConfirm()
 const selectedItem = ref(null)
@@ -19,33 +21,33 @@ const handleResetPassword = () => {
   if (!selectedItem.value) {
     toast.add({
       severity: 'warn',
-      summary: 'Advertencia',
-      detail: 'Selecciona un usuario para resetear su contraseña',
+      summary: t('common.warning'),
+      detail: t('features.users.resetPassword.selectUser'),
       life: 3000
     })
     return
   }
 
   confirm.require({
-    message: `¿Está seguro de resetear la contraseña del usuario ${selectedItem.value.username}?`,
-    header: 'Confirmación',
+    message: t('features.users.resetPassword.confirmMessage', [selectedItem.value.username]),
+    header: t('common.confirm.header'),
     icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Sí, resetear',
-    rejectLabel: 'Cancelar',
+    acceptLabel: t('features.users.resetPassword.accept'),
+    rejectLabel: t('common.cancel'),
     accept: async () => {
       try {
         const result = await resetPasswordMutation.mutateAsync(selectedItem.value.id)
         toast.add({
           severity: 'success',
-          summary: 'Éxito',
-          detail: result?.message || 'Contraseña reseteada correctamente',
+          summary: t('common.success'),
+          detail: result?.message || t('features.users.resetPassword.success'),
           life: 3000
         })
       } catch (error) {
         toast.add({
           severity: 'error',
-          summary: 'Error',
-          detail: error?.response?.data?.message || error?.message || 'Error al resetear contraseña',
+          summary: t('common.error'),
+          detail: error?.response?.data?.message || error?.message || t('features.users.resetPassword.error'),
           life: 3000
         })
       }
@@ -79,7 +81,7 @@ const handleResetPassword = () => {
             : 'text-gray-300 cursor-not-allowed bg-gray-50'"
         >
           <KeyRound class="w-4 h-4" />
-          Resetear Contraseña
+          {{ t('features.users.resetPassword.button') }}
         </button>
       </template>
     </GenericListView>

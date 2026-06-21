@@ -7,24 +7,24 @@ import roleService from '@/features/roles/services/roleService.js'
 export const roleCompetitionConfig = {
     key: 'role-competition',
     routePath: 'manage-roles/role-competition',
-    title: 'Competencias del Rol',
-    listTitle: 'Lista de Competencias del Rol',
+    title: 'features.roles.roleCompetition.title',
+    listTitle: 'features.roles.roleCompetition.listTitle',
     entityName: {
         singular: 'competencia del rol',
         plural: 'competencias del rol'
     },
     service: roleCompetitionService,
     columns: [
-        { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'competenceFk.competitionName', header: 'Competencia', width: '200px', sortable: true, filterable: true },
-        { field: 'compImportanceFk.significance', header: 'Importancia', width: '160px', sortable: true, filterable: true },
-        { field: 'levelsFk.significance', header: 'Nivel', width: '150px', sortable: true, filterable: true },
-        { field: 'rolesFk.roleName', header: 'Rol', width: '150px', sortable: true, filterable: true }
+        { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+        { field: 'competenceFk.competitionName', header: 'common.columns.competence', width: '200px', sortable: true, filterable: true },
+        { field: 'compImportanceFk.significance', header: 'common.columns.importance', width: '160px', sortable: true, filterable: true },
+        { field: 'levelsFk.significance', header: 'common.columns.level', width: '150px', sortable: true, filterable: true },
+        { field: 'rolesFk.roleName', header: 'common.columns.role', width: '150px', sortable: true, filterable: true }
     ],
     fields: [
         {
             name: 'competenceId',
-            label: 'Competencia',
+            label: 'common.fields.competence',
             type: 'select',
             required: true,
             optionsService: competenceService,
@@ -34,7 +34,7 @@ export const roleCompetitionConfig = {
         },
         {
             name: 'compImportanceId',
-            label: 'Importancia',
+            label: 'common.fields.importance',
             type: 'select',
             required: true,
             optionsService: competenceImportanceService,
@@ -44,7 +44,7 @@ export const roleCompetitionConfig = {
         },
         {
             name: 'levelsId',
-            label: 'Nivel',
+            label: 'common.fields.level',
             type: 'select',
             required: true,
             optionsService: levelsService,
@@ -54,7 +54,7 @@ export const roleCompetitionConfig = {
         },
         {
             name: 'roleId',
-            label: 'Rol',
+            label: 'common.fields.role',
             type: 'select',
             required: true,
             optionsService: roleService,
@@ -63,6 +63,6 @@ export const roleCompetitionConfig = {
             initialValuePath: 'rolesFk.id'
         }
     ],
-    breadcrumb: [{ name: 'Competencias del Rol', disable: true }],
+    breadcrumb: [{ name: 'features.roles.roleCompetition.title', disable: true }],
     showImportButton: false
 }

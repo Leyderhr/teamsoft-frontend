@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useSecurityStore } from '@/core/store/security.store.js'
 import { useAuthStore } from '@/lib/auth-store'
@@ -10,6 +11,7 @@ defineProps({
   collapsed: { type: Boolean, default: false }
 })
 
+const { t } = useI18n()
 const router = useRouter()
 const securityStore = useSecurityStore()
 const userStore = useAuthStore()
@@ -18,48 +20,48 @@ const menuItems = computed(() => {
   const items = []
 
   items.push({
-    label: 'Inicio',
+    label: t('menu.home'),
     icon: 'pi pi-home',
     command: () => router.push('/')
   })
 
   if (securityStore.isGestor) {
     items.push({
-      label: 'Configurar',
+      label: t('menu.configure'),
       icon: 'pi pi-list',
       items: [
         {
-          label: 'Competencias',
+          label: t('menu.competences'),
           items: [
-            { label: 'Importancia', command: () => router.push('/nomenclatives/competence-importance') },
-            { label: 'Niveles', command: () => router.push('/nomenclatives/levels') }
+            { label: t('menu.nomenclatives.importance'), command: () => router.push('/nomenclatives/competence-importance') },
+            { label: t('menu.nomenclatives.levels'), command: () => router.push('/nomenclatives/levels') }
           ]
         },
         {
-          label: 'Rol',
+          label: t('menu.role'),
           items: [
-            { label: 'Costo de trabajar a distancia', command: () => router.push('/nomenclatives/cost-distance') },
-            { label: 'Carga del rol', command: () => router.push('/nomenclatives/role-load') }
+            { label: t('menu.nomenclatives.costDistance'), command: () => router.push('/nomenclatives/cost-distance') },
+            { label: t('menu.nomenclatives.roleLoad'), command: () => router.push('/nomenclatives/role-load') }
           ]
         },
         {
-          label: 'Persona',
+          label: t('menu.person'),
           items: [
-            { label: 'Grupos', command: () => router.push('/nomenclatives/person-group') },
-            { label: 'Evaluaci\u00f3n en el rol', command: () => router.push('/nomenclatives/role-eval') },
-            { label: '\u00cdndice de conflicto', command: () => router.push('/nomenclatives/conflict-index') },
-            { label: 'Nacionalidad', command: () => router.push('/nomenclatives/nacionality') },
-            { label: 'Provincia', command: () => router.push('/nomenclatives/county') },
-            { label: 'Raza', command: () => router.push('/nomenclatives/race') },
-            { label: 'Religi\u00f3n', command: () => router.push('/nomenclatives/religion') },
-            { label: 'Rango de edad', command: () => router.push('/nomenclatives/age-group') }
+            { label: t('menu.nomenclatives.groups'), command: () => router.push('/nomenclatives/person-group') },
+            { label: t('menu.nomenclatives.roleEval'), command: () => router.push('/nomenclatives/role-eval') },
+            { label: t('menu.nomenclatives.conflictIndex'), command: () => router.push('/nomenclatives/conflict-index') },
+            { label: t('menu.nomenclatives.nationality'), command: () => router.push('/nomenclatives/nacionality') },
+            { label: t('menu.nomenclatives.county'), command: () => router.push('/nomenclatives/county') },
+            { label: t('menu.nomenclatives.race'), command: () => router.push('/nomenclatives/race') },
+            { label: t('menu.nomenclatives.religion'), command: () => router.push('/nomenclatives/religion') },
+            { label: t('menu.nomenclatives.ageGroup'), command: () => router.push('/nomenclatives/age-group') }
           ]
         },
         {
-          label: 'Proyecto',
+          label: t('menu.project'),
           items: [
-            { label: 'Entidad cliente', command: () => router.push('/nomenclatives/client-entity') },
-            { label: 'Estructuras definidas', command: () => router.push('/nomenclatives/project-structure') }
+            { label: t('menu.nomenclatives.clientEntity'), command: () => router.push('/nomenclatives/client-entity') },
+            { label: t('menu.nomenclatives.projectStructure'), command: () => router.push('/nomenclatives/project-structure') }
           ]
         }
       ]
@@ -68,17 +70,17 @@ const menuItems = computed(() => {
 
   if (securityStore.isGestor) {
     items.push({
-      label: 'Recursos Humanos',
+      label: t('menu.humanResources'),
       icon: 'pi pi-users',
       items: [
-        { label: 'Competencias', command: () => router.push('/manage-competences/competence') },
-        { label: 'Roles', command: () => router.push('/manage-roles/role') },
-        { label: 'Personas', command: () => router.push('/person') },
+        { label: t('menu.competences'), command: () => router.push('/manage-competences/competence') },
+        { label: t('menu.roles'), command: () => router.push('/manage-roles/role') },
+        { label: t('menu.persons'), command: () => router.push('/person') },
         {
-          label: 'Importar personas',
+          label: t('menu.importPersons'),
           items: [
-            { label: 'Importar', command: () => router.push('/import') },
-            { label: 'Configurar', command: () => router.push('/import/config') }
+            { label: t('menu.import'), command: () => router.push('/import') },
+            { label: t('menu.configure'), command: () => router.push('/import/config') }
           ]
         }
       ]
@@ -90,25 +92,25 @@ const menuItems = computed(() => {
 
     if (securityStore.isDirectivoTecnico || securityStore.isExperimentador) {
       projectItems.push(
-          { label: 'Proyectos', command: () => router.push('/manage-projects/project') },
-          { label: 'Formar equipo', command: () => router.push('/manage-projects/team-formation') }
+          { label: t('menu.projects'), command: () => router.push('/manage-projects/project') },
+          { label: t('menu.teamFormation'), command: () => router.push('/manage-projects/team-formation') }
       )
     }
 
     if (securityStore.isJefeEquipo) {
       projectItems.push(
-          { label: 'Finalizar el proyecto', command: () => router.push('/manage-projects/close-project') }
+          { label: t('menu.finalizeProject'), command: () => router.push('/manage-projects/close-project') }
       )
     }
 
     if (securityStore.isDirectivoTecnico) {
       projectItems.push(
-          { label: 'Cerrar proyecto', command: () => router.push('/manage-projects/close-project') }
+          { label: t('menu.closeProject'), command: () => router.push('/manage-projects/close-project') }
       )
     }
 
     items.push({
-      label: 'Proyectos',
+      label: t('menu.projects'),
       icon: 'pi pi-briefcase',
       items: projectItems
     })
@@ -116,32 +118,32 @@ const menuItems = computed(() => {
 
   if (securityStore.isExperimentador) {
     items.push({
-      label: 'Experimentos',
+      label: t('menu.experiments'),
       icon: 'pi pi-cog',
       items: [
-        { label: 'Configurar', command: () => router.push('/experiments') }
+        { label: t('menu.configure'), command: () => router.push('/experiments') }
       ]
     })
   }
 
   if (securityStore.isAdmin) {
     items.push({
-      label: 'Usuarios',
+      label: t('menu.users'),
       icon: 'pi pi-user-plus',
       items: [
-        { label: 'Usuarios', command: () => router.push('/manage-user-role/users') }
+        { label: t('menu.users'), command: () => router.push('/manage-user-role/users') }
       ]
     })
   }
 
   if (securityStore.isAdmin) {
     items.push({
-      label: 'Reportes',
+      label: t('menu.reports'),
       icon: 'pi pi-chart-bar',
       items: [
-        { label: 'Personas', command: () => router.push('/reports/person-report') },
-        { label: 'Equipos finalizados', command: () => router.push('/reports/finished-teams') },
-        { label: 'Listar personas', command: () => router.push('/reports/list-workers') }
+        { label: t('menu.persons'), command: () => router.push('/reports/person-report') },
+        { label: t('menu.finishedTeams'), command: () => router.push('/reports/finished-teams') },
+        { label: t('menu.listPersons'), command: () => router.push('/reports/list-workers') }
       ]
     })
   }
@@ -156,7 +158,7 @@ const menuItems = computed(() => {
       <!-- Profile section -->
       <div v-if="!collapsed" class="profile-section">
         <Avatar icon="pi pi-user" size="xlarge" shape="circle" class="profile-avatar" />
-        <div class="profile-name">{{ userStore.username || 'Usuario' }}</div>
+        <div class="profile-name">{{ userStore.username || t('common.user') }}</div>
         <div class="profile-role" v-if="userStore.roles?.length">
           {{ userStore.roles[0]?.replace('ROLE_', '').replace(/_/g, ' ') }}
         </div>

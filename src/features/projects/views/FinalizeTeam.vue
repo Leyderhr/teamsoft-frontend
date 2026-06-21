@@ -2,14 +2,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import { RefreshCw, Loader2, Search, ClipboardCheck } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import projectService from '@/features/projects/services/projectService.js'
 import { useFinalizeTeamStore } from '@/stores/finalizeTeam'
+import { parseApiError } from '@/lib/apiError'
 
 const router = useRouter()
 const toast = useToast()
 const store = useFinalizeTeamStore()
+const { t } = useI18n()
 
 const projects    = ref([])
 const loading     = ref(false)
@@ -21,8 +24,8 @@ async function loadProjects() {
   loading.value = true
   try {
     projects.value = await projectService.getByState('FORMED')
-  } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los equipos formados', life: 3000 })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('common.error'), detail: await parseApiError(e, t('features.projects.finalizeTeam.loadError')), life: 3000 })
   } finally {
     loading.value = false
   }
@@ -56,19 +59,19 @@ function goEvaluate() {
 
 <template>
   <div class="space-y-6">
-    <PageBreadcrumb page-title="Finalizar Equipo" />
+    <PageBreadcrumb :page-title="t('features.projects.finalizeTeam.title')" />
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
       <!-- Header -->
       <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
-        <h2 class="text-base font-semibold text-gray-800">Equipos formados</h2>
+        <h2 class="text-base font-semibold text-gray-800">{{ t('features.projects.finalizeTeam.formedTeams') }}</h2>
         <div class="flex items-center gap-3 flex-wrap">
           <div class="relative">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Buscar equipo..."
+              :placeholder="t('features.projects.finalizeTeam.searchPlaceholder')"
               class="pl-9 pr-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors w-56"
             />
           </div>
@@ -79,7 +82,7 @@ function goEvaluate() {
             class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors"
           >
             <RefreshCw class="w-4 h-4" :class="loading ? 'animate-spin' : ''" />
-            Actualizar
+            {{ t('features.projects.finalizeTeam.update') }}
           </button>
         </div>
       </div>
@@ -100,13 +103,13 @@ function goEvaluate() {
               <td colspan="4" class="px-4 py-10 text-center">
                 <div class="flex items-center justify-center gap-2 text-sm text-gray-400">
                   <Loader2 class="w-5 h-5 animate-spin" />
-                  Cargando equipos...
+                  {{ t('features.projects.finalizeTeam.loading') }}
                 </div>
               </td>
             </tr>
             <tr v-else-if="!filteredProjects.length">
               <td colspan="4" class="px-4 py-10 text-center text-sm text-gray-400">
-                No hay equipos formados para finalizar
+                {{ t('features.projects.finalizeTeam.noTeams') }}
               </td>
             </tr>
             <tr
@@ -130,7 +133,7 @@ function goEvaluate() {
               <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(p.initialDate) }}</td>
               <td class="px-4 py-3">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-50 text-brand-700 ring-1 ring-brand-200">
-                  Formado
+                  {{ t('features.projects.finalizeTeam.formed') }}
                 </span>
               </td>
             </tr>
@@ -142,9 +145,9 @@ function goEvaluate() {
       <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-4 flex-wrap">
         <div class="text-sm text-gray-500">
           <span v-if="selectedProject">
-            Seleccionado: <strong class="text-gray-800">{{ selectedProject.projectName }}</strong>
+            {{ t('features.projects.finalizeTeam.selected') }} <strong class="text-gray-800">{{ selectedProject.projectName }}</strong>
           </span>
-          <span v-else class="text-gray-400">Ningún equipo seleccionado</span>
+          <span v-else class="text-gray-400">{{ t('features.projects.finalizeTeam.noSelection') }}</span>
         </div>
         <button
           type="button"
@@ -153,7 +156,7 @@ function goEvaluate() {
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <ClipboardCheck class="w-4 h-4" />
-          Evaluar
+          {{ t('features.projects.finalizeTeam.evaluate') }}
         </button>
       </div>
     </div>

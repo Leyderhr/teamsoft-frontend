@@ -17,7 +17,7 @@
             :class="field.colSpan === 'full' ? 'sm:col-span-2 lg:col-span-3 xl:col-span-4' : field.colSpan === 2 ? 'sm:col-span-2' : ''"
           >
             <label class="block text-sm font-medium text-gray-700">
-              {{ field.label }}
+              {{ t(field.label) }}
               <span v-if="field.required" class="text-error-500 ml-0.5">*</span>
             </label>
 
@@ -26,7 +26,7 @@
               v-if="field.type === 'select'"
               v-model="formData[fieldKey(field)]"
               :options="fieldOptions[fieldKey(field)] || []"
-              :placeholder="field.placeholder || 'Seleccione...'"
+              :placeholder="field.placeholder ? t(field.placeholder) : t('common.select')"
             />
 
             <!-- Boolean / Checkbox -->
@@ -39,7 +39,7 @@
                 v-model="formData[fieldKey(field)]"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20"
               />
-              <span class="text-sm text-gray-600">{{ field.label }}</span>
+              <span class="text-sm text-gray-600">{{ t(field.label) }}</span>
             </label>
 
             <!-- Number -->
@@ -47,7 +47,7 @@
               v-else-if="field.type === 'number'"
               type="number"
               v-model="formData[fieldKey(field)]"
-              :placeholder="field.placeholder || field.label"
+              :placeholder="field.placeholder ? t(field.placeholder) : t(field.label)"
               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
             />
 
@@ -55,7 +55,7 @@
             <textarea
               v-else-if="field.type === 'textarea'"
               v-model="formData[fieldKey(field)]"
-              :placeholder="field.placeholder || field.label"
+              :placeholder="field.placeholder ? t(field.placeholder) : t(field.label)"
               rows="3"
               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors resize-none"
             ></textarea>
@@ -65,7 +65,7 @@
               v-else
               type="text"
               v-model="formData[fieldKey(field)]"
-              :placeholder="field.placeholder || field.label"
+              :placeholder="field.placeholder ? t(field.placeholder) : t(field.label)"
               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
             />
 
@@ -84,7 +84,7 @@
             @click="router.back()"
             class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Cancelar
+            {{ t('common.cancel') }}
           </button>
           <button
             type="button"
@@ -94,7 +94,7 @@
           >
             <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
             <Save v-else class="w-4 h-4" />
-            {{ saving ? 'Guardando...' : 'Guardar' }}
+            {{ saving ? t('common.saving') : t('common.save') }}
           </button>
         </div>
     </div>
@@ -105,9 +105,11 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import { AlertCircle, Save, Loader2 } from 'lucide-vue-next'
 import PageBreadcrumb from './PageBreadcrumb.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
+import { parseApiError } from '@/lib/apiError'
 
 const props = defineProps({
   mode: { type: String, default: 'create' },
@@ -120,6 +122,7 @@ const props = defineProps({
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
+const { t } = useI18n()
 
 const formData = reactive({})
 const errors = reactive({})
@@ -127,31 +130,27 @@ const saving = ref(false)
 const fieldOptions = ref({})
 
 const formTitle = computed(() =>
-  props.mode === 'create' ? `Crear ${props.title}` : `Editar ${props.title}`
+  props.mode === 'create' ? `${t('common.create')} ${t(props.title)}` : `${t('common.edit')} ${t(props.title)}`
 )
 
 const breadcrumbItems = computed(() => [
-  { label: props.title, path: props.listRoute }
+  { label: t(props.title), path: props.listRoute }
 ])
 
-// Support both field.key and field.name as the form data key
 function fieldKey(f) {
   return f.key ?? f.name
 }
 
 onMounted(async () => {
-  // Initialize formData with defaults
   props.fields.forEach(f => {
     formData[fieldKey(f)] = f.type === 'boolean' ? false : (f.defaultValue ?? f.default ?? '')
   })
 
-  // Load existing data in edit mode
   if (props.mode === 'edit' && route.params.id) {
     try {
       const res = await props.service.getById(route.params.id)
       const data = res?.data ?? res
       Object.assign(formData, data)
-      // Sobrescribir campos select que usen editKey para extraer IDs de objetos anidados
       props.fields.forEach(f => {
         if (f.editKey) {
           const fk = fieldKey(f)
@@ -160,11 +159,10 @@ onMounted(async () => {
         }
       })
     } catch {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el registro', life: 3000 })
+      toast.add({ severity: 'error', summary: t('common.error'), detail: t('common.loadError'), life: 3000 })
     }
   }
 
-  // Load select options — supports optionsService as a service object (with .getAll()) or a plain function
   for (const field of props.fields) {
     const fk = fieldKey(field)
     if (field.type === 'select') {
@@ -177,7 +175,6 @@ onMounted(async () => {
           } else {
             items = await field.optionsService.getAll()
           }
-          // Map using optionLabel/optionValue if provided
           if (field.optionLabel && field.optionValue) {
             fieldOptions.value[fk] = items.map(i => ({ label: i[field.optionLabel], value: i[field.optionValue] }))
           } else {
@@ -195,15 +192,13 @@ onMounted(async () => {
 })
 
 async function handleSave() {
-  // Clear errors
   Object.keys(errors).forEach(k => delete errors[k])
 
-  // Basic required validation
   let valid = true
   props.fields.forEach(f => {
     const fk = fieldKey(f)
     if (f.required && (formData[fk] === '' || formData[fk] == null)) {
-      errors[fk] = `${f.label} es requerido`
+      errors[fk] = t('common.fieldRequired', [t(f.label)])
       valid = false
     }
   })
@@ -213,19 +208,16 @@ async function handleSave() {
   try {
     if (props.mode === 'create') {
       await props.service.create(formData)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Registro creado correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('common.recordCreated'), life: 3000 })
     } else {
       await props.service.update(route.params.id, formData)
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Registro actualizado correctamente', life: 3000 })
+      toast.add({ severity: 'success', summary: t('common.success'), detail: t('common.recordUpdated'), life: 3000 })
     }
     router.push(props.listRoute)
   } catch (e) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: e?.response?.data?.message ?? e?.message ?? 'Error al guardar',
-      life: 3000,
-    })
+    // REEMPLAZAMOS LA LÓGICA ANTERIOR POR EL TRADUCTOR MÁGICO:
+    const detail = await parseApiError(e, t('common.saveError'))
+    toast.add({ severity: 'error', summary: t('common.error'), detail, life: 5000 })
   } finally {
     saving.value = false
   }

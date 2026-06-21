@@ -26,13 +26,13 @@ watch([items, loading, error], ([newItems, newLoading, newError]) => {
 })
 
 const columns = ref([
-  { field: 'personName', header: 'Nombre', sortable: true },
-  { field: 'surName', header: 'Apellidos', sortable: true },
-  { field: 'card', header: 'CI', sortable: true },
-  { field: 'email', header: 'Email', sortable: true },
-  { field: 'phone', header: 'Teléfono' },
-  { field: 'sex', header: 'Sexo' },
-  { field: 'status', header: 'Estado', type: 'badge', sortable: true },
+  { field: 'personName', header: 'features.persons.fields.name', sortable: true },
+  { field: 'surName', header: 'features.persons.fields.surname', sortable: true },
+  { field: 'card', header: 'features.persons.fields.card', sortable: true },
+  { field: 'email', header: 'features.persons.fields.email', sortable: true },
+  { field: 'phone', header: 'features.persons.fields.phone' },
+  { field: 'sex', header: 'features.persons.fields.sex' },
+  { field: 'status', header: 'common.fields.status', type: 'badge', sortable: true },
 ])
 
 const personService = {
@@ -44,9 +44,7 @@ const personConfig = {
   editRoute: (id) => `/person/edit/${id}`
 }
 
-const handleCreate = () => {
-  router.push('/person/create')
-}
+
 </script>
 
 <template>
@@ -57,9 +55,9 @@ const handleCreate = () => {
       :selected-item="selectedItem"
       :service="personService"
       :config="personConfig"
-      title="Personas"
+      title="features.persons.title"
       :loading="loading"
-      :on-create-click="handleCreate"
+      :on-create-click="loadData"
       @update:selectedItem="selectedItem = $event"
       @refresh="loadData"
     />

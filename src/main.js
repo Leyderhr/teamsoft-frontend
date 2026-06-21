@@ -1,6 +1,7 @@
 import {createApp} from 'vue'
 import App from './App.vue'
 import router from './core/router'
+import { i18n } from './i18n'
 import {createPinia} from "pinia";
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { queryClient } from './lib/query-client'
@@ -41,6 +42,8 @@ app.use(ConfirmationService)
 app.use(router)
 app.use(pinia)
 app.use(VueQueryPlugin, { queryClient })
+
+app.use(i18n)
 
 // Inicializar auth store desde localStorage
 const authStore = useAuthStore()
