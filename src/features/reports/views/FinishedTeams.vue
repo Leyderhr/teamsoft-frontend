@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
 import { ArrowLeft, Loader2, FileText, BarChart2 } from 'lucide-vue-next'
@@ -17,17 +17,17 @@ const selectedProject = ref(null)
 const showReport = ref(false)
 const teamMembers = ref([])
 
-const projectColumns = [
+const projectColumns = computed(() => [
   { field: 'projectName', header: t('features.projects.nameLabel'), sortable: true },
-  { field: 'initialDate', header: 'Fecha Inicio', sortable: true },
-  { field: 'state', header: 'Estado', type: 'badge', sortable: true },
-]
+  { field: 'initialDate', header: t('features.reports.finishedTeams.startDate'), sortable: true },
+  { field: 'state', header: t('features.reports.finishedTeams.state'), type: 'badge', sortable: true },
+])
 
-const teamColumns = [
-  { field: 'fullName', header: 'Nombre', sortable: true },
+const teamColumns = computed(() => [
+  { field: 'fullName', header: t('features.reports.finishedTeams.name'), sortable: true },
   { field: 'roleName', header: t('features.projects.structure.role'), sortable: true },
-  { field: 'evaluation', header: 'Evaluación', sortable: true },
-]
+  { field: 'evaluation', header: t('features.reports.finishedTeams.evaluation'), sortable: true },
+])
 
 const loadFinishedProjects = async () => {
   loading.value = true
@@ -35,7 +35,7 @@ const loadFinishedProjects = async () => {
     const { default: projectService } = await import('@/features/projects/services/projectService.js')
     finishedProjects.value = await projectService.getByState('CLOSED')
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: 'No se pudieron cargar los equipos cerrados', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.reports.finishedTeams.loadError'), life: 3000 })
   } finally {
     loading.value = false
   }
@@ -43,7 +43,7 @@ const loadFinishedProjects = async () => {
 
 const handleSeeReport = async (project) => {
   if (!project) {
-    toast.add({ severity: 'warn', summary: 'Aviso', detail: 'Seleccione un equipo para ver el reporte', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('common.notice'), detail: t('features.reports.finishedTeams.selectTeam'), life: 3000 })
     return
   }
   selectedProject.value = project
@@ -60,7 +60,7 @@ const handleSeeReport = async (project) => {
   } catch (error) {
     console.error('Error cargando equipo:', error)
     teamMembers.value = []
-    toast.add({ severity: 'error', summary: t('common.error'), detail: 'No se pudo cargar el equipo del proyecto', life: 3000 })
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.reports.finishedTeams.teamLoadError'), life: 3000 })
   } finally {
     loadingTeam.value = false
   }
@@ -77,8 +77,8 @@ onMounted(loadFinishedProjects)
 <template>
   <div>
     <PageBreadcrumb
-      :page-title="showReport ? 'Equipo del Proyecto' : 'Equipos Cerrados'"
-      :items="showReport ? [{ label: 'Equipos Cerrados' }] : []"
+      :page-title="showReport ? t('features.reports.finishedTeams.teamTitle') : t('features.reports.finishedTeams.title')"
+      :items="showReport ? [{ label: t('features.reports.finishedTeams.title') }] : []"
     />
 
     <!-- Step 1: selección de proyecto finalizado -->
@@ -111,15 +111,15 @@ onMounted(loadFinishedProjects)
         <div class="p-6">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-700">
             <div>
-              <span class="font-medium text-gray-500 block mb-0.5">Fecha Inicio</span>
+              <span class="font-medium text-gray-500 block mb-0.5">{{ t('features.reports.finishedTeams.startDate') }}</span>
               <span>{{ selectedProject.initialDate || '—' }}</span>
             </div>
             <div>
-              <span class="font-medium text-gray-500 block mb-0.5">Fecha Fin</span>
+              <span class="font-medium text-gray-500 block mb-0.5">{{ t('features.reports.finishedTeams.endDate') }}</span>
               <span>{{ selectedProject.endDate || '—' }}</span>
             </div>
             <div>
-              <span class="font-medium text-gray-500 block mb-0.5">Estado</span>
+              <span class="font-medium text-gray-500 block mb-0.5">{{ t('features.reports.finishedTeams.state') }}</span>
               <span>{{ selectedProject.state || '—' }}</span>
             </div>
           </div>
@@ -129,7 +129,7 @@ onMounted(loadFinishedProjects)
       <!-- Tabla de miembros del equipo -->
       <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-base font-semibold text-gray-800">Miembros del Equipo</h3>
+          <h3 class="text-base font-semibold text-gray-800">{{ t('features.reports.finishedTeams.teamMembers') }}</h3>
         </div>
         <div class="p-6">
           <DataTable

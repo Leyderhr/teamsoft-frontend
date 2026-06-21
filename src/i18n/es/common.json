@@ -35,6 +35,9 @@
   "export": "Exportar",
   "clear": "Limpiar",
   "more": "más",
+  "notice": "Aviso",
+  "optional": "(opcional)",
+  "reset": "Restablecer",
   "home": "Inicio",
   "user": "Usuario",
   "changePassword": "Cambiar contraseña",
@@ -119,6 +122,7 @@
     "sex": "Sexo"
   },
   "table": {
+    "noRecords": "No se encontraron registros.",
     "showing": "Mostrando",
     "of": "de",
     "records": "registros",

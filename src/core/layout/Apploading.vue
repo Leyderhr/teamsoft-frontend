@@ -1,7 +1,9 @@
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { useLoading } from '@/core/composables/useLoading.js'
 import ProgressSpinner from 'primevue/progressspinner'
 
+const { t } = useI18n()
 const { isLoading } = useLoading()
 </script>
 
@@ -10,7 +12,7 @@ const { isLoading } = useLoading()
     <div v-if="isLoading" class="app-loading">
       <div class="loading-card">
         <ProgressSpinner style="width: 32px; height: 32px" strokeWidth="4" />
-        <span class="loading-text">Procesando...</span>
+        <span class="loading-text">{{ t('common.processing') }}</span>
       </div>
     </div>
   </Transition>

@@ -1,9 +1,11 @@
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Clock } from 'lucide-vue-next'
 import { useAuthStore } from '@/lib/auth-store'
 
+const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 const currentYear = ref(new Date().getFullYear())
@@ -39,7 +41,7 @@ const goToLogin = () => {
     <div class="mx-auto w-full max-w-[242px] text-center sm:max-w-[472px]">
 
       <h1 class="mb-8 font-bold text-blue-light-500 text-title-md xl:text-title-2xl">
-        SESIÓN
+        {{ t('errors.sessionExpired.label') }}
       </h1>
 
       <div class="mx-auto mb-2 flex items-center justify-center w-[220px] h-[220px] sm:w-[300px] sm:h-[300px] rounded-full bg-blue-light-50">
@@ -47,11 +49,10 @@ const goToLogin = () => {
       </div>
 
       <!-- Sub-label -->
-      <p class="text-sm font-semibold text-blue-light-500 tracking-widest uppercase mb-4">Sesión Expirada</p>
+      <p class="text-sm font-semibold text-blue-light-500 tracking-widest uppercase mb-4">{{ t('errors.sessionExpired.subtitle') }}</p>
 
       <p class="mt-6 mb-6 text-base text-gray-700 sm:text-lg">
-        Tu sesión ha caducado por inactividad.
-        Por favor, inicia sesión nuevamente para continuar.
+        {{ t('errors.sessionExpired.message') }}
       </p>
 
       <div class="flex flex-wrap items-center justify-center gap-3">
@@ -60,7 +61,7 @@ const goToLogin = () => {
           @click="goToLogin"
           class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 transition-colors cursor-pointer"
         >
-          Iniciar Sesión
+          {{ t('common.login') }}
         </button>
       </div>
     </div>

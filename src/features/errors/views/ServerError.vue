@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { AlertTriangle } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const router = useRouter()
 const currentYear = ref(new Date().getFullYear())
 
@@ -34,7 +36,7 @@ const reload = () => window.location.reload()
     <div class="mx-auto w-full max-w-[242px] text-center sm:max-w-[472px]">
 
       <h1 class="mb-8 font-bold text-title-md xl:text-title-2xl" style="color: #7a5af8;">
-        ERROR
+        {{ t('errors.common.errorLabel') }}
       </h1>
 
       <div class="mx-auto mb-2 flex items-center justify-center w-[220px] h-[220px] sm:w-[300px] sm:h-[300px] rounded-full" style="background-color: #f5f3ff;">
@@ -42,11 +44,10 @@ const reload = () => window.location.reload()
       </div>
 
       <!-- Sub-label -->
-      <p class="text-sm font-semibold tracking-widest uppercase mb-4" style="color: #7a5af8;">500 — Error del Servidor</p>
+      <p class="text-sm font-semibold tracking-widest uppercase mb-4" style="color: #7a5af8;">{{ t('errors.serverError.subtitle') }}</p>
 
       <p class="mt-6 mb-6 text-base text-gray-700 sm:text-lg">
-        Ha ocurrido un error interno en el servidor. Intenta recargar la página o vuelve
-        más tarde. Si el problema persiste, contacta al administrador.
+        {{ t('errors.serverError.message') }}
       </p>
 
       <div class="flex flex-wrap items-center justify-center gap-3">
@@ -55,14 +56,14 @@ const reload = () => window.location.reload()
           @click="reload"
           class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 transition-colors cursor-pointer"
         >
-          Recargar Página
+          {{ t('common.reloadPage') }}
         </button>
         <button
           type="button"
           @click="router.push('/')"
           class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 transition-colors cursor-pointer"
         >
-          Ir al Inicio
+          {{ t('common.goHome') }}
         </button>
       </div>
     </div>

@@ -15,25 +15,25 @@ import personService from '@/features/persons/services/personService.js'
 export const cycleConfig = {
     key: 'cycle',
     routePath: 'manage-projects/cycle',
-    title: 'Ciclos de Proyecto',
-    listTitle: 'Lista de Ciclos',
+    title: 'features.projects.cycle.title',
+    listTitle: 'features.projects.cycle.listTitle',
     entityName: {
         singular: 'ciclo',
         plural: 'ciclos'
     },
     service: cycleService,
     columns: [
-        { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'beginDate', header: 'Fecha Inicio', width: '140px', sortable: true },
-        { field: 'endDate', header: 'Fecha Fin', width: '140px', sortable: true },
-        { field: 'projectFk.projectName', header: 'Proyecto', width: '200px', sortable: true, filterable: true }
+        { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+        { field: 'beginDate', header: 'common.columns.startDate', width: '140px', sortable: true },
+        { field: 'endDate', header: 'common.columns.endDate', width: '140px', sortable: true },
+        { field: 'projectFk.projectName', header: 'common.columns.project', width: '200px', sortable: true, filterable: true }
     ],
     fields: [
-        { name: 'beginDate', label: 'Fecha de Inicio', type: 'date', required: true },
-        { name: 'endDate', label: 'Fecha de Fin', type: 'date', required: false },
+        { name: 'beginDate', label: 'common.fields.startDate', type: 'date', required: true },
+        { name: 'endDate', label: 'common.fields.endDate', type: 'date', required: false },
         {
             name: 'projectId',
-            label: 'Proyecto',
+            label: 'common.fields.project',
             type: 'select',
             required: false,
             optionsService: projectService,
@@ -42,32 +42,32 @@ export const cycleConfig = {
             initialValuePath: 'projectFk.id'
         }
     ],
-    breadcrumb: [{ name: 'Ciclos de Proyecto', disable: true }],
+    breadcrumb: [{ name: 'features.projects.cycle.title', disable: true }],
     showImportButton: false
 }
 
 export const projectRolesConfig = {
     key: 'project-roles',
     routePath: 'manage-projects/project-roles',
-    title: 'Roles del Proyecto',
-    listTitle: 'Lista de Roles del Proyecto',
+    title: 'features.projects.projectRoles.title',
+    listTitle: 'features.projects.projectRoles.listTitle',
     entityName: {
         singular: 'rol del proyecto',
         plural: 'roles del proyecto'
     },
     service: projectRolesService,
     columns: [
-        { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'amountWorkersRole', header: 'Cantidad Trabajadores', width: '180px', sortable: true },
-        { field: 'projectStructureFk.name', header: 'Estructura', width: '180px', sortable: true, filterable: true },
-        { field: 'roleFk.roleName', header: 'Rol', width: '150px', sortable: true, filterable: true },
-        { field: 'roleLoadFk.value', header: 'Carga del Rol', width: '130px', sortable: true }
+        { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+        { field: 'amountWorkersRole', header: 'features.projects.projectRoles.columns.workerCount', width: '180px', sortable: true },
+        { field: 'projectStructureFk.name', header: 'common.columns.structure', width: '180px', sortable: true, filterable: true },
+        { field: 'roleFk.roleName', header: 'common.columns.role', width: '150px', sortable: true, filterable: true },
+        { field: 'roleLoadFk.value', header: 'common.columns.roleLoad', width: '130px', sortable: true }
     ],
     fields: [
-        { name: 'amountWorkersRole', label: 'Cantidad de Trabajadores', type: 'number', required: true, min: 1 },
+        { name: 'amountWorkersRole', label: 'features.projects.projectRoles.fields.workerCount', type: 'number', required: true, min: 1 },
         {
             name: 'projectStructureId',
-            label: 'Estructura de Proyecto',
+            label: 'common.fields.projectStructure',
             type: 'select',
             required: true,
             optionsService: projectStructureService,
@@ -77,7 +77,7 @@ export const projectRolesConfig = {
         },
         {
             name: 'roleId',
-            label: 'Rol',
+            label: 'common.fields.role',
             type: 'select',
             required: true,
             optionsService: roleService,
@@ -87,7 +87,7 @@ export const projectRolesConfig = {
         },
         {
             name: 'roleLoadId',
-            label: 'Carga del Rol',
+            label: 'common.fields.roleLoad',
             type: 'select',
             required: true,
             optionsService: roleLoadService,
@@ -96,29 +96,29 @@ export const projectRolesConfig = {
             initialValuePath: 'roleLoadFk.id'
         }
     ],
-    breadcrumb: [{ name: 'Roles del Proyecto', disable: true }],
+    breadcrumb: [{ name: 'features.projects.projectRoles.title', disable: true }],
     showImportButton: false
 }
 
 export const projectStructureCycleConfig = {
     key: 'project-structure-cycle',
     routePath: 'manage-projects/project-structure-cycle',
-    title: 'Ciclos de Estructura de Proyecto',
-    listTitle: 'Lista de Ciclos de Estructura',
+    title: 'features.projects.projectStructureCycle.title',
+    listTitle: 'features.projects.projectStructureCycle.listTitle',
     entityName: {
         singular: 'ciclo de estructura',
         plural: 'ciclos de estructura'
     },
     service: projectStructureCycleService,
     columns: [
-        { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'cycleFk.beginDate', header: 'Fecha Inicio del Ciclo', width: '180px', sortable: true, filterable: true },
-        { field: 'projectStructureFk.name', header: 'Estructura', width: '220px', sortable: true, filterable: true }
+        { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+        { field: 'cycleFk.beginDate', header: 'features.projects.projectStructureCycle.columns.cycleStartDate', width: '180px', sortable: true, filterable: true },
+        { field: 'projectStructureFk.name', header: 'common.columns.structure', width: '220px', sortable: true, filterable: true }
     ],
     fields: [
         {
             name: 'cycleId',
-            label: 'Ciclo',
+            label: 'common.fields.cycle',
             type: 'select',
             required: true,
             optionsService: cycleService,
@@ -128,7 +128,7 @@ export const projectStructureCycleConfig = {
         },
         {
             name: 'projectStructureId',
-            label: 'Estructura de Proyecto',
+            label: 'common.fields.projectStructure',
             type: 'select',
             required: true,
             optionsService: projectStructureService,
@@ -137,32 +137,32 @@ export const projectStructureCycleConfig = {
             initialValuePath: 'projectStructureFk.id'
         }
     ],
-    breadcrumb: [{ name: 'Ciclos de Estructura', disable: true }],
+    breadcrumb: [{ name: 'features.projects.projectStructureCycle.breadcrumb', disable: true }],
     showImportButton: false
 }
 
 export const projectTechCompetenceConfig = {
     key: 'project-tech-competence',
     routePath: 'manage-projects/project-tech-competence',
-    title: 'Competencias Técnicas del Proyecto',
-    listTitle: 'Lista de Competencias Técnicas',
+    title: 'features.projects.projectTechCompetence.title',
+    listTitle: 'features.projects.projectTechCompetence.listTitle',
     entityName: {
         singular: 'competencia técnica',
         plural: 'competencias técnicas'
     },
     service: projectTechCompetenceService,
     columns: [
-        { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'competenceFk.competitionName', header: 'Competencia', width: '180px', sortable: true, filterable: true },
-        { field: 'compImportanceFk.significance', header: 'Importancia', width: '150px', sortable: true },
-        { field: 'levelFk.significance', header: 'Nivel', width: '140px', sortable: true },
-        { field: 'projectStructureFk.name', header: 'Estructura', width: '160px', sortable: true, filterable: true },
-        { field: 'roleFk.roleName', header: 'Rol', width: '130px', sortable: true, filterable: true }
+        { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+        { field: 'competenceFk.competitionName', header: 'common.columns.competence', width: '180px', sortable: true, filterable: true },
+        { field: 'compImportanceFk.significance', header: 'common.columns.importance', width: '150px', sortable: true },
+        { field: 'levelFk.significance', header: 'common.columns.level', width: '140px', sortable: true },
+        { field: 'projectStructureFk.name', header: 'common.columns.structure', width: '160px', sortable: true, filterable: true },
+        { field: 'roleFk.roleName', header: 'common.columns.role', width: '130px', sortable: true, filterable: true }
     ],
     fields: [
         {
             name: 'competenceId',
-            label: 'Competencia',
+            label: 'common.fields.competence',
             type: 'select',
             required: true,
             optionsService: competenceService,
@@ -172,7 +172,7 @@ export const projectTechCompetenceConfig = {
         },
         {
             name: 'compImportanceId',
-            label: 'Importancia',
+            label: 'common.fields.importance',
             type: 'select',
             required: true,
             optionsService: competenceImportanceService,
@@ -182,7 +182,7 @@ export const projectTechCompetenceConfig = {
         },
         {
             name: 'levelId',
-            label: 'Nivel',
+            label: 'common.fields.level',
             type: 'select',
             required: true,
             optionsService: levelsService,
@@ -192,7 +192,7 @@ export const projectTechCompetenceConfig = {
         },
         {
             name: 'projectStructureId',
-            label: 'Estructura de Proyecto',
+            label: 'common.fields.projectStructure',
             type: 'select',
             required: true,
             optionsService: projectStructureService,
@@ -202,7 +202,7 @@ export const projectTechCompetenceConfig = {
         },
         {
             name: 'roleId',
-            label: 'Rol',
+            label: 'common.fields.role',
             type: 'select',
             required: true,
             optionsService: roleService,
@@ -211,32 +211,32 @@ export const projectTechCompetenceConfig = {
             initialValuePath: 'roleFk.id'
         }
     ],
-    breadcrumb: [{ name: 'Competencias Técnicas del Proyecto', disable: true }],
+    breadcrumb: [{ name: 'features.projects.projectTechCompetence.title', disable: true }],
     showImportButton: false
 }
 
 export const assignedRoleConfig = {
     key: 'assigned-role',
     routePath: 'manage-projects/assigned-role',
-    title: 'Roles Asignados',
-    listTitle: 'Lista de Roles Asignados',
+    title: 'features.projects.assignedRole.title',
+    listTitle: 'features.projects.assignedRole.listTitle',
     entityName: {
         singular: 'rol asignado',
         plural: 'roles asignados'
     },
     service: assignedRoleService,
     columns: [
-        { field: 'id', header: 'ID', width: '80px', sortable: true },
-        { field: 'workersFk.personName', header: 'Trabajador', width: '160px', sortable: true, filterable: true },
-        { field: 'rolesFk.roleName', header: 'Rol', width: '140px', sortable: true, filterable: true },
-        { field: 'status', header: 'Estado', width: '110px', sortable: true },
-        { field: 'beginDate', header: 'Fecha Inicio', width: '130px', sortable: true },
-        { field: 'endDate', header: 'Fecha Fin', width: '130px', sortable: true }
+        { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+        { field: 'workersFk.personName', header: 'common.columns.worker', width: '160px', sortable: true, filterable: true },
+        { field: 'rolesFk.roleName', header: 'common.columns.role', width: '140px', sortable: true, filterable: true },
+        { field: 'status', header: 'common.columns.status', width: '110px', sortable: true },
+        { field: 'beginDate', header: 'common.columns.startDate', width: '130px', sortable: true },
+        { field: 'endDate', header: 'common.columns.endDate', width: '130px', sortable: true }
     ],
     fields: [
         {
             name: 'workerId',
-            label: 'Trabajador',
+            label: 'common.fields.worker',
             type: 'select',
             required: true,
             optionsService: personService,
@@ -246,7 +246,7 @@ export const assignedRoleConfig = {
         },
         {
             name: 'roleId',
-            label: 'Rol',
+            label: 'common.fields.role',
             type: 'select',
             required: true,
             optionsService: roleService,
@@ -256,7 +256,7 @@ export const assignedRoleConfig = {
         },
         {
             name: 'cycleId',
-            label: 'Ciclo',
+            label: 'common.fields.cycle',
             type: 'select',
             required: false,
             optionsService: cycleService,
@@ -264,11 +264,11 @@ export const assignedRoleConfig = {
             optionValue: 'id',
             initialValuePath: 'cyclesFk.id'
         },
-        { name: 'status', label: 'Estado', type: 'text', required: false },
-        { name: 'observation', label: 'Observación', type: 'textarea', required: false },
-        { name: 'beginDate', label: 'Fecha de Inicio', type: 'date', required: false },
-        { name: 'endDate', label: 'Fecha de Fin', type: 'date', required: false }
+        { name: 'status', label: 'common.fields.status', type: 'text', required: false },
+        { name: 'observation', label: 'common.fields.observation', type: 'textarea', required: false },
+        { name: 'beginDate', label: 'common.fields.startDate', type: 'date', required: false },
+        { name: 'endDate', label: 'common.fields.endDate', type: 'date', required: false }
     ],
-    breadcrumb: [{ name: 'Roles Asignados', disable: true }],
+    breadcrumb: [{ name: 'features.projects.assignedRole.title', disable: true }],
     showImportButton: false
 }

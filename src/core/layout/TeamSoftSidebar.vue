@@ -46,7 +46,7 @@
                 <LayoutDashboard class="w-5 h-5 flex-shrink-0" />
               </span>
               <span v-if="isExpanded || isHovered || isMobileOpen" class="text-sm font-medium whitespace-nowrap">
-                Dashboard
+                {{ t('menu.dashboard') }}
               </span>
             </router-link>
           </li>
@@ -67,7 +67,7 @@
                   <Cog class="w-5 h-5 flex-shrink-0" />
                 </span>
                 <span v-if="isExpanded || isHovered || isMobileOpen" class="text-sm font-medium whitespace-nowrap">
-                  Configurar
+                  {{ t('menu.configure') }}
                 </span>
                 <ChevronDown
                   v-if="isExpanded || isHovered || isMobileOpen"
@@ -89,7 +89,7 @@
                         :class="isNestedOpen('config-competencias') ? 'text-brand-500 font-medium' : 'text-gray-600 font-normal'"
                       >
                         <BookOpen class="w-4 h-4 flex-shrink-0" />
-                        <span class="whitespace-nowrap">Competencias</span>
+                        <span class="whitespace-nowrap">{{ t('menu.competences') }}</span>
                         <ChevronDown
                           class="ml-auto w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0"
                           :class="isNestedOpen('config-competencias') ? 'rotate-180' : ''"
@@ -99,7 +99,7 @@
                         <ul v-show="isNestedOpen('config-competencias')" style="overflow:hidden" class="ml-6 mt-0.5 space-y-0.5">
                           <li v-for="sub in configurarCompetencias" :key="sub.path">
                             <router-link :to="sub.path" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive(sub.path) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                              {{ sub.name }}
+                              {{ t(sub.name) }}
                             </router-link>
                           </li>
                         </ul>
@@ -114,7 +114,7 @@
                         :class="isNestedOpen('config-rol') ? 'text-brand-500 font-medium' : 'text-gray-600 font-normal'"
                       >
                         <Shield class="w-4 h-4 flex-shrink-0" />
-                        <span class="whitespace-nowrap">Rol</span>
+                        <span class="whitespace-nowrap">{{ t('menu.role') }}</span>
                         <ChevronDown
                           class="ml-auto w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0"
                           :class="isNestedOpen('config-rol') ? 'rotate-180' : ''"
@@ -124,7 +124,7 @@
                         <ul v-show="isNestedOpen('config-rol')" style="overflow:hidden" class="ml-6 mt-0.5 space-y-0.5">
                           <li v-for="sub in configurarRol" :key="sub.path">
                             <router-link :to="sub.path" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive(sub.path) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                              {{ sub.name }}
+                              {{ t(sub.name) }}
                             </router-link>
                           </li>
                         </ul>
@@ -139,7 +139,7 @@
                         :class="isNestedOpen('config-persona') ? 'text-brand-500 font-medium' : 'text-gray-600 font-normal'"
                       >
                         <UserCog class="w-4 h-4 flex-shrink-0" />
-                        <span class="whitespace-nowrap">Persona</span>
+                        <span class="whitespace-nowrap">{{ t('menu.person') }}</span>
                         <ChevronDown
                           class="ml-auto w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0"
                           :class="isNestedOpen('config-persona') ? 'rotate-180' : ''"
@@ -149,7 +149,7 @@
                         <ul v-show="isNestedOpen('config-persona')" style="overflow:hidden" class="ml-6 mt-0.5 space-y-0.5">
                           <li v-for="sub in configurarPersona" :key="sub.path">
                             <router-link :to="sub.path" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive(sub.path) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                              {{ sub.name }}
+                              {{ t(sub.name) }}
                             </router-link>
                           </li>
                         </ul>
@@ -164,7 +164,7 @@
                         :class="isNestedOpen('config-proyecto') ? 'text-brand-500 font-medium' : 'text-gray-600 font-normal'"
                       >
                         <FolderCog class="w-4 h-4 flex-shrink-0" />
-                        <span class="whitespace-nowrap">Proyecto</span>
+                        <span class="whitespace-nowrap">{{ t('menu.project') }}</span>
                         <ChevronDown
                           class="ml-auto w-3.5 h-3.5 transition-transform duration-200 flex-shrink-0"
                           :class="isNestedOpen('config-proyecto') ? 'rotate-180' : ''"
@@ -174,7 +174,7 @@
                         <ul v-show="isNestedOpen('config-proyecto')" style="overflow:hidden" class="ml-6 mt-0.5 space-y-0.5">
                           <li v-for="sub in configurarProyecto" :key="sub.path">
                             <router-link :to="sub.path" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive(sub.path) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                              {{ sub.name }}
+                              {{ t(sub.name) }}
                             </router-link>
                           </li>
                         </ul>
@@ -202,7 +202,7 @@
                   <Users class="w-5 h-5 flex-shrink-0" />
                 </span>
                 <span v-if="isExpanded || isHovered || isMobileOpen" class="text-sm font-medium whitespace-nowrap">
-                  Recursos Humanos
+                  {{ t('menu.humanResources') }}
                 </span>
                 <ChevronDown
                   v-if="isExpanded || isHovered || isMobileOpen"
@@ -215,7 +215,7 @@
                   <ul class="mt-1 ml-9 space-y-0.5">
                     <li v-for="sub in rrhhItems" :key="sub.path">
                       <router-link :to="sub.path" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive(sub.path) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        {{ sub.name }}
+                        {{ t(sub.name) }}
                       </router-link>
                     </li>
                   </ul>
@@ -239,7 +239,7 @@
                   <Briefcase class="w-5 h-5 flex-shrink-0" />
                 </span>
                 <span v-if="isExpanded || isHovered || isMobileOpen" class="text-sm font-medium whitespace-nowrap">
-                  Proyectos
+                  {{ t('menu.projects') }}
                 </span>
                 <ChevronDown
                   v-if="isExpanded || isHovered || isMobileOpen"
@@ -252,7 +252,7 @@
                   <ul class="mt-1 ml-9 space-y-0.5">
                     <li v-for="sub in proyectosItems" :key="sub.path">
                       <router-link :to="sub.path" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive(sub.path) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        {{ sub.name }}
+                        {{ t(sub.name) }}
                       </router-link>
                     </li>
                   </ul>
@@ -276,7 +276,7 @@
                   <FlaskConical class="w-5 h-5 flex-shrink-0" />
                 </span>
                 <span v-if="isExpanded || isHovered || isMobileOpen" class="text-sm font-medium whitespace-nowrap">
-                  Experimentos
+                  {{ t('menu.experiments') }}
                 </span>
               </router-link>
             </li>
@@ -297,7 +297,7 @@
                   <ShieldCheck class="w-5 h-5 flex-shrink-0" />
                 </span>
                 <span v-if="isExpanded || isHovered || isMobileOpen" class="text-sm font-medium whitespace-nowrap">
-                  Administración
+                  {{ t('menu.administration') }}
                 </span>
                 <ChevronDown
                   v-if="isExpanded || isHovered || isMobileOpen"
@@ -310,22 +310,22 @@
                   <ul class="mt-1 ml-9 space-y-0.5">
                     <li>
                       <router-link to="/manage-user-role/users" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive('/manage-user-role/users') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        Usuarios
+                        {{ t('menu.users') }}
                       </router-link>
                     </li>
                     <li>
                       <router-link to="/reports/person-report" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive('/reports/person-report') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        Reporte de personas
+                        {{ t('menu.personReport') }}
                       </router-link>
                     </li>
                     <li>
                       <router-link to="/reports/finished-teams" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive('/reports/finished-teams') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        Equipos Cerrados
+                        {{ t('menu.closedTeams') }}
                       </router-link>
                     </li>
                     <li>
                       <router-link to="/reports/list-workers" class="menu-dropdown-item hover:bg-gray-100 hover:text-gray-700" :class="isActive('/reports/list-workers') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'">
-                        Listar personas
+                        {{ t('menu.listPersons') }}
                       </router-link>
                     </li>
 
@@ -343,6 +343,7 @@
 
 <script setup>
 import { ref, computed, watchEffect } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useSecurityStore } from '@/core/store/security.store.js'
 import { useSidebar } from '@/core/composables/useSidebar.js'
@@ -362,6 +363,7 @@ import {
   ChevronDown,
 } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const route = useRoute()
 const securityStore = useSecurityStore()
 const { isExpanded, isMobileOpen, isHovered, openSubmenu, setIsHovered, toggleSubmenu } = useSidebar()
@@ -395,29 +397,29 @@ const isSubmenuOpen = (key) => {
 
 // ── Configurar sub-data ──
 const configurarCompetencias = [
-  { name: 'Importancia', path: '/nomenclatives/competence-importance' },
-  { name: 'Niveles', path: '/nomenclatives/levels' },
+  { name: 'menu.nomenclatives.importance', path: '/nomenclatives/competence-importance' },
+  { name: 'menu.nomenclatives.levels', path: '/nomenclatives/levels' },
 ]
 
 const configurarRol = [
-  { name: 'Costo de distancia', path: '/nomenclatives/cost-distance' },
-  { name: 'Carga del rol', path: '/nomenclatives/role-load' },
+  { name: 'menu.nomenclatives.costDistance', path: '/nomenclatives/cost-distance' },
+  { name: 'menu.nomenclatives.roleLoad', path: '/nomenclatives/role-load' },
 ]
 
 const configurarPersona = [
-  { name: 'Grupos', path: '/nomenclatives/person-group' },
-  { name: 'Evaluación de rol', path: '/nomenclatives/role-eval' },
-  { name: 'Índice de conflicto', path: '/nomenclatives/conflict-index' },
-  { name: 'Nacionalidad', path: '/nomenclatives/nacionality' },
-  { name: 'Provincia', path: '/nomenclatives/county' },
-  { name: 'Raza', path: '/nomenclatives/race' },
-  { name: 'Religión', path: '/nomenclatives/religion' },
-  { name: 'Rango de edad', path: '/nomenclatives/age-group' },
+  { name: 'menu.nomenclatives.groups', path: '/nomenclatives/person-group' },
+  { name: 'menu.nomenclatives.roleEval', path: '/nomenclatives/role-eval' },
+  { name: 'menu.nomenclatives.conflictIndex', path: '/nomenclatives/conflict-index' },
+  { name: 'menu.nomenclatives.nationality', path: '/nomenclatives/nacionality' },
+  { name: 'menu.nomenclatives.county', path: '/nomenclatives/county' },
+  { name: 'menu.nomenclatives.race', path: '/nomenclatives/race' },
+  { name: 'menu.nomenclatives.religion', path: '/nomenclatives/religion' },
+  { name: 'menu.nomenclatives.ageGroup', path: '/nomenclatives/age-group' },
 ]
 
 const configurarProyecto = [
-  { name: 'Entidad cliente', path: '/nomenclatives/client-entity' },
-  { name: 'Estructuras', path: '/nomenclatives/project-structure' },
+  { name: 'menu.nomenclatives.clientEntity', path: '/nomenclatives/client-entity' },
+  { name: 'menu.nomenclatives.projectStructure', path: '/nomenclatives/project-structure' },
 ]
 
 const configurarAllPaths = computed(() => [
@@ -445,10 +447,10 @@ watchEffect(() => {
 
 // ── Recursos Humanos ──
 const rrhhItems = computed(() => [
-  { name: 'Competencias', path: '/manage-competences/competence' },
-  { name: 'Roles', path: '/manage-roles/role' },
-  { name: 'Personas', path: '/person' },
-  { name: 'Importar Personas', path: '/import' },
+  { name: 'menu.competences', path: '/manage-competences/competence' },
+  { name: 'menu.roles', path: '/manage-roles/role' },
+  { name: 'menu.persons', path: '/person' },
+  { name: 'menu.importPersons', path: '/import' },
 ])
 
 // ── Proyectos ──
@@ -456,13 +458,13 @@ const proyectosItems = computed(() => {
   const items = []
   if (securityStore.isDirectivoTecnico || securityStore.isExperimentador) {
     items.push(
-      { name: 'Proyectos', path: '/manage-projects/project' },
-      { name: 'Formar equipo', path: '/manage-projects/team-formation' },
-      { name: 'Finalizar equipo', path: '/manage-projects/finalize-team' },
+      { name: 'menu.projects', path: '/manage-projects/project' },
+      { name: 'menu.teamFormation', path: '/manage-projects/team-formation' },
+      { name: 'menu.finalizeTeam', path: '/manage-projects/finalize-team' },
     )
   }
   if (securityStore.isJefeEquipo || securityStore.isDirectivoTecnico) {
-    items.push({ name: 'Cerrar equipo', path: '/manage-projects/close-team' })
+    items.push({ name: 'menu.closeTeam', path: '/manage-projects/close-team' })
   }
   return items
 })

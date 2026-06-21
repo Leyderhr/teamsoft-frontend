@@ -35,6 +35,9 @@
   "export": "Export",
   "clear": "Clear",
   "more": "more",
+  "notice": "Notice",
+  "optional": "(optional)",
+  "reset": "Reset",
   "home": "Home",
   "user": "User",
   "changePassword": "Change password",
@@ -119,6 +122,7 @@
     "sex": "Sex"
   },
   "table": {
+    "noRecords": "No records found.",
     "showing": "Showing",
     "of": "of",
     "records": "records",

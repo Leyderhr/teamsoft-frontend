@@ -120,7 +120,8 @@
     "listTitle": "Competences List",
     "entity": { "singular": "competence", "plural": "competences" },
     "columns": { "technical": "Technical" },
-    "fields": { "name": "Competence Name", "technical": "Technical" }
+    "fields": { "name": "Competence Name", "technical": "Technical" },
+    "associatedCount": "{0} associated competence(s)"
   },
   "competenceDimension": {
     "title": "Competence Dimensions",
@@ -163,6 +164,7 @@
     "entity": { "singular": "role", "plural": "roles" },
     "columns": { "impact": "Impact", "isBoss": "Team Leader" },
     "fields": { "roleName": "Role Name", "impact": "Impact", "isBoss": "Team Leader" },
+    "associatedCount": "{0} associated competence(s)",
     "roleCompetition": {
       "title": "Role Competences",
       "listTitle": "Role Competences List",
@@ -562,7 +564,10 @@
       "levelLabel": "Level",
       "nameHeader": "Name",
       "surnameHeader": "Surname",
-      "dniHeader": "ID"
+      "dniHeader": "ID",
+      "name": "Name",
+      "startDate": "Start Date",
+      "state": "Status"
     },
     "finalizeTeam": {
       "title": "Finalize Team",
@@ -622,7 +627,10 @@
       "dniHeader": "ID",
       "roleHeader": "Role",
       "evaluationHeader": "Evaluation",
-      "confirmMessage": "Are you sure you want to finalize team «{0}»? Evaluations will be recorded and the status will change to Finalized."
+      "confirmMessage": "Are you sure you want to finalize team «{0}»? Evaluations will be recorded and the status will change to Finalized.",
+      "name": "Name",
+      "startDate": "Start Date",
+      "state": "Status"
     },
     "teamFormation": {
       "title": "Form Team",
@@ -741,8 +749,33 @@
     }
   },
   "reports": {
-    "personReport": { "title": "Person Report" },
-    "finishedTeams": { "title": "Closed Teams" },
+    "personReport": {
+      "title": "Person Report",
+      "workload": "Workload",
+      "load": "Load",
+      "status": "Status",
+      "assignedProjects": "Assigned projects",
+      "backToList": "Back to list",
+      "noProjects": "No assigned projects",
+      "evaluation": "Evaluation",
+      "rolesIn": "Roles in",
+      "selectedProject": "selected project",
+      "selectProjectHint": "Select a project to see the roles",
+      "noRoles": "No roles in this project"
+    },
+    "finishedTeams": {
+      "title": "Closed Teams",
+      "teamTitle": "Project Team",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "state": "Status",
+      "name": "Name",
+      "evaluation": "Evaluation",
+      "loadError": "Could not load closed teams",
+      "selectTeam": "Select a team to see the report",
+      "teamLoadError": "Could not load the project team",
+      "teamMembers": "Team Members"
+    },
     "listWorkers": { "title": "List Persons" },
     "searchFilters": "Search filters",
     "selectRole": "Select Role",
@@ -803,10 +836,142 @@
   },
   "import": {
     "title": "Import Persons",
-    "configTitle": "Import Configuration"
+    "configTitle": "Import Configuration",
+    "wizard": {
+      "title": "Import Persons",
+      "csvFile": "CSV File",
+      "processing": "Processing file...",
+      "clickToChange": "Click to change",
+      "clickToSelect": "Click to select a CSV file",
+      "maxSize": "Max 10 MB",
+      "detectedColumns": "Columns detected in the file:",
+      "targetGroup": "Target group",
+      "selectGroup": "Select a group",
+      "personMappingHint": "Map each file column to the corresponding field in the Person entity.",
+      "csvColumn": "CSV Column",
+      "targetField": "Target field",
+      "addMapping": "Add mapping",
+      "competenceMappingHint": "Map each CSV column to one or more competences it represents.",
+      "competenceWeights": "Competence Weights",
+      "total": "Total",
+      "noCompetencesMapped": "No competences mapped.",
+      "numericMaxValues": "Numeric Maximum Values",
+      "noNumericColumns": "No numeric columns detected.",
+      "roleMappingHint": "Map CSV columns to the role they represent.",
+      "selectRole": "Select role",
+      "fileAndGroup": "File and Group",
+      "file": "File",
+      "group": "Group",
+      "noGroup": "No group",
+      "personAttrMapping": "Person Attribute Mapping",
+      "personField": "Person Field",
+      "competenceMapping": "Competence Mapping",
+      "competences": "Competences",
+      "roleMapping": "Role Mapping",
+      "role": "Role",
+      "importCompleted": "Import completed successfully.",
+      "recordsImported": "records imported.",
+      "stepOf": "Step {0} of {1}",
+      "importing": "Importing...",
+      "import": "Import",
+      "newImport": "New Import",
+      "fileLoaded": "File loaded",
+      "columnsDetected": "{0} columns detected",
+      "demoMode": "Demo mode",
+      "demoColumns": "Simulated columns (API unavailable)",
+      "importSuccess": "Import successful",
+      "importSuccessDetail": "Data imported successfully",
+      "importError": "Could not complete the import",
+      "competenceFallback": "Competence",
+      "steps": {
+        "selectFile": "Select File",
+        "personAttributes": "Person Attributes",
+        "competenceAttributes": "Competence Attributes",
+        "configureCompetences": "Configure Competences",
+        "roleAttributes": "Role Attributes",
+        "verifyImport": "Verify and Import"
+      },
+      "personFields": {
+        "personName": "Name",
+        "surName": "Surname",
+        "card": "ID Card",
+        "address": "Address",
+        "phone": "Phone",
+        "email": "Email",
+        "sex": "Sex",
+        "inDate": "Entry date",
+        "birthDate": "Birth date",
+        "workload": "Workload",
+        "experience": "Years of experience",
+        "status": "Status",
+        "tipoMB": "MBTI Type"
+      }
+    },
+    "config": {
+      "title": "Import Configuration",
+      "saved": "Configuration saved successfully",
+      "saveError": "Could not save the configuration",
+      "cutoffPoint": "Cutoff Point",
+      "cutoffHint": "Minimum compatibility threshold to assign a worker to a role.",
+      "yearsExperience": "Number of Years of Experience",
+      "updateIfExists": "Update if exists",
+      "ignore": "Ignore",
+      "updateValues": "Update values",
+      "oldValuesAction": "Actions on old values",
+      "keepOldValues": "Keep old values",
+      "deleteOldValues": "Delete old values"
+    }
   },
   "experiments": {
-    "configTitle": "Experiment Configuration"
+    "configTitle": "Experiment Configuration",
+    "title": "Experiment Configuration",
+    "teamSoftParams": "TeamSoft Parameters",
+    "initialSolutionLabel": "Initial Solution",
+    "personTries": "Tries per person",
+    "operatorLabel": "Operator",
+    "operatorTypeLabel": "Operator Type",
+    "notApplicableRandom": "Not applicable for Random",
+    "configStrategy": "Configuration Strategy",
+    "executions": "Executions",
+    "iterations": "Iterations",
+    "calculateTime": "Calculate time",
+    "validate": "Validate",
+    "validationsNumber": "Number of validations",
+    "algorithmParams": "Algorithm Parameters (BICIAM)",
+    "hillClimbingRestart": "Hill Climbing Restart",
+    "tabuListSize": "Tabu List Size",
+    "multiobjHCRestartNeighbors": "Multi-objective HC Restart Neighborhood",
+    "multiobjHCDistanceNeighbors": "Multi-objective HC Distance Neighborhood",
+    "multiobjTabuSize": "Multi-objective Tabu Size",
+    "initialSolution": {
+      "belbin": "Belbin",
+      "competences": "Competences",
+      "minRoles": "Minimum roles",
+      "teamBoss": "Team boss",
+      "random": "Random"
+    },
+    "operator": {
+      "mutation": "Mutation",
+      "crossover": "Crossover",
+      "random": "Random"
+    },
+    "mutationType": {
+      "substitution": "Substitution",
+      "rolePermutation": "Role permutation",
+      "projectPermutation": "Project permutation",
+      "bossSubstitution": "Boss substitution",
+      "allRolesPermutation": "Permutation on all roles"
+    },
+    "crossoverType": {
+      "projectVector": "Project vector crossover",
+      "roleVector": "Role vector crossover",
+      "personVector": "Person vector crossover",
+      "roleExperience": "Role experience crossover",
+      "onePoint": "One-point crossover",
+      "twoPoint": "Two-point crossover",
+      "bestStateVector": "Best-state vector crossover",
+      "bestStateGeneral": "Best-state general crossover"
+    }
   },
   "teamUp": {
     "step1": {

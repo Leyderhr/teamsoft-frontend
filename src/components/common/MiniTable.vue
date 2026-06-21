@@ -1,17 +1,17 @@
 <template>
   <div v-if="!rows.length" class="text-sm text-gray-400 p-4 text-center bg-gray-50 rounded-lg">
-    Sin registros
+    {{ t('common.noRecords') }}
   </div>
   <div v-else class="overflow-hidden rounded-lg border border-gray-200">
     <div class="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
-      <span class="text-xs font-medium text-gray-500">{{ rows.length }} registro(s)</span>
+      <span class="text-xs font-medium text-gray-500">{{ t('common.recordCount', [rows.length]) }}</span>
       <button 
         v-if="selected.length" 
         type="button"
         @click="$emit('remove')"
         class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs text-error-600 hover:bg-error-50 transition-colors"
       >
-        {{ selected.length > 1 ? 'Eliminar seleccionados' : 'Eliminar seleccionado' }}
+        {{ selected.length > 1 ? t('common.deleteSelected') : t('common.deleteSelectedOne') }}
       </button>
     </div>
     <table class="min-w-full">
@@ -55,7 +55,10 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { CheckCircle2, XCircle } from 'lucide-vue-next'
+
+const { t } = useI18n()
 
 const props = defineProps({
   rows: { type: Array, default: () => [] },

@@ -17,324 +17,324 @@ export const nomenclativeConfigs = {
     religion: {
         key: 'religion',
         endpoint: 'religion',
-        title: 'Religiones',
-        listTitle: 'Lista de Religiones',
+        title: 'features.nomenclatives.religion.title',
+        listTitle: 'features.nomenclatives.religion.listTitle',
         entityName: {
             singular: 'religión',
             plural: 'religiones'
         },
         service: religionService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'religionName', header: 'Nombre', width: '250px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'religionName', header: 'common.columns.name', width: '250px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'religionName', label: 'Nombre de la Religión', type: 'text', required: true }
+            { name: 'religionName', label: 'features.nomenclatives.religion.fields.name', type: 'text', required: true }
         ],
-        breadcrumb: [{ name: 'Religión', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.religion.title', disable: true }],
         showImportButton: false
     },
 
     race: {
         key: 'race',
         endpoint: 'race',
-        title: 'Razas',
-        listTitle: 'Lista de Razas',
+        title: 'features.nomenclatives.race.title',
+        listTitle: 'features.nomenclatives.race.listTitle',
         entityName: {
             singular: 'raza',
             plural: 'razas'
         },
         service: raceService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'raceName', header: 'Nombre', width: '200px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'raceName', header: 'common.columns.name', width: '200px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'raceName', label: 'Nombre de la Raza', type: 'text', required: true }
+            { name: 'raceName', label: 'features.nomenclatives.race.fields.name', type: 'text', required: true }
         ],
-        breadcrumb: [{ name: 'Raza', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.race.title', disable: true }],
         showImportButton: false
     },
 
     ageGroup: {
         key: 'age-group',
         endpoint: 'ageGroups',
-        title: 'Grupos de Edad',
-        listTitle: 'Lista de Grupos de Edad',
+        title: 'features.nomenclatives.ageGroup.title',
+        listTitle: 'features.nomenclatives.ageGroup.listTitle',
         entityName: {
             singular: 'grupo de edad',
             plural: 'grupos de edad'
         },
         service: ageGroupService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'ageGroupName', header: 'Nombre', width: '200px', sortable: true, filterable: true },
-            { field: 'minAge', header: 'Edad Mínima', width: '120px', sortable: true },
-            { field: 'maxAge', header: 'Edad Máxima', width: '120px', sortable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'ageGroupName', header: 'common.columns.name', width: '200px', sortable: true, filterable: true },
+            { field: 'minAge', header: 'features.nomenclatives.ageGroup.columns.minAge', width: '120px', sortable: true },
+            { field: 'maxAge', header: 'features.nomenclatives.ageGroup.columns.maxAge', width: '120px', sortable: true }
         ],
         fields: [
-            { name: 'ageGroupName', label: 'Nombre del Grupo', type: 'text', required: true },
-            { name: 'minAge', label: 'Edad Mínima', type: 'number', required: true, min: 0 },
-            { name: 'maxAge', label: 'Edad Máxima', type: 'number', required: true, min: 0 }
+            { name: 'ageGroupName', label: 'features.nomenclatives.ageGroup.fields.name', type: 'text', required: true },
+            { name: 'minAge', label: 'features.nomenclatives.ageGroup.fields.minAge', type: 'number', required: true, min: 0 },
+            { name: 'maxAge', label: 'features.nomenclatives.ageGroup.fields.maxAge', type: 'number', required: true, min: 0 }
         ],
-        breadcrumb: [{ name: 'Grupos de Edad', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.ageGroup.title', disable: true }],
         showImportButton: false
     },
 
     nacionality: {
         key: 'nacionality',
         endpoint: 'nacionality',
-        title: 'Nacionalidades',
-        listTitle: 'Lista de Nacionalidades',
+        title: 'features.nomenclatives.nacionality.title',
+        listTitle: 'features.nomenclatives.nacionality.listTitle',
         entityName: {
             singular: 'nacionalidad',
             plural: 'nacionalidades'
         },
         service: nacionalityService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'paisNac', header: 'País', width: '200px', sortable: true, filterable: true },
-            { field: 'gentilicioNac', header: 'Gentilicio', width: '200px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'paisNac', header: 'features.nomenclatives.nacionality.columns.country', width: '200px', sortable: true, filterable: true },
+            { field: 'gentilicioNac', header: 'features.nomenclatives.nacionality.columns.demonym', width: '200px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'paisNac', label: 'País', type: 'text', required: true },
-            { name: 'gentilicioNac', label: 'Gentilicio', type: 'text', required: true }
+            { name: 'paisNac', label: 'features.nomenclatives.nacionality.fields.country', type: 'text', required: true },
+            { name: 'gentilicioNac', label: 'features.nomenclatives.nacionality.fields.demonym', type: 'text', required: true }
         ],
-        breadcrumb: [{ name: 'Nacionalidades', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.nacionality.title', disable: true }],
         showImportButton: false
     },
 
     county: {
         key: 'county',
         endpoint: 'county',
-        title: 'Provincias',
-        listTitle: 'Lista de Provincias',
+        title: 'features.nomenclatives.county.title',
+        listTitle: 'features.nomenclatives.county.listTitle',
         entityName: {
             singular: 'provincia',
             plural: 'provincias'
         },
         service: countyService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'countyName', header: 'Nombre', width: '200px', sortable: true, filterable: true },
-            { field: 'code', header: 'Código', width: '120px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'countyName', header: 'common.columns.name', width: '200px', sortable: true, filterable: true },
+            { field: 'code', header: 'common.columns.code', width: '120px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'countyName', label: 'Nombre de la Provincia', type: 'text', required: true },
-            { name: 'code', label: 'Código', type: 'text', required: true }
+            { name: 'countyName', label: 'features.nomenclatives.county.fields.name', type: 'text', required: true },
+            { name: 'code', label: 'common.fields.code', type: 'text', required: true }
         ],
-        breadcrumb: [{ name: 'Provincias', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.county.title', disable: true }],
         showImportButton: false
     },
 
     conflictIndex: {
         key: 'conflict-index',
         endpoint: 'conflictIndex',
-        title: 'Índices de Conflicto',
-        listTitle: 'Lista de Índices de Conflicto',
+        title: 'features.nomenclatives.conflictIndex.title',
+        listTitle: 'features.nomenclatives.conflictIndex.listTitle',
         entityName: {
             singular: 'índice de conflicto',
             plural: 'índices de conflicto'
         },
         service: conflictIndexService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'description', header: 'Descripción', width: '200px', sortable: true, filterable: true },
-            { field: 'weight', header: 'Peso', width: '120px', sortable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'description', header: 'common.columns.description', width: '200px', sortable: true, filterable: true },
+            { field: 'weight', header: 'features.nomenclatives.conflictIndex.columns.weight', width: '120px', sortable: true }
         ],
         fields: [
-            { name: 'description', label: 'Descripción', type: 'text', required: true },
-            { name: 'weight', label: 'Peso', type: 'number', required: true, min: 0 }
+            { name: 'description', label: 'common.fields.description', type: 'text', required: true },
+            { name: 'weight', label: 'features.nomenclatives.conflictIndex.fields.weight', type: 'number', required: true, min: 0 }
         ],
-        breadcrumb: [{ name: 'Índices de Conflicto', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.conflictIndex.title', disable: true }],
         showImportButton: false
     },
 
     roleEvaluation: {
         key: 'role-eval',
         endpoint: 'roleEvaluation',
-        title: 'Evaluación en el Rol',
-        listTitle: 'Lista de Evaluaciones de Rol',
+        title: 'features.nomenclatives.roleEvaluation.title',
+        listTitle: 'features.nomenclatives.roleEvaluation.listTitle',
         entityName: {
             singular: 'evaluación de rol',
             plural: 'evaluaciones de rol'
         },
         service: roleEvaluationService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'levels', header: 'Nivel', width: '120px', sortable: true },
-            { field: 'significance', header: 'Significado', width: '200px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'levels', header: 'common.columns.level', width: '120px', sortable: true },
+            { field: 'significance', header: 'common.columns.significance', width: '200px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'levels', label: 'Nivel', type: 'number', required: true, min: 0 },
-            { name: 'significance', label: 'Significado', type: 'text', required: true }
+            { name: 'levels', label: 'common.fields.level', type: 'number', required: true, min: 0 },
+            { name: 'significance', label: 'common.fields.significance', type: 'text', required: true }
         ],
-        breadcrumb: [{ name: 'Evaluación en el Rol', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.roleEvaluation.title', disable: true }],
         showImportButton: false
     },
 
     personGroup: {
         key: 'person-group',
         endpoint: 'personGroups',
-        title: 'Grupos de Personas',
-        listTitle: 'Lista de Grupos de Personas',
+        title: 'features.nomenclatives.personGroup.title',
+        listTitle: 'features.nomenclatives.personGroup.listTitle',
         entityName: {
             singular: 'grupo de persona',
             plural: 'grupos de personas'
         },
         service: personGroupService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'name', header: 'Nombre', width: '250px', sortable: true, filterable: true },
-            { field: 'father.name', header: 'Grupo Padre', width: '200px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'name', header: 'common.columns.name', width: '250px', sortable: true, filterable: true },
+            { field: 'father.name', header: 'features.nomenclatives.personGroup.columns.parentGroup', width: '200px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'name', label: 'Nombre del Grupo', type: 'text', required: true },
-            { name: 'parentGroupId', label: 'Grupo Padre', type: 'select', required: false, optionsService: personGroupService, optionLabel: 'name', optionValue: 'id', editKey: 'father.id' }
+            { name: 'name', label: 'features.nomenclatives.personGroup.fields.name', type: 'text', required: true },
+            { name: 'parentGroupId', label: 'features.nomenclatives.personGroup.fields.parentGroup', type: 'select', required: false, optionsService: personGroupService, optionLabel: 'name', optionValue: 'id', editKey: 'father.id' }
         ],
-        breadcrumb: [{ name: 'Grupos de Personas', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.personGroup.title', disable: true }],
         showImportButton: false
     },
 
     costDistance: {
         key: 'cost-distance',
         endpoint: 'costDistance',
-        title: 'Costo de Trabajar a Distancia',
-        listTitle: 'Lista de Costos de Distancia',
+        title: 'features.nomenclatives.costDistance.title',
+        listTitle: 'features.nomenclatives.costDistance.listTitle',
         entityName: {
             singular: 'costo de distancia',
             plural: 'costos de distancia'
         },
         service: costDistanceService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'countyA.countyName', header: 'Provincia A', width: '180px', sortable: true, filterable: true },
-            { field: 'countyB.countyName', header: 'Provincia B', width: '180px', sortable: true, filterable: true },
-            { field: 'costDistance', header: 'Costo', width: '120px', sortable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'countyA.countyName', header: 'features.nomenclatives.costDistance.columns.countyA', width: '180px', sortable: true, filterable: true },
+            { field: 'countyB.countyName', header: 'features.nomenclatives.costDistance.columns.countyB', width: '180px', sortable: true, filterable: true },
+            { field: 'costDistance', header: 'features.nomenclatives.costDistance.columns.cost', width: '120px', sortable: true }
         ],
         fields: [
-            { name: 'costDistance', label: 'Costo', type: 'number', required: true, min: 0 },
-            { name: 'countyAId', label: 'Provincia A', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id', editKey: 'countyA.id' },
-            { name: 'countyBId', label: 'Provincia B', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id', editKey: 'countyB.id' }
+            { name: 'costDistance', label: 'features.nomenclatives.costDistance.fields.cost', type: 'number', required: true, min: 0 },
+            { name: 'countyAId', label: 'features.nomenclatives.costDistance.fields.countyA', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id', editKey: 'countyA.id' },
+            { name: 'countyBId', label: 'features.nomenclatives.costDistance.fields.countyB', type: 'select', required: true, optionsService: countyService, optionLabel: 'countyName', optionValue: 'id', editKey: 'countyB.id' }
         ],
-        breadcrumb: [{ name: 'Costo de Trabajar a Distancia', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.costDistance.title', disable: true }],
         showImportButton: false
     },
 
     roleLoad: {
         key: 'role-load',
         endpoint: 'roleLoad',
-        title: 'Carga del Rol',
-        listTitle: 'Lista de Cargas de Rol',
+        title: 'features.nomenclatives.roleLoad.title',
+        listTitle: 'features.nomenclatives.roleLoad.listTitle',
         entityName: {
             singular: 'carga de rol',
             plural: 'cargas de rol'
         },
         service: roleLoadService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'value', header: 'Valor', width: '120px', sortable: true },
-            { field: 'significance', header: 'Significado', width: '200px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'value', header: 'common.columns.value', width: '120px', sortable: true },
+            { field: 'significance', header: 'common.columns.significance', width: '200px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'value', label: 'Valor', type: 'number', required: true, min: 0 },
-            { name: 'significance', label: 'Significado', type: 'text', required: true }
+            { name: 'value', label: 'common.fields.value', type: 'number', required: true, min: 0 },
+            { name: 'significance', label: 'common.fields.significance', type: 'text', required: true }
         ],
-        breadcrumb: [{ name: 'Carga del Rol', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.roleLoad.title', disable: true }],
         showImportButton: false
     },
 
     client: {
         key: 'client-entity',
         endpoint: 'clients',
-        title: 'Clientes',
-        listTitle: 'Lista de Clientes',
+        title: 'features.nomenclatives.client.title',
+        listTitle: 'features.nomenclatives.client.listTitle',
         entityName: {
             singular: 'cliente',
             plural: 'clientes'
         },
         service: clientService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'entityName', header: 'Nombre de la Entidad', width: '200px', sortable: true, filterable: true },
-            { field: 'address', header: 'Dirección', width: '200px', sortable: true, filterable: true },
-            { field: 'phone', header: 'Teléfono', width: '150px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'entityName', header: 'features.nomenclatives.client.columns.entityName', width: '200px', sortable: true, filterable: true },
+            { field: 'address', header: 'common.columns.address', width: '200px', sortable: true, filterable: true },
+            { field: 'phone', header: 'common.columns.phone', width: '150px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'entityName', label: 'Nombre de la Entidad', type: 'text', required: true },
-            { name: 'address', label: 'Dirección', type: 'text', required: true },
-            { name: 'phone', label: 'Teléfono', type: 'text', required: true }
+            { name: 'entityName', label: 'features.nomenclatives.client.fields.entityName', type: 'text', required: true },
+            { name: 'address', label: 'common.fields.address', type: 'text', required: true },
+            { name: 'phone', label: 'common.fields.phone', type: 'text', required: true }
         ],
-        breadcrumb: [{ name: 'Clientes', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.client.title', disable: true }],
         showImportButton: false
     },
 
     competenceImportance: {
         key: 'competence-importance',
         endpoint: 'competenceImportance',
-        title: 'Importancia de Competencias',
-        listTitle: 'Lista de Importancias de Competencias',
+        title: 'features.nomenclatives.competenceImportance.title',
+        listTitle: 'features.nomenclatives.competenceImportance.listTitle',
         entityName: {
             singular: 'importancia de competencia',
             plural: 'importancias de competencias'
         },
         service: competenceImportanceService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'levels', header: 'Nivel', width: '120px', sortable: true },
-            { field: 'significance', header: 'Significado', width: '200px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'levels', header: 'common.columns.level', width: '120px', sortable: true },
+            { field: 'significance', header: 'common.columns.significance', width: '200px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'levels', label: 'Nivel', type: 'number', required: true, min: 0 },
-            { name: 'significance', label: 'Significado', type: 'text', required: true }
+            { name: 'levels', label: 'common.fields.level', type: 'number', required: true, min: 0 },
+            { name: 'significance', label: 'common.fields.significance', type: 'text', required: true }
         ],
-        breadcrumb: [{ name: 'Importancia de Competencias', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.competenceImportance.title', disable: true }],
         showImportButton: false
     },
 
     levels: {
         key: 'levels',
         endpoint: 'levels',
-        title: 'Niveles de Competencias',
-        listTitle: 'Lista de Niveles',
+        title: 'features.nomenclatives.levels.title',
+        listTitle: 'features.nomenclatives.levels.listTitle',
         entityName: {
             singular: 'nivel',
             plural: 'niveles'
         },
         service: levelsService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'levels', header: 'Nivel', width: '120px', sortable: true },
-            { field: 'significance', header: 'Significado', width: '200px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'levels', header: 'common.columns.level', width: '120px', sortable: true },
+            { field: 'significance', header: 'common.columns.significance', width: '200px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'levels', label: 'Nivel', type: 'number', required: true, min: 0 },
-            { name: 'significance', label: 'Significado', type: 'text', required: true }
+            { name: 'levels', label: 'common.fields.level', type: 'number', required: true, min: 0 },
+            { name: 'significance', label: 'common.fields.significance', type: 'text', required: true }
         ],
-        breadcrumb: [{ name: 'Niveles de Competencias', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.levels.title', disable: true }],
         showImportButton: false
     },
 
     projectStructure: {
         key: 'project-structure',
         endpoint: 'project-structure',
-        title: 'Estructuras de Proyecto',
-        listTitle: 'Lista de Estructuras de Proyecto',
+        title: 'features.nomenclatives.projectStructure.title',
+        listTitle: 'features.nomenclatives.projectStructure.listTitle',
         entityName: {
             singular: 'estructura de proyecto',
             plural: 'estructuras de proyecto'
         },
         service: projectStructureService,
         columns: [
-            { field: 'id', header: 'ID', width: '80px', sortable: true },
-            { field: 'name', header: 'Nombre', width: '250px', sortable: true, filterable: true }
+            { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
+            { field: 'name', header: 'common.columns.name', width: '250px', sortable: true, filterable: true }
         ],
         fields: [
-            { name: 'name', label: 'Nombre de la Estructura', type: 'text', required: true }
+            { name: 'name', label: 'features.nomenclatives.projectStructure.fields.name', type: 'text', required: true }
         ],
         useCustomDialog: true,
         customDialogComponent: 'ProjectStructureFormDialog',
-        breadcrumb: [{ name: 'Estructuras de Proyecto', disable: true }],
+        breadcrumb: [{ name: 'features.nomenclatives.projectStructure.title', disable: true }],
         showImportButton: false
     }
 
