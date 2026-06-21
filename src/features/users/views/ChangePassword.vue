@@ -6,8 +6,11 @@ import { useToast } from 'primevue/usetoast'
 import { Save, Loader2, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-vue-next'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/lib/auth-store'
 import { parseApiError } from '@/lib/apiError'
 
+const router = useRouter()
+const authStore = useAuthStore()
 const { t } = useI18n()
 const toast = useToast()
 const { changePassword, isChangingPassword } = useAuth()
@@ -66,10 +69,14 @@ const handleSubmit = async () => {
       confirmPassword: confirmPassword.value.trim(),
     })
     toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.users.passwordUpdated'), life: 3000 })
+    
     currentPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
     strengthVisible.value = false
+
+    authStore.clearAuth()
+    router.push('/login')
   } catch (e) {
     const detail = await parseApiError(e, t('features.users.passwordUpdateError'))
     toast.add({ severity: 'error', summary: t('common.error'), detail, life: 4000 })
@@ -81,7 +88,7 @@ const handleSubmit = async () => {
   <div>
     <PageBreadcrumb :page-title="t('features.users.changePassword')" />
 
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-base font-semibold text-gray-800">{{ t('features.users.changePassword') }}</h2>
       </div>
@@ -217,3 +224,22 @@ const handleSubmit = async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Oculta el icono de revelar contraseña en navegadores basados en Edge/IE */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+/* Oculta iconos adicionales en navegadores basados en WebKit (Chrome, Safari, etc.) si llegaran a aparecer */
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+  height: 0;
+  width: 0;
+  margin: 0;
+}
+</style>

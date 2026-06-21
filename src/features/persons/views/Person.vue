@@ -44,9 +44,7 @@ const personConfig = {
   editRoute: (id) => `/person/edit/${id}`
 }
 
-const handleCreate = () => {
-  router.push('/person/create')
-}
+
 </script>
 
 <template>
@@ -59,7 +57,7 @@ const handleCreate = () => {
       :config="personConfig"
       title="Personas"
       :loading="loading"
-      :on-create-click="handleCreate"
+      :on-create-click="loadData"
       @update:selectedItem="selectedItem = $event"
       @refresh="loadData"
     />
