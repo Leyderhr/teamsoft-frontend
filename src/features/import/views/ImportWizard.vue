@@ -446,7 +446,7 @@ onMounted(loadOptions)
                   />
                 </div>
                 <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
-                  <span class="text-sm text-gray-500">Total</span>
+                  <span class="text-sm text-gray-500">{{ t('features.import.wizard.total') }}</span>
                   <span class="text-sm font-semibold text-gray-800">
                     {{ competenceWeights.reduce((s, c) => s + (c.weight || 0), 0).toFixed(2) }}
                   </span>
@@ -459,7 +459,7 @@ onMounted(loadOptions)
           <!-- Valores Máximos Numéricos -->
           <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Valores Máximos Numéricos</h3>
+              <h3 class="text-base font-semibold text-gray-800">{{ t('features.import.wizard.numericMaxValues') }}</h3>
             </div>
             <div class="p-6">
               <div v-if="numericMaxValues.length" class="flex flex-col gap-3">
@@ -478,7 +478,7 @@ onMounted(loadOptions)
                   />
                 </div>
               </div>
-              <p v-else class="text-sm text-gray-400">No se detectaron columnas numéricas.</p>
+              <p v-else class="text-sm text-gray-400">{{ t('features.import.wizard.noNumericColumns') }}</p>
             </div>
           </div>
         </div>
@@ -509,7 +509,7 @@ onMounted(loadOptions)
                 v-model="mapping.roleId"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
               >
-                <option :value="null">Seleccione rol</option>
+                <option :value="null">{{ t('features.import.wizard.selectRole') }}</option>
                 <option v-for="role in roleOptions" :key="role.id" :value="role.id">{{ role.roleName }}</option>
               </select>
 
@@ -541,21 +541,21 @@ onMounted(loadOptions)
           <!-- Archivo y Grupo -->
           <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Archivo y Grupo</h3>
+              <h3 class="text-base font-semibold text-gray-800">{{ t('features.import.wizard.fileAndGroup') }}</h3>
             </div>
             <div class="p-6">
               <div class="flex flex-wrap gap-6 text-sm">
                 <div class="flex flex-col gap-1">
-                  <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">Archivo</span>
+                  <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">{{ t('features.import.wizard.file') }}</span>
                   <div class="flex items-center gap-2 text-gray-800 font-medium">
                     <FileText class="w-4 h-4 text-brand-500" />
                     {{ uploadedFile?.name }}
                   </div>
                 </div>
                 <div class="flex flex-col gap-1">
-                  <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">Grupo</span>
+                  <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">{{ t('features.import.wizard.group') }}</span>
                   <span class="text-gray-800 font-medium">
-                    {{ groupOptions.find(g => g.id === selectedGroup)?.name || 'Sin grupo' }}
+                    {{ groupOptions.find(g => g.id === selectedGroup)?.name || t('features.import.wizard.noGroup') }}
                   </span>
                 </div>
               </div>
@@ -565,14 +565,14 @@ onMounted(loadOptions)
           <!-- Mapeo de Persona -->
           <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Mapeo de Atributos de Persona</h3>
+              <h3 class="text-base font-semibold text-gray-800">{{ t('features.import.wizard.personAttrMapping') }}</h3>
             </div>
             <div class="p-6">
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-gray-100">
                     <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.csvColumn') }}</th>
-                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Campo de Persona</th>
+                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.personField') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -599,14 +599,14 @@ onMounted(loadOptions)
             class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden"
           >
             <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Mapeo de Competencias</h3>
+              <h3 class="text-base font-semibold text-gray-800">{{ t('features.import.wizard.competenceMapping') }}</h3>
             </div>
             <div class="p-6">
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-gray-100">
                     <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.csvColumn') }}</th>
-                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Competencias</th>
+                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.competences') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -641,14 +641,14 @@ onMounted(loadOptions)
             class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden"
           >
             <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Mapeo de Roles</h3>
+              <h3 class="text-base font-semibold text-gray-800">{{ t('features.import.wizard.roleMapping') }}</h3>
             </div>
             <div class="p-6">
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-gray-100">
                     <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.csvColumn') }}</th>
-                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Rol</th>
+                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.role') }}</th>
                   </tr>
                 </thead>
                 <tbody>

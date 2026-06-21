@@ -44,10 +44,10 @@ const handleSave = async () => {
             updateIfExists: updateIfExists.value,
             oldValuesAction: oldValuesAction.value
         })
-        toast.add({ severity: 'success', summary: t('common.success'), detail: 'Configuración guardada correctamente', life: 3000 })
+        toast.add({ severity: 'success', summary: t('common.success'), detail: t('features.import.config.saved'), life: 3000 })
     } catch (error) {
         console.error('Error guardando config:', error)
-        toast.add({ severity: 'error', summary: t('common.error'), detail: 'No se pudo guardar la configuración', life: 3000 })
+        toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.import.config.saveError'), life: 3000 })
     } finally {
         saving.value = false
     }
@@ -63,7 +63,7 @@ onMounted(loadConfig)
 <template>
   <div class="p-4 pl-15 flex justify-center">
     <div class="w-full" style="max-width: 560px">
-      <h1 class="titulo text-black font-bold">Configuración de Importación</h1>
+      <h1 class="titulo text-black font-bold">{{ t('features.import.config.title') }}</h1>
 
       <Card class="mt-4">
         <template #content>
@@ -72,7 +72,7 @@ onMounted(loadConfig)
             <!-- Punto de corte -->
             <div class="flex flex-col gap-2">
               <label class="font-semibold text-sm text-[var(--ts-text-primary)]">
-                Punto de Corte
+                {{ t('features.import.config.cutoffPoint') }}
                 <span class="text-[var(--ts-text-muted)] font-normal">(0.1 – 1.0)</span>
               </label>
               <InputNumber
@@ -84,14 +84,14 @@ onMounted(loadConfig)
                 class="w-48"
               />
               <small class="text-[var(--ts-text-muted)]">
-                Umbral mínimo de compatibilidad para asignar un trabajador a un rol.
+                {{ t('features.import.config.cutoffHint') }}
               </small>
             </div>
 
             <!-- Años de experiencia -->
             <div class="flex flex-col gap-2">
               <label class="font-semibold text-sm text-[var(--ts-text-primary)]">
-                Número de Años de Experiencia
+                {{ t('features.import.config.yearsExperience') }}
               </label>
               <InputNumber
                 v-model="yearsExperience"
@@ -104,16 +104,16 @@ onMounted(loadConfig)
             <!-- Actualizar si existe -->
             <div class="flex flex-col gap-3">
               <label class="font-semibold text-sm text-[var(--ts-text-primary)]">
-                Actualizar si existe
+                {{ t('features.import.config.updateIfExists') }}
               </label>
               <div class="flex flex-col gap-2">
                 <div class="flex items-center gap-2">
                   <RadioButton v-model="updateIfExists" value="ignore" inputId="ignore" />
-                  <label for="ignore" class="cursor-pointer">Ignorar</label>
+                  <label for="ignore" class="cursor-pointer">{{ t('features.import.config.ignore') }}</label>
                 </div>
                 <div class="flex items-center gap-2">
                   <RadioButton v-model="updateIfExists" value="update" inputId="update" />
-                  <label for="update" class="cursor-pointer">Actualizar valores</label>
+                  <label for="update" class="cursor-pointer">{{ t('features.import.config.updateValues') }}</label>
                 </div>
               </div>
             </div>
@@ -121,16 +121,16 @@ onMounted(loadConfig)
             <!-- Acción en valores antiguos (solo si update) -->
             <div v-if="updateIfExists === 'update'" class="flex flex-col gap-3 pl-4 border-l-2 border-[var(--ts-border)]">
               <label class="font-semibold text-sm text-[var(--ts-text-primary)]">
-                Acciones en valores antiguos
+                {{ t('features.import.config.oldValuesAction') }}
               </label>
               <div class="flex flex-col gap-2">
                 <div class="flex items-center gap-2">
                   <RadioButton v-model="oldValuesAction" value="keep" inputId="keep" />
-                  <label for="keep" class="cursor-pointer">Mantener valores antiguos</label>
+                  <label for="keep" class="cursor-pointer">{{ t('features.import.config.keepOldValues') }}</label>
                 </div>
                 <div class="flex items-center gap-2">
                   <RadioButton v-model="oldValuesAction" value="delete" inputId="delete" />
-                  <label for="delete" class="cursor-pointer">Eliminar valores antiguos</label>
+                  <label for="delete" class="cursor-pointer">{{ t('features.import.config.deleteOldValues') }}</label>
                 </div>
               </div>
             </div>

@@ -232,7 +232,7 @@ const handleSearch = async () => {
       }
     }
     
-    workers.value = await reportService.getFilteredWorkers(payload)
+    workers.value = await reportService.getPersonReport()
     toast.add({
       severity: 'success',
       summary: t('features.reports.search.completed'),
