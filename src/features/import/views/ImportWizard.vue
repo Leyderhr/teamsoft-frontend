@@ -10,6 +10,7 @@ import personGroupService from '@/features/nomenclatives/services/personGroupSer
 import competenceService from '@/features/competences/services/competenceService.js'
 import roleService from '@/features/roles/services/roleService.js'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
+import AppSelect from '@/components/ui/AppSelect.vue'
 import { parseApiError } from '@/lib/apiError'
 import { useImportWizard } from '@/features/import/composables/useImportWizard.js'
 
@@ -35,6 +36,13 @@ const {
 const groupOptions = ref([])
 const competenceOptions = ref([])
 const roleOptions = ref([])
+
+// Opciones para los AppSelect (componente custom del proyecto)
+const headerOptions = computed(() => headers.value.map((h) => ({ value: h, label: h })))
+const groupSelectOptions = computed(() => groupOptions.value.map((g) => ({ value: g.name, label: g.name })))
+const competenceSelectOptions = computed(() =>
+  competenceOptions.value.map((c) => ({ value: c.competitionName, label: c.competitionName })))
+const roleSelectOptions = computed(() => roleOptions.value.map((r) => ({ value: r.id, label: r.roleName })))
 
 const stepTitles = computed(() => [
   t('features.import.wizard.steps.selectFile'),
@@ -170,16 +178,14 @@ onMounted(loadOptions)
             <label class="text-sm font-medium text-gray-700">
               {{ t('features.import.wizard.targetGroup') }} <span class="text-error-500">*</span>
             </label>
-            <input
+            <AppSelect
               v-model="groupName"
-              type="text"
-              list="import-group-options"
-              :placeholder="t('features.import.wizard.groupNamePlaceholder')"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
+              :options="groupSelectOptions"
+              searchable
+              allow-create
+              placeholder="features.import.wizard.groupNamePlaceholder"
+              search-placeholder="features.import.wizard.groupNamePlaceholder"
             />
-            <datalist id="import-group-options">
-              <option v-for="g in groupOptions" :key="g.id" :value="g.name" />
-            </datalist>
             <span class="text-xs text-gray-400">{{ t('features.import.wizard.groupNameHint') }}</span>
           </div>
         </div>
@@ -190,19 +196,11 @@ onMounted(loadOptions)
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.personFields.personName') }} <span class="text-error-500">*</span></label>
-              <select v-model="nombreColumn"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white">
-                <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
-                <option v-for="col in headers" :key="col" :value="col">{{ col }}</option>
-              </select>
+              <AppSelect v-model="nombreColumn" :options="headerOptions" searchable placeholder="features.import.wizard.csvColumn" />
             </div>
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.personFields.experience') }} <span class="text-error-500">*</span></label>
-              <select v-model="experienceColumn"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white">
-                <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
-                <option v-for="col in headers" :key="col" :value="col">{{ col }}</option>
-              </select>
+              <AppSelect v-model="experienceColumn" :options="headerOptions" searchable placeholder="features.import.wizard.csvColumn" />
             </div>
           </div>
           <p class="text-xs text-gray-400">{{ t('features.import.wizard.generatedFieldsHint') }}</p>
@@ -215,11 +213,10 @@ onMounted(loadOptions)
           <div v-for="(comp, ci) in competenceMappings" :key="ci"
             class="rounded-xl border border-gray-200 p-4 space-y-4">
             <div class="flex items-center gap-3">
-              <select v-model="comp.competenceName"
-                class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white">
-                <option :value="null">{{ t('features.import.wizard.selectCompetence') }}</option>
-                <option v-for="c in competenceOptions" :key="c.id" :value="c.competitionName">{{ c.competitionName }}</option>
-              </select>
+              <div class="flex-1">
+                <AppSelect v-model="comp.competenceName" :options="competenceSelectOptions" searchable
+                  placeholder="features.import.wizard.selectCompetence" />
+              </div>
               <button type="button" class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors"
                 @click="removeCompetence(ci)">
                 <Trash2 class="w-4 h-4" />
@@ -230,11 +227,10 @@ onMounted(loadOptions)
             <div class="space-y-3 pl-3 border-l-2 border-gray-100">
               <div v-for="(attr, ai) in comp.attributes" :key="ai" class="space-y-2">
                 <div class="flex flex-wrap items-center gap-3">
-                  <select v-model="attr.csvColumn"
-                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white min-w-[160px]">
-                    <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
-                    <option v-for="col in headers" :key="col" :value="col">{{ col }}</option>
-                  </select>
+                  <div class="min-w-[180px]">
+                    <AppSelect v-model="attr.csvColumn" :options="headerOptions" searchable
+                      placeholder="features.import.wizard.csvColumn" />
+                  </div>
                   <div class="flex items-center gap-1.5">
                     <span class="text-xs text-gray-500">{{ t('features.import.wizard.weight') }}</span>
                     <input v-model.number="attr.weight" type="number" min="0" max="1" step="0.05"
@@ -319,17 +315,13 @@ onMounted(loadOptions)
           <p class="text-sm text-gray-500">{{ t('features.import.wizard.roleMappingHint') }}</p>
           <div class="space-y-3">
             <div v-for="(rm, idx) in roleMappings" :key="idx" class="flex items-center gap-3">
-              <select v-model="rm.roleId"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white">
-                <option :value="null">{{ t('features.import.wizard.selectRole') }}</option>
-                <option v-for="role in roleOptions" :key="role.id" :value="role.id">{{ role.roleName }}</option>
-              </select>
+              <div class="w-full">
+                <AppSelect v-model="rm.roleId" :options="roleSelectOptions" searchable placeholder="features.import.wizard.selectRole" />
+              </div>
               <ChevronRight class="w-4 h-4 text-gray-300 flex-shrink-0" />
-              <select v-model="rm.csvColumn"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white">
-                <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
-                <option v-for="col in headers" :key="col" :value="col">{{ col }}</option>
-              </select>
+              <div class="w-full">
+                <AppSelect v-model="rm.csvColumn" :options="headerOptions" searchable placeholder="features.import.wizard.csvColumn" />
+              </div>
               <button type="button" class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors flex-shrink-0"
                 @click="removeRole(idx)">
                 <Trash2 class="w-4 h-4" />
@@ -383,8 +375,9 @@ onMounted(loadOptions)
               <div><span class="text-gray-500">{{ t('features.import.wizard.errors') }}:</span> <b>{{ importResult.errors }}</b></div>
             </div>
             <ul v-if="importResult.errorMessages?.length" class="text-xs text-warning-700 space-y-1 max-h-40 overflow-auto">
-              <li v-for="(msg, i) in importResult.errorMessages" :key="i" class="flex items-start gap-1.5">
-                <AlertCircle class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{{ msg }}
+              <li v-for="(err, i) in importResult.errorMessages" :key="i" class="flex items-start gap-1.5">
+                <AlertCircle class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                <span><b>{{ err.row }}:</b> {{ t('errors.' + err.errorCode, err.parameters || []) }}</span>
               </li>
             </ul>
           </div>

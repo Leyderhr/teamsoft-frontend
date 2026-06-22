@@ -19,6 +19,7 @@
   "ERR_IMPORT_COLUMN_NOT_FOUND": "Column '{0}' does not exist in the CSV file.",
   "ERR_IMPORT_ROW_NO_NAME": "The row has no person name.",
   "ERR_IMPORT_INVALID_NUMBER": "Invalid numeric value: '{0}'.",
+  "ERR_IMPORT_ROW_FAILED": "Error processing the row: {0}.",
   "ERR_IMPORT_FILE_ID_REQUIRED": "The file identifier is required.",
   "ERR_IMPORT_GROUP_NAME_REQUIRED": "The group name is required.",
   "ERR_IMPORT_CUTOFF_REQUIRED": "The cutoff point is required.",

@@ -19,6 +19,7 @@
   "ERR_IMPORT_COLUMN_NOT_FOUND": "La columna '{0}' no existe en el archivo CSV.",
   "ERR_IMPORT_ROW_NO_NAME": "La fila no tiene nombre de persona.",
   "ERR_IMPORT_INVALID_NUMBER": "Valor numérico inválido: '{0}'.",
+  "ERR_IMPORT_ROW_FAILED": "Error al procesar la fila: {0}.",
   "ERR_IMPORT_FILE_ID_REQUIRED": "El identificador del archivo es obligatorio.",
   "ERR_IMPORT_GROUP_NAME_REQUIRED": "El nombre del grupo es obligatorio.",
   "ERR_IMPORT_CUTOFF_REQUIRED": "El punto de corte es obligatorio.",
