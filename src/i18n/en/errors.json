@@ -14,12 +14,16 @@
   "COMP_IMPORTANCE_SUCCESSFULLY_DELETED": "Competence importance deleted successfully.",
   "ERR_VAL_COMP_IMPORTANCE_LEVEL": "Level is required and must be at least 0.",
   "ERR_VAL_COMP_IMPORTANCE_SIGNIFICANCE": "Significance is required and only  letters, numbers and spaces are allowed.",
+  "ERR_COMP_IMPORTANCE_LEVELS_DUPLICATE": "A competence importance with this level already exists. Please use a unique level.",
+  "ERR_COMP_IMPORTANCE_SIGNIFICANCE_DUPLICATE": "A competence importance with this significance already exists. Please use a unique significance.",
 
   "ERR_LEVELS_NOT_FOUND": "Level not found with ID: {0}.",
   "ERR_LEVELS_CANT_BE_DELETED": "Cannot delete level because it has associated relations.",
   "LEVELS_SUCCESSFULLY_DELETED": "Level deleted successfully.",
   "ERR_VAL_LEVELS_VALUE": "Level value is required and must be at least 0.",
   "ERR_VAL_LEVELS_SIGNIFICANCE": "Significance is required and only letters, numbers and spaces are allowed.",
+  "ERR_LEVELS_VALUE_ALREADY_EXISTS": "A level with this value already exists. Please use a unique level value.",
+  "ERR_LEVELS_SIGNIFICANCE_ALREADY_EXISTS": "A level with this significance already exists. Please use a unique significance.",
 
   "ERR_COST_DISTANCE_NOT_FOUND": "Cost distance not found with ID: {0}.",
   "ERR_COST_DISTANCE_SAME_COUNTIES": "County A and County B cannot be the same.",
@@ -36,6 +40,8 @@
   "ERR_ROLE_LOAD_CANT_BE_UPDATED": "Cannot update the load value because it is being used in a project.",
   "ERR_VAL_ROLE_LOAD_VALUE": "Value is required and must be at least 0.",
   "ERR_VAL_ROLE_LOAD_SIGNIFICANCE": "Significance is required and only letters, numbers and spaces are allowed.",
+  "ERR_ROLE_LOAD_VALUE_ALREADY_EXISTS": "A role load with this value already exists. Please use a unique value.",
+  "ERR_ROLE_LOAD_SIGNIFICANCE_ALREADY_EXISTS": "A role load with this significance already exists. Please use a unique significance.",
 
   "ERR_PERSON_GROUP_NOT_FOUND": "Person group not found.",
   "ERR_PARENT_GROUP_NOT_FOUND": "Parent group not found.",
@@ -49,34 +55,44 @@
   "ROLE_EVALUATION_SUCCESSFULLY_DELETED": "Role Evaluation deleted successfully.",
   "ERR_VAL_ROLE_EVAL_LEVEL": "Evaluation level is required.",
   "ERR_VAL_ROLE_EVAL_SIGNIFICANCE": "Evaluation significance is required.",
+  "ERR_ROLE_EVALUATION_LEVELS_ALREADY_EXISTS": "An evaluation level with this numeric value already exists. Please use a unique value.",
+  "ERR_ROLE_EVALUATION_SIGNIFICANCE_ALREADY_EXISTS": "An evaluation with this significance already exists. Please use a unique significance.",
 
   "ERR_CONFLICT_INDEX_NOT_FOUND": "Conflict index not found.",
   "ERR_CONFLICT_INDEX_CANT_BE_DELETED": "Cannot delete conflict index because it has associated person conflicts.",
   "CONFLICT_INDEX_SUCCESSFULLY_DELETED": "Conflict Index deleted successfully.",
   "ERR_VAL_CONFLICT_INDEX_DESCRIPTION": "Description is required and only letters, numbers and spaces are allowed.",
   "ERR_VAL_CONFLICT_INDEX_WEIGHT": "Weight is required and must be at least 0.",
+  "ERR_CONFLICT_INDEX_DESCRIPTION_ALREADY_EXISTS": "A conflict index with this description already exists. Please use a unique description.",
+  "ERR_CONFLICT_INDEX_WEIGHT_ALREADY_EXISTS": "A conflict index with this weight already exists. Please use a unique weight.",
 
   "ERR_NATIONALITY_NOT_FOUND": "Nationality not found.",
   "ERR_NATIONALITY_CANT_BE_DELETED": "Cannot delete nationality because it has associated persons.",
   "NATIONALITY_SUCCESSFULLY_DELETED": "Nationality deleted successfully.",
   "ERR_VAL_NATIONALITY_NAME": "Country name is required and only letters and spaces are allowed.",
   "ERR_VAL_NATIONALITY_GENTILICIO": "Demonym is required and only letters and spaces are allowed.",
+  "ERR_NATIONALITY_COUNTRY_ALREADY_EXISTS": "A nationality with this country name already exists. Please use a unique country name.",
+  "ERR_NATIONALITY_DEMONYM_ALREADY_EXISTS": "A nationality with this demonym already exists. Please use a unique demonym.",
 
   "ERR_COUNTY_NOT_FOUND": "County not found.",
   "ERR_COUNTY_CANT_BE_DELETED": "Cannot delete County because it has associated relations.",
   "COUNTY_SUCCESSFULLY_DELETED": "County deleted successfully.",
   "ERR_VAL_COUNTY_NAME": "County name is required and only letters and spaces are allowed.",
   "ERR_VAL_COUNTY_CODE": "Code is required and must contain at least one digit.",
+  "ERR_COUNTY_NAME_ALREADY_EXISTS": "A county with this name already exists. Please use a unique name.",
+  "ERR_COUNTY_CODE_ALREADY_EXISTS": "A county with this code already exists. Please use a unique code.",
 
   "ERR_RACE_NOT_FOUND": "Race not found.",
   "ERR_RACE_CANT_BE_DELETED": "Cannot delete Race because it has associated persons.",
   "RACE_SUCCESSFULLY_DELETED": "Race deleted successfully.",
   "ERR_VAL_RACE_NAME": "Race name is required and must contain only letters.",
+  "ERR_RACE_NAME_ALREADY_EXISTS": "A race with this name already exists. Please use a unique name.",
 
   "ERR_RELIGION_NOT_FOUND": "Religion not found.",
   "ERR_RELIGION_CANT_BE_DELETED": "Cannot delete religion because it has associated persons.",
   "RELIGION_SUCCESSFULLY_DELETED": "Religion deleted successfully.",
   "ERR_VAL_RELIGION_NAME": "Religion name is required and must contain only letters.",
+  "ERR_RELIGION_NAME_ALREADY_EXISTS": "A religion with this name already exists. Please use a unique name.",
 
   "ERR_CLIENT_NOT_FOUND": "Client not found.",
   "ERR_CLIENT_CANT_BE_DELETED": "Cannot delete client because it has associated projects.",
@@ -84,6 +100,7 @@
   "ERR_VAL_CLIENT_NAME": "Entity name is required and only letters, spaces and digits are allowed.",
   "ERR_VAL_CLIENT_ADDRESS": "Address is required.",
   "ERR_VAL_CLIENT_PHONE": "Phone is required and may only contain digits, spaces, plus sign (+) and hyphens, and must have at least 8 digits.",
+  "ERR_CLIENT_ENTITY_NAME_DUPLICATE": "An client with this name already exists. Please use a unique name.",
 
   "ERR_PROJECT_STRUCTURE_NOT_FOUND": "Project structure not found.",
   "ERR_PROJECT_STRUCTURE_CANT_BE_DELETED": "Cannot delete project structure because it has associated cycles.",
@@ -92,6 +109,7 @@
   "ERR_PROJECT_STRUCTURE_BOSS_WORKERS_LIMIT": "A role with 'boss' type must have exactly 1 worker.",
   "ERR_VAL_PROJECT_STRUCTURE_NAME": "Name is required and only letters, spaces and digits are allowed.",
   "ERR_VAL_PROJECT_STRUCTURE_ROLES": "Project Structure needs at least one project role.",
+  "ERR_PROJECT_STRUCTURE_NAME_ALREADY_EXISTS": "A project structure with this name already exists. Please use a unique name.",
 
   "ERR_COMPETENCE_NOT_FOUND": "Competence not found.",
   "ERR_COMPETENCE_CANT_BE_DELETED": "Cannot delete competence because it has associated relations.",
@@ -102,6 +120,8 @@
   "ERR_VAL_COMPETENCE_NAME": "Competence name is required and only letters, spaces and digits are allowed.",
   "ERR_VAL_COMPETENCE_DESCRIPTION": "Competence description is required and only letters, spaces and digits are allowed.",
   "ERR_VAL_COMPETENCE_IS_TECHNICAL": "Define if it is a technical competency.",
+  "ERR_COMPETENCE_NAME_ALREADY_EXISTS": "A competence with this name already exists. Please use a unique name.",
+  "ERR_COMPETENCE_DESCRIPTION_ALREADY_EXISTS": "A competence with this description already exists. Please use a unique description.",
 
   "ERR_ROLE_NOT_FOUND": "Role not found.",
   "ERR_ROLE_CANT_BE_DELETED": "Cannot delete role because it has associated relations.",
@@ -111,6 +131,8 @@
   "VAL_ROLE_DESCRIPTION": "Role description is required and only letters, spaces and digits are allowed.",
   "ERR_VAL_ROLE_IMPACT": "Impact is required.",
   "ERR_VAL_ROLE_IS_BOSS": "Is boss parameter is required.",
+  "ERR_ROLE_NAME_ALREADY_EXISTS": "A role with this name already exists. Please use a unique name.",
+  "ERR_ROLE_DESCRIPTION_ALREADY_EXISTS": "A role with this description already exists. Please use a unique description.",
 
   "ERR_PROJECT_NOT_FOUND": "Project not found.",
   "ERR_PROJECT_CANT_BE_DELETED": "Cannot delete project because it has associated data.",
@@ -158,6 +180,8 @@
   "ERR_VAL_PERSON_GROUP_ID": "Person group ID is required.",
   "ERR_VAL_PERSON_TEST": "Psychological test is required.",
   "ERR_VAL_PERSON_SEX": "Sex must be 'M' or 'F'.",
+  "ERR_PERSON_CARD_ALREADY_EXISTS": "A person with this ID card already exists. Please use a unique ID card.",
+  "ERR_PERSON_EMAIL_ALREADY_EXISTS": "A person with this email already exists. Please use a unique email.",
 
   "ERR_VAL_PERSON_CONFLICT_INDEX_ID": "Conflict index ID is required.",
   "ERR_VAL_PERSON_CONFLICT_TARGET_ID": "Target person conflict ID is required.",
@@ -187,6 +211,7 @@
   "ERR_VAL_AGE_GROUP_MAX_AGE": "Maximum age is required.",
   "ERR_VAL_AGE_GROUP_MIN_AGE": "Minimum age is required.",
   "ERR_VAL_AGE_GROUP_RANGE_INVALID": "Minimum age must be less than or equal to maximum age.",
+  "ERR_AGE_GROUP_NAME_DUPLICATE": "An age group with this name already exists. Please use a unique name.",
 
   "ALGO_CONFIG_SUCCESSFULLY_DELETED": "Algorithm Config deleted successfully.",
   "ERR_VAL_ALGO_INITIAL_SOLUTION_REQUIRED": "The initial solution must not be null.",
@@ -215,6 +240,7 @@
   "ERR_VAL_USER_EMAIL": "Email is required.",
   "ERR_VAL_USER_ENABLED_STATUS": "Enabled status is required.",
   "ERR_VAL_USER_ROLES": "At least one role is required.",
+  "ERR_USER_MAIL_ALREADY_EXISTS": "A user with this mail already exists. Please use a unique mail.",
 
   "ERR_VAL_CHANGE_PASSWORD_CURRENT_REQUIRED": "Current password is required.",
   "ERR_VAL_CHANGE_PASSWORD_NEW": "New password is required (min 6 characters).",
