@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDown, Check, Search } from 'lucide-vue-next'
+import { ChevronDown, Check, Search, X } from 'lucide-vue-next'
+
 
 const { t } = useI18n()
 
@@ -13,6 +14,7 @@ const props = defineProps({
   size: { type: String, default: 'md' }, // 'md' | 'sm'
   searchable: { type: Boolean, default: false },
   searchPlaceholder: { type: String, default: 'common.searchPlaceholder' },
+  clearable: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -152,6 +154,10 @@ function onSearchKeydown(e) {
   }
 }
 
+function clearSelection() {
+  emit('update:modelValue', null)
+}
+
 onUnmounted(close)
 </script>
 
@@ -180,6 +186,14 @@ onUnmounted(close)
       >
         {{ selectedLabel ?? t(placeholder) }}
       </span>
+
+      <X
+          v-if="clearable && modelValue !== null && modelValue !== '' && modelValue !== undefined && !disabled"
+          class="shrink-0 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+          :class="size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'"
+          @click.stop="clearSelection"
+      />
+
       <ChevronDown
         class="shrink-0 text-gray-400 transition-transform duration-150"
         :class="[size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4', { 'rotate-180': isOpen }]"

@@ -27,6 +27,7 @@
               v-model="formData[fieldKey(field)]"
               :options="fieldOptions[fieldKey(field)] || []"
               :placeholder="field.placeholder ? t(field.placeholder) : t('common.select')"
+              :clearable="field.clearable"
             />
 
             <!-- Boolean / Checkbox -->
