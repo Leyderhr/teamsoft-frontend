@@ -43,7 +43,7 @@
             <AppSelect
               v-model="selectedClient"
               :options="clientOptions"
-              placeholder="Seleccione..."
+              :placeholder="t('common.select')"
               searchable
             />
           </div>
@@ -56,7 +56,7 @@
             <AppSelect
               v-model="selectedProvince"
               :options="provinceOptions"
-              placeholder="Seleccione..."
+              :placeholder="t('common.select')"
               searchable
             />
           </div>
@@ -70,7 +70,7 @@
           <AppSelect
             v-model="selectedProjectStructure"
             :options="projectStructureOptions"
-            placeholder="Seleccione una estructura..."
+            :placeholder="t('features.projects.structurePlaceholder')"
           />
         </div>
 
@@ -99,7 +99,7 @@
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-error-50 text-error-600 text-xs font-medium hover:bg-error-100 transition-colors"
               >
                 <Trash2 class="w-3.5 h-3.5" />
-                Eliminar seleccionados
+                {{ t('common.deleteSelected') }}
               </button>
             </div>
             <table class="min-w-full divide-y divide-gray-100">

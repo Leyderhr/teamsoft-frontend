@@ -93,9 +93,9 @@ function goEvaluate() {
           <thead class="bg-gray-50">
             <tr>
               <th class="w-10 px-4 py-3"></th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Inicio</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t('features.projects.finalizeTeam.name') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t('features.projects.finalizeTeam.startDate') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ t('features.projects.finalizeTeam.state') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">

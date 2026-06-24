@@ -5,6 +5,11 @@ const reportService = {
   async getPersonReport() {
     return api.get('person').json()
   },
+  // Búsqueda avanzada: filtra personas por los criterios del FilterDTO (AND).
+  // Endpoint backend: POST /api/filter (FilterController)
+  async filterPersons(payload) {
+    return api.post('filter', { json: payload }).json()
+  },
   // Reporte de una persona: sus datos + proyectos/roles/evaluaciones
   async getPersonDetail(personId) {
     return api.get(`person/${personId}/report`).json()

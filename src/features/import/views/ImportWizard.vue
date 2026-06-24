@@ -2,208 +2,102 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
-import { useRouter } from 'vue-router'
-import { Upload, FileText, ChevronRight, Trash2, Plus, Check, Loader2, ArrowLeft, ArrowRight } from 'lucide-vue-next'
-import importService from '@/features/import/services/importService.js'
+import {
+  Upload, FileText, ChevronRight, Trash2, Plus, Check, Loader2,
+  ArrowLeft, ArrowRight, AlertCircle,
+} from 'lucide-vue-next'
 import personGroupService from '@/features/nomenclatives/services/personGroupService.js'
 import competenceService from '@/features/competences/services/competenceService.js'
 import roleService from '@/features/roles/services/roleService.js'
 import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
+import AppSelect from '@/components/ui/AppSelect.vue'
+import { parseApiError } from '@/lib/apiError'
+import { useImportWizard } from '@/features/import/composables/useImportWizard.js'
 
 const { t } = useI18n()
 const toast = useToast()
-const router = useRouter()
 
-// =====================
-// Wizard state
-// =====================
-const currentStep = ref(1)
-const totalSteps = 6
-const importing = ref(false)
+const {
+  totalSteps, currentStep,
+  uploadedFile, headers, groupName, uploadingFile,
+  nombreColumn, experienceColumn,
+  competenceMappings,
+  puntoCorte, maxExpValue, updateIfExist, deleteOldValues,
+  roleMappings,
+  importing, importResult,
+  parseFile, execute, reset,
+  addCompetence, removeCompetence, addAttribute, removeAttribute,
+  syncTextValues, addTextValue, removeTextValue,
+  addRole, removeRole,
+  canNext, goNext, goPrev,
+} = useImportWizard()
 
-// =====================
-// STEP 1 — Selección de Archivo
-// =====================
-const uploadedFile = ref(null)
-const fileColumns = ref([])   // Column headers from CSV
-const filePreview = ref([])   // First N rows for preview
-const selectedGroup = ref(null)
+// Catálogos para los selects
 const groupOptions = ref([])
-const uploadingFile = ref(false)
-
-// Field options for person mapping
-const personFieldOptions = computed(() => [
-    { label: t('features.import.wizard.personFields.personName'), value: 'personName' },
-    { label: t('features.import.wizard.personFields.surName'), value: 'surName' },
-    { label: t('features.import.wizard.personFields.card'), value: 'card' },
-    { label: t('features.import.wizard.personFields.address'), value: 'address' },
-    { label: t('features.import.wizard.personFields.phone'), value: 'phone' },
-    { label: t('features.import.wizard.personFields.email'), value: 'email' },
-    { label: t('features.import.wizard.personFields.sex'), value: 'sex' },
-    { label: t('features.import.wizard.personFields.inDate'), value: 'inDate' },
-    { label: t('features.import.wizard.personFields.birthDate'), value: 'birthDate' },
-    { label: t('features.import.wizard.personFields.workload'), value: 'workload' },
-    { label: t('features.import.wizard.personFields.experience'), value: 'experience' },
-    { label: t('features.import.wizard.personFields.status'), value: 'status' },
-    { label: t('features.import.wizard.personFields.tipoMB'), value: 'tipoMB' }
-])
-
-// =====================
-// STEP 2 — Mapeo de Persona
-// =====================
-const personMappings = ref([])  // [{ csvColumn, personField }]
-
-const addPersonMapping = () => {
-    personMappings.value.push({ csvColumn: null, personField: null })
-}
-const removePersonMapping = (index) => {
-    personMappings.value.splice(index, 1)
-}
-
-// =====================
-// STEP 3 — Mapeo de Competencias
-// =====================
 const competenceOptions = ref([])
-const competenceMappings = ref([])  // [{ csvColumn, competenceIds: [] }]
-
-const addCompetenceMapping = () => {
-    competenceMappings.value.push({ csvColumn: null, competenceIds: [] })
-}
-const removeCompetenceMapping = (index) => {
-    competenceMappings.value.splice(index, 1)
-}
-
-// =====================
-// STEP 4 — Configuración de Competencias
-// =====================
-const competenceWeights = ref([])  // [{ competenceId, competenceName, weight }]
-const numericMaxValues = ref([])   // [{ csvColumn, maxValue }]
-
-const initCompetenceWeights = () => {
-    const allCompetenceIds = new Set()
-    competenceMappings.value.forEach(m => m.competenceIds.forEach(id => allCompetenceIds.add(id)))
-    competenceWeights.value = Array.from(allCompetenceIds).map(id => {
-        const comp = competenceOptions.value.find(c => c.id === id)
-        return { competenceId: id, competenceName: comp?.competitionName || (t('features.import.wizard.competenceFallback') + ' ' + id), weight: 1.0 }
-    })
-    // Numeric columns
-    numericMaxValues.value = fileColumns.value
-        .filter(col => {
-            const vals = filePreview.value.map(r => r[col])
-            return vals.some(v => !isNaN(parseFloat(v)))
-        })
-        .map(col => ({ csvColumn: col, maxValue: 100 }))
-}
-
-// =====================
-// STEP 5 — Mapeo de Roles
-// =====================
 const roleOptions = ref([])
-const roleMappings = ref([])  // [{ csvColumn, roleId }]
 
-const addRoleMapping = () => {
-    roleMappings.value.push({ csvColumn: null, roleId: null })
-}
-const removeRoleMapping = (index) => {
-    roleMappings.value.splice(index, 1)
-}
+// Opciones para los AppSelect (componente custom del proyecto)
+const headerOptions = computed(() => headers.value.map((h) => ({ value: h, label: h })))
+const groupSelectOptions = computed(() => groupOptions.value.map((g) => ({ value: g.name, label: g.name })))
+const competenceSelectOptions = computed(() =>
+  competenceOptions.value.map((c) => ({ value: c.competitionName, label: c.competitionName })))
+const roleSelectOptions = computed(() => roleOptions.value.map((r) => ({ value: r.id, label: r.roleName })))
 
-// =====================
-// STEP 6 — Verificación e Importación
-// =====================
-const importResult = ref(null)
-
-// =====================
-// Navigation
-// =====================
 const stepTitles = computed(() => [
-    t('features.import.wizard.steps.selectFile'),
-    t('features.import.wizard.steps.personAttributes'),
-    t('features.import.wizard.steps.competenceAttributes'),
-    t('features.import.wizard.steps.configureCompetences'),
-    t('features.import.wizard.steps.roleAttributes'),
-    t('features.import.wizard.steps.verifyImport')
+  t('features.import.wizard.steps.selectFile'),
+  t('features.import.wizard.steps.personAttributes'),
+  t('features.import.wizard.steps.competenceAttributes'),
+  t('features.import.wizard.steps.configureCompetences'),
+  t('features.import.wizard.steps.roleAttributes'),
+  t('features.import.wizard.steps.verifyImport'),
 ])
-
-const canNext = computed(() => {
-    if (currentStep.value === 1) return uploadedFile.value !== null
-    if (currentStep.value === 2) return personMappings.value.some(m => m.csvColumn && m.personField)
-    return true
-})
-
-const goNext = () => {
-    if (currentStep.value === 3) initCompetenceWeights()
-    if (currentStep.value < totalSteps) currentStep.value++
-}
-const goPrev = () => {
-    if (currentStep.value > 1) currentStep.value--
-}
-
-// =====================
-// Handlers
-// =====================
-const handleFileSelect = async (event) => {
-    const file = event.files[0]
-    if (!file) return
-    uploadingFile.value = true
-    try {
-        const result = await importService.uploadFile(file)
-        uploadedFile.value = file
-        fileColumns.value = result.columns || []
-        filePreview.value = result.preview || []
-        // Auto-init 3 person mapping rows
-        personMappings.value = fileColumns.value.slice(0, Math.min(3, fileColumns.value.length)).map(col => ({
-            csvColumn: col, personField: null
-        }))
-        toast.add({ severity: 'success', summary: t('features.import.wizard.fileLoaded'), detail: t('features.import.wizard.columnsDetected', [fileColumns.value.length]), life: 3000 })
-    } catch (error) {
-        console.error('Error uploading file:', error)
-        // Demo mode: simulate columns from file name
-        uploadedFile.value = file
-        fileColumns.value = ['nombre', 'apellidos', 'carnet', 'email', 'telefono', 'sexo', 'experiencia']
-        filePreview.value = []
-        personMappings.value = fileColumns.value.map(col => ({ csvColumn: col, personField: null }))
-        toast.add({ severity: 'info', summary: t('features.import.wizard.demoMode'), detail: t('features.import.wizard.demoColumns'), life: 3000 })
-    } finally {
-        uploadingFile.value = false
-    }
-}
 
 const handleFileChange = async (event) => {
-    const file = event.target.files[0]
-    if (file) await handleFileSelect({ files: [file] })
+  const file = event.target.files[0]
+  if (!file) return
+  try {
+    await parseFile(file)
+    toast.add({
+      severity: 'success',
+      summary: t('features.import.wizard.fileLoaded'),
+      detail: t('features.import.wizard.columnsDetected', [headers.value.length]),
+      life: 3000,
+    })
+  } catch (error) {
+    const detail = await parseApiError(error, t('features.import.wizard.importError'))
+    toast.add({ severity: 'error', summary: t('common.error'), detail, life: 5000 })
+  }
+}
+
+const onNumericToggle = (attr) => {
+  if (!attr.isNumeric) syncTextValues(attr)
 }
 
 const handleImport = async () => {
-    importing.value = true
-    try {
-        const payload = {
-            groupId: selectedGroup.value,
-            personMappings: personMappings.value.filter(m => m.csvColumn && m.personField),
-            competenceMappings: competenceMappings.value.filter(m => m.csvColumn && m.competenceIds.length),
-            competenceWeights: competenceWeights.value,
-            numericMaxValues: numericMaxValues.value,
-            roleMappings: roleMappings.value.filter(m => m.csvColumn && m.roleId)
-        }
-        importResult.value = await importService.executeImport(payload)
-        toast.add({ severity: 'success', summary: t('features.import.wizard.importSuccess'), detail: t('features.import.wizard.importSuccessDetail'), life: 5000 })
-    } catch (error) {
-        console.error('Error importando:', error)
-        toast.add({ severity: 'error', summary: t('common.error'), detail: t('features.import.wizard.importError'), life: 4000 })
-    } finally {
-        importing.value = false
-    }
+  try {
+    const res = await execute()
+    toast.add({
+      severity: 'success',
+      summary: t('features.import.wizard.importSuccess'),
+      detail: t('features.import.wizard.importSummary', [res.created, res.updated, res.skipped, res.errors]),
+      life: 6000,
+    })
+  } catch (error) {
+    const detail = await parseApiError(error, t('features.import.wizard.importError'))
+    toast.add({ severity: 'error', summary: t('common.error'), detail, life: 6000 })
+  }
 }
 
 const loadOptions = async () => {
-    const [groups, competences, roles] = await Promise.allSettled([
-        personGroupService.getAll(),
-        competenceService.getAll(),
-        roleService.getAll()
-    ])
-    if (groups.status === 'fulfilled') groupOptions.value = groups.value
-    if (competences.status === 'fulfilled') competenceOptions.value = competences.value
-    if (roles.status === 'fulfilled') roleOptions.value = roles.value
+  const [groups, competences, roles] = await Promise.allSettled([
+    personGroupService.getAll(),
+    competenceService.getAll(),
+    roleService.getAll(),
+  ])
+  if (groups.status === 'fulfilled') groupOptions.value = groups.value
+  if (competences.status === 'fulfilled') competenceOptions.value = competences.value
+  if (roles.status === 'fulfilled') roleOptions.value = roles.value
 }
 
 onMounted(loadOptions)
@@ -239,29 +133,22 @@ onMounted(loadOptions)
       </template>
     </div>
 
-    <!-- Step content card -->
+    <!-- Step content -->
     <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
         <h3 class="text-base font-semibold text-gray-800">{{ stepTitles[currentStep - 1] }}</h3>
       </div>
       <div class="p-6">
 
-        <!-- ======================== STEP 1: Seleccionar Archivo ======================== -->
+        <!-- ===== STEP 1: Archivo + Grupo ===== -->
         <div v-if="currentStep === 1" class="flex flex-col gap-6">
-
-          <!-- File upload zone -->
           <div class="flex flex-col gap-3">
             <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.csvFile') }}</label>
             <label
               class="flex flex-col items-center justify-center gap-3 w-full rounded-xl border-2 border-dashed border-gray-300 px-6 py-10 cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition-colors"
               :class="uploadedFile ? 'border-brand-400 bg-brand-50/20' : ''"
             >
-              <input
-                type="file"
-                accept=".csv"
-                class="hidden"
-                @change="handleFileChange"
-              />
+              <input type="file" accept=".csv" class="hidden" @change="handleFileChange" />
               <div v-if="uploadingFile" class="flex flex-col items-center gap-2 text-brand-500">
                 <Loader2 class="w-8 h-8 animate-spin" />
                 <span class="text-sm font-medium">{{ t('features.import.wizard.processing') }}</span>
@@ -279,460 +166,252 @@ onMounted(loadOptions)
             </label>
           </div>
 
-          <!-- Detected columns -->
-          <div v-if="fileColumns.length" class="flex flex-col gap-2">
+          <div v-if="headers.length" class="flex flex-col gap-2">
             <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.detectedColumns') }}</label>
             <div class="flex flex-wrap gap-2">
-              <span
-                v-for="col in fileColumns"
-                :key="col"
-                class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
-              >
-                {{ col }}
-              </span>
+              <span v-for="col in headers" :key="col"
+                class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ col }}</span>
             </div>
           </div>
 
-          <!-- Group select -->
           <div class="flex flex-col gap-2 max-w-sm">
-            <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.targetGroup') }} <span class="text-gray-400 font-normal">{{ t('common.optional') }}</span></label>
-            <select
-              v-model="selectedGroup"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-            >
-              <option :value="null">{{ t('features.import.wizard.selectGroup') }}</option>
-              <option v-for="g in groupOptions" :key="g.id" :value="g.id">{{ g.name }}</option>
-            </select>
+            <label class="text-sm font-medium text-gray-700">
+              {{ t('features.import.wizard.targetGroup') }} <span class="text-error-500">*</span>
+            </label>
+            <AppSelect
+              v-model="groupName"
+              :options="groupSelectOptions"
+              searchable
+              allow-create
+              placeholder="features.import.wizard.groupNamePlaceholder"
+              search-placeholder="features.import.wizard.groupNamePlaceholder"
+            />
+            <span class="text-xs text-gray-400">{{ t('features.import.wizard.groupNameHint') }}</span>
           </div>
         </div>
 
-        <!-- ======================== STEP 2: Mapeo de Persona ======================== -->
+        <!-- ===== STEP 2: Persona (nombre + experiencia) ===== -->
         <div v-else-if="currentStep === 2" class="flex flex-col gap-4">
-          <p class="text-sm text-gray-500">
-            {{ t('features.import.wizard.personMappingHint') }}
-          </p>
-
-          <div class="space-y-3">
-            <div
-              v-for="(mapping, idx) in personMappings"
-              :key="idx"
-              class="flex items-center gap-3"
-            >
-              <select
-                v-model="mapping.csvColumn"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-              >
-                <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
-                <option v-for="col in fileColumns" :key="col" :value="col">{{ col }}</option>
-              </select>
-
-              <ChevronRight class="w-4 h-4 text-gray-300 flex-shrink-0" />
-
-              <select
-                v-model="mapping.personField"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-              >
-                <option :value="null">{{ t('features.import.wizard.targetField') }}</option>
-                <option v-for="opt in personFieldOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-              </select>
-
-              <button
-                type="button"
-                class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors flex-shrink-0"
-                @click="removePersonMapping(idx)"
-              >
-                <Trash2 class="w-4 h-4" />
-              </button>
+          <p class="text-sm text-gray-500">{{ t('features.import.wizard.personMappingHint') }}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.personFields.personName') }} <span class="text-error-500">*</span></label>
+              <AppSelect v-model="nombreColumn" :options="headerOptions" searchable placeholder="features.import.wizard.csvColumn" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.personFields.experience') }} <span class="text-error-500">*</span></label>
+              <AppSelect v-model="experienceColumn" :options="headerOptions" searchable placeholder="features.import.wizard.csvColumn" />
             </div>
           </div>
-
-          <div>
-            <button
-              type="button"
-              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-500 transition-colors"
-              @click="addPersonMapping"
-            >
-              <Plus class="w-4 h-4" />
-              {{ t('features.import.wizard.addMapping') }}
-            </button>
-          </div>
+          <p class="text-xs text-gray-400">{{ t('features.import.wizard.generatedFieldsHint') }}</p>
         </div>
 
-        <!-- ======================== STEP 3: Mapeo de Competencias ======================== -->
+        <!-- ===== STEP 3: Competencias (competencia -> atributos) ===== -->
         <div v-else-if="currentStep === 3" class="flex flex-col gap-4">
-          <p class="text-sm text-gray-500">
-            Asocie cada columna del CSV con una o más competencias que representa.
-          </p>
+          <p class="text-sm text-gray-500">{{ t('features.import.wizard.competenceMappingHint') }}</p>
 
-          <div class="space-y-3">
-            <div
-              v-for="(mapping, idx) in competenceMappings"
-              :key="idx"
-              class="flex items-start gap-3"
-            >
-              <select
-                v-model="mapping.csvColumn"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-              >
-                <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
-                <option v-for="col in fileColumns" :key="col" :value="col">{{ col }}</option>
-              </select>
-
-              <ChevronRight class="w-4 h-4 text-gray-300 flex-shrink-0 mt-2.5" />
-
-              <div class="w-full flex flex-col gap-1">
-                <select
-                  v-model="mapping.competenceIds"
-                  multiple
-                  class="w-full h-28 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-                >
-                  <option v-for="comp in competenceOptions" :key="comp.id" :value="comp.id">
-                    {{ comp.competitionName }}
-                  </option>
-                </select>
-                <span
-                  v-if="mapping.competenceIds.length"
-                  class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 self-start"
-                >
-                  {{ mapping.competenceIds.length }} seleccionada{{ mapping.competenceIds.length !== 1 ? 's' : '' }}
-                </span>
+          <div v-for="(comp, ci) in competenceMappings" :key="ci"
+            class="rounded-xl border border-gray-200 p-4 space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="flex-1">
+                <AppSelect v-model="comp.competenceName" :options="competenceSelectOptions" searchable
+                  placeholder="features.import.wizard.selectCompetence" />
               </div>
-
-              <button
-                type="button"
-                class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors flex-shrink-0 mt-1"
-                @click="removeCompetenceMapping(idx)"
-              >
+              <button type="button" class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors"
+                @click="removeCompetence(ci)">
                 <Trash2 class="w-4 h-4" />
               </button>
             </div>
-          </div>
 
-          <div>
-            <button
-              type="button"
-              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-500 transition-colors"
-              @click="addCompetenceMapping"
-            >
-              <Plus class="w-4 h-4" />
-              {{ t('features.import.wizard.addMapping') }}
-            </button>
-          </div>
-        </div>
-
-        <!-- ======================== STEP 4: Configurar Competencias ======================== -->
-        <div v-else-if="currentStep === 4" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-          <!-- Pesos de Competencias -->
-          <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Pesos de Competencias</h3>
-            </div>
-            <div class="p-6">
-              <div v-if="competenceWeights.length" class="flex flex-col gap-3">
-                <div
-                  v-for="(item, idx) in competenceWeights"
-                  :key="idx"
-                  class="flex items-center justify-between gap-4"
-                >
-                  <span class="text-sm text-gray-700 flex-1 truncate">{{ item.competenceName }}</span>
-                  <input
-                    v-model.number="item.weight"
-                    type="number"
-                    :min="0"
-                    :max="1"
-                    :step="0.05"
-                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors w-24 text-right"
-                  />
-                </div>
-                <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
-                  <span class="text-sm text-gray-500">Total</span>
-                  <span class="text-sm font-semibold text-gray-800">
-                    {{ competenceWeights.reduce((s, c) => s + (c.weight || 0), 0).toFixed(2) }}
-                  </span>
-                </div>
-              </div>
-              <p v-else class="text-sm text-gray-400">No hay competencias mapeadas.</p>
-            </div>
-          </div>
-
-          <!-- Valores Máximos Numéricos -->
-          <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Valores Máximos Numéricos</h3>
-            </div>
-            <div class="p-6">
-              <div v-if="numericMaxValues.length" class="flex flex-col gap-3">
-                <div
-                  v-for="(item, idx) in numericMaxValues"
-                  :key="idx"
-                  class="flex items-center justify-between gap-4"
-                >
-                  <span class="text-sm text-gray-700 flex-1 truncate">{{ item.csvColumn }}</span>
-                  <input
-                    v-model.number="item.maxValue"
-                    type="number"
-                    :min="1"
-                    :max="10000"
-                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors w-24 text-right"
-                  />
-                </div>
-              </div>
-              <p v-else class="text-sm text-gray-400">No se detectaron columnas numéricas.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- ======================== STEP 5: Mapeo de Roles ======================== -->
-        <div v-else-if="currentStep === 5" class="flex flex-col gap-4">
-          <p class="text-sm text-gray-500">
-            Asocie columnas del CSV con el rol que representan.
-          </p>
-
-          <div class="space-y-3">
-            <div
-              v-for="(mapping, idx) in roleMappings"
-              :key="idx"
-              class="flex items-center gap-3"
-            >
-              <select
-                v-model="mapping.csvColumn"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-              >
-                <option :value="null">{{ t('features.import.wizard.csvColumn') }}</option>
-                <option v-for="col in fileColumns" :key="col" :value="col">{{ col }}</option>
-              </select>
-
-              <ChevronRight class="w-4 h-4 text-gray-300 flex-shrink-0" />
-
-              <select
-                v-model="mapping.roleId"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
-              >
-                <option :value="null">Seleccione rol</option>
-                <option v-for="role in roleOptions" :key="role.id" :value="role.id">{{ role.roleName }}</option>
-              </select>
-
-              <button
-                type="button"
-                class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors flex-shrink-0"
-                @click="removeRoleMapping(idx)"
-              >
-                <Trash2 class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="button"
-              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-500 transition-colors"
-              @click="addRoleMapping"
-            >
-              <Plus class="w-4 h-4" />
-              {{ t('features.import.wizard.addMapping') }}
-            </button>
-          </div>
-        </div>
-
-        <!-- ======================== STEP 6: Verificar e Importar ======================== -->
-        <div v-else-if="currentStep === 6" class="flex flex-col gap-4">
-
-          <!-- Archivo y Grupo -->
-          <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Archivo y Grupo</h3>
-            </div>
-            <div class="p-6">
-              <div class="flex flex-wrap gap-6 text-sm">
-                <div class="flex flex-col gap-1">
-                  <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">Archivo</span>
-                  <div class="flex items-center gap-2 text-gray-800 font-medium">
-                    <FileText class="w-4 h-4 text-brand-500" />
-                    {{ uploadedFile?.name }}
+            <!-- Atributos de la competencia -->
+            <div class="space-y-3 pl-3 border-l-2 border-gray-100">
+              <div v-for="(attr, ai) in comp.attributes" :key="ai" class="space-y-2">
+                <div class="flex flex-wrap items-center gap-3">
+                  <div class="min-w-[180px]">
+                    <AppSelect v-model="attr.csvColumn" :options="headerOptions" searchable
+                      placeholder="features.import.wizard.csvColumn" />
                   </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs text-gray-500">{{ t('features.import.wizard.weight') }}</span>
+                    <input v-model.number="attr.weight" type="number" min="0" max="1" step="0.05"
+                      class="w-20 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+                  </div>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" v-model="attr.isNumeric" @change="onNumericToggle(attr)"
+                      class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+                    <span class="text-sm text-gray-600">{{ t('features.import.wizard.numericColumn') }}</span>
+                  </label>
+                  <button type="button" class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors ml-auto"
+                    @click="removeAttribute(ci, ai)">
+                    <Trash2 class="w-4 h-4" />
+                  </button>
                 </div>
-                <div class="flex flex-col gap-1">
-                  <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">Grupo</span>
-                  <span class="text-gray-800 font-medium">
-                    {{ groupOptions.find(g => g.id === selectedGroup)?.name || 'Sin grupo' }}
-                  </span>
+
+                <!-- Editor de pesos por valor de texto -->
+                <div v-if="!attr.isNumeric" class="rounded-lg bg-gray-50 border border-gray-100 p-3 space-y-2">
+                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ t('features.import.wizard.textValueWeights') }}</p>
+                  <div v-for="(tv, ti) in attr.textValues" :key="ti" class="flex items-center gap-2">
+                    <input v-model="tv.value" type="text" :placeholder="t('features.import.wizard.textValue')"
+                      class="flex-1 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+                    <input v-model.number="tv.weight" type="number" min="0" max="1" step="0.1"
+                      class="w-20 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+                    <button type="button" class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors"
+                      @click="removeTextValue(attr, ti)">
+                      <Trash2 class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <button type="button" class="inline-flex items-center gap-1.5 text-xs text-brand-500 hover:text-brand-600"
+                    @click="addTextValue(attr)">
+                    <Plus class="w-3.5 h-3.5" /> {{ t('features.import.wizard.addValue') }}
+                  </button>
                 </div>
               </div>
+
+              <button type="button"
+                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-500 transition-colors"
+                @click="addAttribute(ci)">
+                <Plus class="w-4 h-4" /> {{ t('features.import.wizard.addAttribute') }}
+              </button>
             </div>
           </div>
 
-          <!-- Mapeo de Persona -->
-          <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Mapeo de Atributos de Persona</h3>
-            </div>
-            <div class="p-6">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-gray-100">
-                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.csvColumn') }}</th>
-                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Campo de Persona</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(m, idx) in personMappings.filter(m => m.csvColumn && m.personField)"
-                    :key="idx"
-                    class="border-b border-gray-50 last:border-0"
-                  >
-                    <td class="py-2.5 pr-4 text-gray-700">
-                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ m.csvColumn }}</span>
-                    </td>
-                    <td class="py-2.5 text-gray-700">
-                      {{ personFieldOptions.find(f => f.value === m.personField)?.label || m.personField }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Mapeo de Competencias -->
-          <div
-            v-if="competenceMappings.some(m => m.csvColumn)"
-            class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden"
-          >
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Mapeo de Competencias</h3>
-            </div>
-            <div class="p-6">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-gray-100">
-                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.csvColumn') }}</th>
-                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Competencias</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(m, idx) in competenceMappings.filter(m => m.csvColumn && m.competenceIds.length)"
-                    :key="idx"
-                    class="border-b border-gray-50 last:border-0"
-                  >
-                    <td class="py-2.5 pr-4 text-gray-700 align-top">
-                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ m.csvColumn }}</span>
-                    </td>
-                    <td class="py-2.5">
-                      <div class="flex flex-wrap gap-1">
-                        <span
-                          v-for="cId in m.competenceIds"
-                          :key="cId"
-                          class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-brand-50 text-brand-600"
-                        >
-                          {{ competenceOptions.find(c => c.id === cId)?.competitionName || String(cId) }}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Mapeo de Roles -->
-          <div
-            v-if="roleMappings.some(m => m.csvColumn && m.roleId)"
-            class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden"
-          >
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-base font-semibold text-gray-800">Mapeo de Roles</h3>
-            </div>
-            <div class="p-6">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-gray-100">
-                    <th class="text-left py-2 pr-4 font-medium text-gray-500 text-xs uppercase tracking-wide">{{ t('features.import.wizard.csvColumn') }}</th>
-                    <th class="text-left py-2 font-medium text-gray-500 text-xs uppercase tracking-wide">Rol</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(m, idx) in roleMappings.filter(m => m.csvColumn && m.roleId)"
-                    :key="idx"
-                    class="border-b border-gray-50 last:border-0"
-                  >
-                    <td class="py-2.5 pr-4 text-gray-700">
-                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ m.csvColumn }}</span>
-                    </td>
-                    <td class="py-2.5 text-gray-700">
-                      {{ roleOptions.find(r => r.id === m.roleId)?.roleName || String(m.roleId) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Success result banner -->
-          <div
-            v-if="importResult"
-            class="flex items-center gap-3 px-5 py-4 rounded-xl bg-success-50 border border-success-200 text-success-700"
-          >
-            <Check class="w-5 h-5 text-success-500 flex-shrink-0" />
-            <div class="text-sm font-medium">
-              Importación completada exitosamente.
-              <span v-if="importResult.imported"> {{ importResult.imported }} registros importados.</span>
-            </div>
+          <div>
+            <button type="button"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-500 transition-colors"
+              @click="addCompetence">
+              <Plus class="w-4 h-4" /> {{ t('features.import.wizard.addCompetence') }}
+            </button>
           </div>
         </div>
 
+        <!-- ===== STEP 4: Configuración ===== -->
+        <div v-else-if="currentStep === 4" class="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.cutoffPoint') }}</label>
+            <input v-model.number="puntoCorte" type="number" min="0" max="1" step="0.05"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            <span class="text-xs text-gray-400">{{ t('features.import.wizard.cutoffHint') }}</span>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium text-gray-700">{{ t('features.import.wizard.maxExpValue') }}</label>
+            <input v-model.number="maxExpValue" type="number" min="1" max="60" step="1"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors" />
+            <span class="text-xs text-gray-400">{{ t('features.import.wizard.maxExpHint') }}</span>
+          </div>
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" v-model="updateIfExist"
+              class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+            <span class="text-sm text-gray-700">{{ t('features.import.wizard.updateIfExist') }}</span>
+          </label>
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" v-model="deleteOldValues"
+              class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer" />
+            <span class="text-sm text-gray-700">{{ t('features.import.wizard.deleteOldValues') }}</span>
+          </label>
+        </div>
+
+        <!-- ===== STEP 5: Roles ===== -->
+        <div v-else-if="currentStep === 5" class="flex flex-col gap-4">
+          <p class="text-sm text-gray-500">{{ t('features.import.wizard.roleMappingHint') }}</p>
+          <div class="space-y-3">
+            <div v-for="(rm, idx) in roleMappings" :key="idx" class="flex items-center gap-3">
+              <div class="w-full">
+                <AppSelect v-model="rm.roleId" :options="roleSelectOptions" searchable placeholder="features.import.wizard.selectRole" />
+              </div>
+              <ChevronRight class="w-4 h-4 text-gray-300 flex-shrink-0" />
+              <div class="w-full">
+                <AppSelect v-model="rm.csvColumn" :options="headerOptions" searchable placeholder="features.import.wizard.csvColumn" />
+              </div>
+              <button type="button" class="p-1.5 rounded-lg hover:bg-error-50 text-gray-400 hover:text-error-600 transition-colors flex-shrink-0"
+                @click="removeRole(idx)">
+                <Trash2 class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div>
+            <button type="button"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-brand-400 hover:text-brand-500 transition-colors"
+              @click="addRole">
+              <Plus class="w-4 h-4" /> {{ t('features.import.wizard.addMapping') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== STEP 6: Verificar e importar ===== -->
+        <div v-else-if="currentStep === 6" class="flex flex-col gap-4">
+          <div class="flex flex-wrap gap-6 text-sm rounded-xl border border-gray-200 p-5">
+            <div class="flex flex-col gap-1">
+              <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">{{ t('features.import.wizard.file') }}</span>
+              <div class="flex items-center gap-2 text-gray-800 font-medium">
+                <FileText class="w-4 h-4 text-brand-500" />{{ uploadedFile?.name }}
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">{{ t('features.import.wizard.group') }}</span>
+              <span class="text-gray-800 font-medium">{{ groupName }}</span>
+            </div>
+            <div class="flex flex-col gap-1">
+              <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">{{ t('features.import.wizard.personField') }}</span>
+              <span class="text-gray-800 font-medium">{{ nombreColumn }} / {{ experienceColumn }}</span>
+            </div>
+            <div class="flex flex-col gap-1">
+              <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">{{ t('features.import.wizard.competences') }} / {{ t('features.import.wizard.role') }}</span>
+              <span class="text-gray-800 font-medium">{{ competenceMappings.length }} / {{ roleMappings.length }}</span>
+            </div>
+          </div>
+
+          <!-- Resultado -->
+          <div v-if="importResult"
+            class="rounded-xl border p-5 space-y-3"
+            :class="importResult.errors ? 'bg-warning-50 border-warning-200' : 'bg-success-50 border-success-200'">
+            <div class="flex items-center gap-2 font-semibold"
+              :class="importResult.errors ? 'text-warning-700' : 'text-success-700'">
+              <Check class="w-5 h-5" /> {{ t('features.import.wizard.importDone') }}
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div><span class="text-gray-500">{{ t('features.import.wizard.created') }}:</span> <b>{{ importResult.created }}</b></div>
+              <div><span class="text-gray-500">{{ t('features.import.wizard.updated') }}:</span> <b>{{ importResult.updated }}</b></div>
+              <div><span class="text-gray-500">{{ t('features.import.wizard.skipped') }}:</span> <b>{{ importResult.skipped }}</b></div>
+              <div><span class="text-gray-500">{{ t('features.import.wizard.errors') }}:</span> <b>{{ importResult.errors }}</b></div>
+            </div>
+            <ul v-if="importResult.errorMessages?.length" class="text-xs text-warning-700 space-y-1 max-h-40 overflow-auto">
+              <li v-for="(err, i) in importResult.errorMessages" :key="i" class="flex items-start gap-1.5">
+                <AlertCircle class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                <span><b>{{ err.row }}:</b> {{ t('errors.' + err.errorCode, err.parameters || []) }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Navigation footer -->
     <div class="flex items-center justify-between pt-2">
-      <button
-        type="button"
+      <button type="button"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        :disabled="currentStep === 1"
-        @click="goPrev"
-      >
-        <ArrowLeft class="w-4 h-4" />
-        Anterior
+        :disabled="currentStep === 1" @click="goPrev">
+        <ArrowLeft class="w-4 h-4" />{{ t('common.previous') }}
       </button>
 
-      <span class="text-sm text-gray-400">Paso {{ currentStep }} de {{ totalSteps }}</span>
+      <span class="text-sm text-gray-400">{{ t('features.import.wizard.stepOf', [currentStep, totalSteps]) }}</span>
 
       <div class="flex items-center gap-2">
-        <!-- Next -->
-        <button
-          v-if="currentStep < totalSteps"
-          type="button"
+        <button v-if="currentStep < totalSteps" type="button"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          :disabled="!canNext"
-          @click="goNext"
-        >
-          {{ t('common.next') }}
-          <ArrowRight class="w-4 h-4" />
+          :disabled="!canNext" @click="goNext">
+          {{ t('common.next') }}<ArrowRight class="w-4 h-4" />
         </button>
-
-        <!-- Import -->
-        <button
-          v-else-if="!importResult"
-          type="button"
+        <button v-else-if="!importResult" type="button"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          :disabled="importing"
-          @click="handleImport"
-        >
+          :disabled="importing" @click="handleImport">
           <Loader2 v-if="importing" class="w-4 h-4 animate-spin" />
           <Upload v-else class="w-4 h-4" />
-          {{ importing ? 'Importando...' : 'Importar' }}
+          {{ importing ? t('features.import.wizard.importing') : t('features.import.wizard.import') }}
         </button>
-
-        <!-- Nueva Importación -->
-        <button
-          v-else
-          type="button"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          @click="currentStep = 1; uploadedFile = null; importResult = null"
-        >
-          Nueva Importación
+        <button v-else type="button"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          @click="reset">
+          {{ t('features.import.wizard.newImport') }}
         </button>
       </div>
     </div>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDown, Check, Search, X } from 'lucide-vue-next'
+import { ChevronDown, Check, Search, Plus, X } from 'lucide-vue-next'
 
 
 const { t } = useI18n()
@@ -14,6 +14,8 @@ const props = defineProps({
   size: { type: String, default: 'md' }, // 'md' | 'sm'
   searchable: { type: Boolean, default: false },
   searchPlaceholder: { type: String, default: 'common.searchPlaceholder' },
+  // Permite crear un valor nuevo escribiéndolo en el buscador (combobox taggable).
+  allowCreate: { type: Boolean, default: false },
   clearable: { type: Boolean, default: false },
 })
 
@@ -36,8 +38,25 @@ const filteredOptions = computed(() => {
 const selectedLabel = computed(() => {
   const v = props.modelValue
   if (v === '' || v === null || v === undefined) return null
-  return props.options.find(o => o.value === v)?.label ?? null
+  const found = props.options.find(o => o.value === v)?.label
+  if (found != null) return found
+  // Con allowCreate, el valor puede ser uno nuevo que no está en las opciones:
+  // mostramos el propio valor para no perder lo que el usuario escribió.
+  return props.allowCreate ? String(v) : null
 })
+
+// Hay un valor escrito que no coincide exactamente con ninguna opción -> se puede crear.
+const canCreate = computed(() => {
+  if (!props.allowCreate) return false
+  const q = searchQuery.value.trim()
+  if (!q) return false
+  return !props.options.some(o => o.label.toLowerCase() === q.toLowerCase())
+})
+
+function createFromQuery() {
+  const q = searchQuery.value.trim()
+  if (q) select(q)
+}
 
 async function open() {
   if (props.disabled) return
@@ -149,7 +168,11 @@ function onSearchKeydown(e) {
       break
     case 'Enter':
       e.preventDefault()
-      if (focusedIndex.value >= 0) select(filteredOptions.value[focusedIndex.value].value)
+      if (focusedIndex.value >= 0 && filteredOptions.value[focusedIndex.value]) {
+        select(filteredOptions.value[focusedIndex.value].value)
+      } else if (canCreate.value) {
+        createFromQuery()
+      }
       break
   }
 }
@@ -255,8 +278,19 @@ onUnmounted(close)
               />
             </button>
 
+            <!-- Crear nuevo valor a partir de lo escrito -->
+            <button
+              v-if="canCreate"
+              type="button"
+              @click="createFromQuery"
+              class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-brand-600 hover:bg-brand-50 transition-colors border-t border-gray-100"
+            >
+              <Plus class="w-4 h-4 shrink-0" />
+              <span class="truncate flex-1">{{ t('common.createOption', [searchQuery.trim()]) }}</span>
+            </button>
+
             <div
-              v-if="!filteredOptions.length"
+              v-if="!filteredOptions.length && !canCreate"
               class="px-3 py-3 text-sm text-gray-400 text-center"
             >
               {{ searchQuery ? t('common.noResults') : t('common.noOptions') }}

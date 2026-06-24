@@ -416,7 +416,7 @@ async function handleSave() {
           <div class="rounded-xl border border-gray-200 overflow-hidden">
             <div class="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-200">
               <span class="text-xs font-medium text-gray-500">
-                {{ competitions.length }} competencia{{ competitions.length !== 1 ? 's' : '' }} asociada{{ competitions.length !== 1 ? 's' : '' }}
+                {{ t('features.roles.associatedCount', [competitions.length]) }}
               </span>
               <button
                 v-if="selectedCompIdx >= 0"

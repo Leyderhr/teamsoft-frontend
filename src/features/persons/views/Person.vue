@@ -32,6 +32,7 @@ const columns = ref([
   { field: 'email', header: 'features.persons.fields.email', sortable: true },
   { field: 'phone', header: 'features.persons.fields.phone' },
   { field: 'sex', header: 'features.persons.fields.sex' },
+  { field: 'group.name', header:'features.persons.fields.group', sortable: true},
   { field: 'status', header: 'common.fields.status', type: 'badge', sortable: true },
 ])
 
