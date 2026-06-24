@@ -1,5 +1,5 @@
 // src/stores/teamFormation.js
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 
 export const DEFAULT_TF_PARAMS = {
   // Step 1 fields (default all false/0; overwritten only in teamsPayload getter)
@@ -73,32 +73,77 @@ const STEP2_WEIGHT_PAIRS = [
   ['minIncomp', 'minIncompWeight'],
 ]
 
-const STEP3_WEIGHT_PAIRS = [
-  ['maxCompetences', 'maxCompetencesWeight'],
-  ['balanceCompetences', 'balanceCompetenceWeight'],
-  ['takeWorkLoad', 'workLoadWeight'],
-  ['balancePersonWorkload', 'balanceWorkLoadWeight'],
-  ['minIncomp', 'minIncompWeight'],
-  ['balanceSynergy', 'balanceSynergyWeight'],
-  ['minCostDistance', 'minCostDistanceWeight'],
-  ['balanceCostDistance', 'balanceCostDistanceWeight'],
-  ['maxInterests', 'maxInterestsWeight'],
-  ['balanceInterests', 'balanceInterestWeight'],
-  ['maxBelbinRoles', 'maxBelbinWeight'],
-  ['balanceBelbinRoles', 'balanceBelbinWeight'],
-  ['maxProjectInterests', 'maxProjectInterestsWeight'],
-  ['maxMbtiTypes', 'maxMbtiTypesWeight'],
-  ['maxMultiroleTeamMembers', 'maxMultiroleTeamMembersWeight'],
-  ['balanceMultiroleTeamMembers', 'balanceMultiroleTeamMembersWeight'],
-  ['maxSex', 'maxSexWeight'],
-  ['balanceMaximizeSexFactor', 'balanceMaximizeSexFactorWeight'],
-  ['heterogeneousTeams', 'heterogeneousTeamsWeight'],
-  ['balanceHeterogeneousTeams', 'balanceHeterogeneousTeamsNacionalityFactorWeight'],
-  ['maxReligion', 'maxReligionWeight'],
-  ['balanceMaximizeReligion', 'balanceMaximizeReligionWeight'],
-  ['maxAgeHeterogeneity', 'maxAgeHeterogeneityWeight'],
-  ['balanceMaximizeAgeHeterogeneity', 'balanceMaximizeAgeHeterogeneityWeight'],
+// Unidades de factor del Paso 3: [enable, weight, balance, balanceWeight].
+// Los factores duales (sexo, nacionalidad, religión, edad) aportan dos unidades
+// (lado Heterogéneo y lado Homogéneo), cada una con su propio peso y balance.
+// Se usa para garantizar el invariante: si un factor (o su balance) está apagado,
+// su peso/balance/peso-de-balance NO se toman en cuenta.
+const STEP3_FACTOR_UNITS = [
+  ['maxCompetences', 'maxCompetencesWeight', 'balanceCompetences', 'balanceCompetenceWeight'],
+  ['takeWorkLoad', 'workLoadWeight', 'balancePersonWorkload', 'balanceWorkLoadWeight'],
+  ['minIncomp', 'minIncompWeight', 'balanceSynergy', 'balanceSynergyWeight'],
+  ['minCostDistance', 'minCostDistanceWeight', 'balanceCostDistance', 'balanceCostDistanceWeight'],
+  ['maxInterests', 'maxInterestsWeight', 'balanceInterests', 'balanceInterestWeight'],
+  ['maxBelbinRoles', 'maxBelbinWeight', 'balanceBelbinRoles', 'balanceBelbinWeight'],
+  ['maxProjectInterests', 'maxProjectInterestsWeight', 'balanceProjectInterests', 'balanceProjectInterestWeight'],
+  ['maxMbtiTypes', 'maxMbtiTypesWeight', 'balanceMbtiTypes', 'balanceMbtiTypesWeight'],
+  ['maxMultiroleTeamMembers', 'maxMultiroleTeamMembersWeight', 'balanceMultiroleTeamMembers', 'balanceMultiroleTeamMembersWeight'],
+  ['maxSex', 'maxSexWeight', 'balanceMaximizeSexFactor', 'balanceMaximizeSexFactorWeight'],
+  ['minSex', 'minSexWeight', 'balanceMinimizeSexFactor', 'balanceMinimizeSexFactorWeight'],
+  ['heterogeneousTeams', 'heterogeneousTeamsWeight', 'balanceHeterogeneousTeams', 'balanceHeterogeneousTeamsNacionalityFactorWeight'],
+  ['homogeneousTeams', 'homogeneousTeamsWeight', 'balanceHomogeneousTeams', 'balanceHomogeneousTeamsNacionalityFactorWeight'],
+  ['maxReligion', 'maxReligionWeight', 'balanceMaximizeReligion', 'balanceMaximizeReligionWeight'],
+  ['minReligion', 'minReligionWeight', 'balanceMinimizeReligion', 'balanceMinimizeReligionWeight'],
+  ['maxAgeHeterogeneity', 'maxAgeHeterogeneityWeight', 'balanceMaximizeAgeHeterogeneity', 'balanceMaximizeAgeHeterogeneityWeight'],
+  ['minAgeHomogeneity', 'minAgeHomogeneityWeight', 'balanceMinimizeAgeHomogeneity', 'balanceMinimizeAgeHomogeneityWeight'],
 ]
+
+// Pares [flag, peso] para validar que los pesos sumen 1.0. Se derivan de
+// STEP3_FACTOR_UNITS (objetivo + balance de cada unidad) para que la validación
+// considere TODOS los factores activos —incluidos los lados Homogéneo— y no vuelva
+// a quedar incompleta al agregar factores.
+const STEP3_WEIGHT_PAIRS = STEP3_FACTOR_UNITS.flatMap(
+  ([enableKey, weightKey, balanceKey, balanceWeightKey]) => [
+    [enableKey, weightKey],
+    [balanceKey, balanceWeightKey],
+  ]
+)
+
+// Aplica al patch las cascadas de "apagado": si se desmarca un factor, se limpian
+// su peso, su balance y el peso del balance; si se desmarca un balance, se limpia
+// su peso. Devuelve un nuevo patch que mantiene consistente al store.
+function applyStep3Cascade(patch) {
+  const out = { ...patch }
+  for (const [enableKey, weightKey, balanceKey, balanceWeightKey] of STEP3_FACTOR_UNITS) {
+    if (enableKey in out && out[enableKey] === false) {
+      out[weightKey] = null
+      out[balanceKey] = false
+      out[balanceWeightKey] = null
+    }
+    if (balanceKey in out && out[balanceKey] === false) {
+      out[balanceWeightKey] = null
+    }
+  }
+  return out
+}
+
+// Normaliza el objeto completo de factores: para cada unidad apagada, fuerza su
+// peso/balance/peso-de-balance a "no contar". Garantía final antes de enviar al
+// backend (no depende de cómo se haya seteado el estado).
+function normalizeStep3Factors(factors) {
+  const out = { ...factors }
+  for (const [enableKey, weightKey, balanceKey, balanceWeightKey] of STEP3_FACTOR_UNITS) {
+    if (!out[enableKey]) {
+      out[weightKey] = null
+      out[balanceKey] = false
+      out[balanceWeightKey] = null
+    }
+    if (!out[balanceKey]) {
+      out[balanceWeightKey] = null
+    }
+  }
+  return out
+}
 
 function checkWeights(factors, pairs) {
   const total = pairs
@@ -249,7 +294,7 @@ export const useTeamFormationStore = defineStore('teamFormation', {
     }),
 
     teamsPayload: (state) => {
-      const s3 = state.step3Factors
+      const s3 = normalizeStep3Factors(state.step3Factors)
       const { workerIncompatibilities, roleIncompatibilities, ...s3Rest } = s3
       return {
         teamFormationParameters: {
@@ -285,7 +330,7 @@ export const useTeamFormationStore = defineStore('teamFormation', {
       Object.assign(this.step2Factors, data)
     },
     updateStep3Factors(data) {
-      Object.assign(this.step3Factors, data)
+      Object.assign(this.step3Factors, applyStep3Cascade(data))
     },
     addFixedWorker(fw) {
       const duplicate = this.fixedWorkers.some(
@@ -334,3 +379,11 @@ export const useTeamFormationStore = defineStore('teamFormation', {
     },
   },
 })
+
+// HMR: sin esto, al editar este store durante `npm run dev` Pinia NO actualiza la
+// definición (getters/acciones) en caliente; el componente sí se hot-reemplaza, pero
+// el store queda con la versión vieja hasta un recargado completo. Esto causaba que
+// las correcciones del getter `teamsPayload` no surtieran efecto sin recargar.
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useTeamFormationStore, import.meta.hot))
+}

@@ -249,14 +249,6 @@ const routes = [
                 }
             },
             {
-                path: 'import/config',
-                name: 'ImportConfig',
-                component: () => import('@/features/import/views/ImportConfig.vue'),
-                meta: {
-                    breadcrumb: [{ name: 'features.import.configTitle', disable: true }]
-                }
-            },
-            {
                 path: 'experiments',
                 name: 'ExperimentConfig',
                 component: () => import('@/features/experiments/views/ExperimentConfig.vue'),

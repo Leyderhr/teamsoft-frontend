@@ -14,48 +14,48 @@ const saving = ref(false)
 
 // ============ TeamSoft Parameters ============
 // initialSolutionConf: 0=Belbin 1=Competencias 2=Min roles 3=Jefe equipo 4=Aleatorio
-const initialSolutionOptions = [
-  { label: 'Belbin', value: 0 },
-  { label: 'Competencias', value: 1 },
-  { label: 'Mínimo de roles', value: 2 },
-  { label: 'Jefe de equipo', value: 3 },
-  { label: 'Aleatorio', value: 4 },
-]
+const initialSolutionOptions = computed(() => [
+  { label: t('features.experiments.initialSolution.belbin'), value: 0 },
+  { label: t('features.experiments.initialSolution.competences'), value: 1 },
+  { label: t('features.experiments.initialSolution.minRoles'), value: 2 },
+  { label: t('features.experiments.initialSolution.teamBoss'), value: 3 },
+  { label: t('features.experiments.initialSolution.random'), value: 4 },
+])
 const selectedInitialSolution = ref(4)
 const numPersonTries = ref(100)
 
 // operatorOpc: 0=Mutación 1=Cruzamiento 2=Aleatorio
-const operatorOptions = [
-  { label: 'Mutación', value: 0 },
-  { label: 'Cruzamiento', value: 1 },
-  { label: 'Aleatorio', value: 2 },
-]
+const operatorOptions = computed(() => [
+  { label: t('features.experiments.operator.mutation'), value: 0 },
+  { label: t('features.experiments.operator.crossover'), value: 1 },
+  { label: t('features.experiments.operator.random'), value: 2 },
+])
 const selectedOperator = ref(0)
 
 // operatorTypeOpc for mutation: 0-4
-const mutationTypeOptions = [
-  { label: 'Sustitución', value: 0 },
-  { label: 'Permutación de roles', value: 1 },
-  { label: 'Permutación de proyectos', value: 2 },
-  { label: 'Sustitución del jefe', value: 3 },
-  { label: 'Permutación en todos los roles', value: 4 },
-]
+const mutationTypeOptions = computed(() => [
+  { label: t('features.experiments.mutationType.substitution'), value: 0 },
+  { label: t('features.experiments.mutationType.rolePermutation'), value: 1 },
+  { label: t('features.experiments.mutationType.projectPermutation'), value: 2 },
+  { label: t('features.experiments.mutationType.bossSubstitution'), value: 3 },
+  { label: t('features.experiments.mutationType.allRolesPermutation'), value: 4 },
+])
 
 // operatorTypeOpc for crossover: 0-7
-const crossoverTypeOptions = [
-  { label: 'Cruce de vector de proyecto', value: 0 },
-  { label: 'Cruce de vector de rol', value: 1 },
-  { label: 'Cruce de vector de persona', value: 2 },
-  { label: 'Cruce de experiencia en rol', value: 3 },
-  { label: 'Cruce de un punto', value: 4 },
-  { label: 'Cruce de dos puntos', value: 5 },
-  { label: 'Cruce de vector de mejor estado', value: 6 },
-  { label: 'Cruce general de mejor estado', value: 7 },
-]
+const crossoverTypeOptions = computed(() => [
+  { label: t('features.experiments.crossoverType.projectVector'), value: 0 },
+  { label: t('features.experiments.crossoverType.roleVector'), value: 1 },
+  { label: t('features.experiments.crossoverType.personVector'), value: 2 },
+  { label: t('features.experiments.crossoverType.roleExperience'), value: 3 },
+  { label: t('features.experiments.crossoverType.onePoint'), value: 4 },
+  { label: t('features.experiments.crossoverType.twoPoint'), value: 5 },
+  { label: t('features.experiments.crossoverType.bestStateVector'), value: 6 },
+  { label: t('features.experiments.crossoverType.bestStateGeneral'), value: 7 },
+])
 
 const operatorTypeOptions = computed(() => {
-  if (selectedOperator.value === 0) return mutationTypeOptions
-  if (selectedOperator.value === 1) return crossoverTypeOptions
+  if (selectedOperator.value === 0) return mutationTypeOptions.value
+  if (selectedOperator.value === 1) return crossoverTypeOptions.value
   return []
 })
 const operatorTypeDisabled = computed(() => selectedOperator.value === 2)
@@ -128,20 +128,20 @@ const handleSave = async () => {
 
 <template>
   <div>
-    <PageBreadcrumb page-title="Configuración del Experimento" :items="[]" />
+    <PageBreadcrumb :page-title="t('features.experiments.title')" :items="[]" />
 
     <div class="space-y-5">
 
       <!-- Parámetros de TeamSoft -->
       <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-base font-semibold text-gray-800">Parámetros de TeamSoft</h3>
+          <h3 class="text-base font-semibold text-gray-800">{{ t('features.experiments.teamSoftParams') }}</h3>
         </div>
         <div class="p-6">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Solución Inicial</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.initialSolutionLabel') }}</label>
               <AppSelect
                 v-model="selectedInitialSolution"
                 :options="initialSolutionOptions"
@@ -149,7 +149,7 @@ const handleSave = async () => {
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Intentos por persona</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.personTries') }}</label>
               <input
                 v-model.number="numPersonTries"
                 type="number"
@@ -160,7 +160,7 @@ const handleSave = async () => {
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Operador</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.operatorLabel') }}</label>
               <AppSelect
                 v-model="selectedOperator"
                 :options="operatorOptions"
@@ -168,12 +168,12 @@ const handleSave = async () => {
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Tipo de Operador</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.operatorTypeLabel') }}</label>
               <AppSelect
                 v-model="selectedOperatorType"
                 :options="operatorTypeOptions"
                 :disabled="operatorTypeDisabled"
-                placeholder="No aplica para Aleatorio"
+                :placeholder="t('features.experiments.notApplicableRandom')"
               />
             </div>
 
@@ -184,13 +184,13 @@ const handleSave = async () => {
       <!-- Estrategia de Configuración -->
       <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-base font-semibold text-gray-800">Estrategia de Configuración</h3>
+          <h3 class="text-base font-semibold text-gray-800">{{ t('features.experiments.configStrategy') }}</h3>
         </div>
         <div class="p-6">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Ejecuciones</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.executions') }}</label>
               <input
                 v-model.number="executions"
                 type="number"
@@ -201,7 +201,7 @@ const handleSave = async () => {
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Iteraciones</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.iterations') }}</label>
               <input
                 v-model.number="iterations"
                 type="number"
@@ -218,7 +218,7 @@ const handleSave = async () => {
                 type="checkbox"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer"
               />
-              <label for="calcTime" class="text-sm font-medium text-gray-700 cursor-pointer">Calcular tiempo</label>
+              <label for="calcTime" class="text-sm font-medium text-gray-700 cursor-pointer">{{ t('features.experiments.calculateTime') }}</label>
             </div>
 
             <div class="flex items-center gap-3">
@@ -228,11 +228,11 @@ const handleSave = async () => {
                 type="checkbox"
                 class="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/20 cursor-pointer"
               />
-              <label for="validateChk" class="text-sm font-medium text-gray-700 cursor-pointer">Validar</label>
+              <label for="validateChk" class="text-sm font-medium text-gray-700 cursor-pointer">{{ t('features.experiments.validate') }}</label>
             </div>
 
             <div v-if="validate" class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Número de validaciones</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.validationsNumber') }}</label>
               <input
                 v-model.number="possibleValidateNumber"
                 type="number"
@@ -249,13 +249,13 @@ const handleSave = async () => {
       <!-- Parámetros del Algoritmo (BICIAM) -->
       <div class="bg-white rounded-2xl border border-gray-200 shadow-theme-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-base font-semibold text-gray-800">Parámetros del Algoritmo (BICIAM)</h3>
+          <h3 class="text-base font-semibold text-gray-800">{{ t('features.experiments.algorithmParams') }}</h3>
         </div>
         <div class="p-6">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Reinicio Hill Climbing</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.hillClimbingRestart') }}</label>
               <input
                 v-model.number="hillClimbingRestartCount"
                 type="number"
@@ -266,7 +266,7 @@ const handleSave = async () => {
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Tamaño de Lista Tabú</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.tabuListSize') }}</label>
               <input
                 v-model.number="tabuSolutionsMaxelements"
                 type="number"
@@ -277,7 +277,7 @@ const handleSave = async () => {
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Vecindad HC Multiobjetivo con Reinicio</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.multiobjHCRestartNeighbors') }}</label>
               <input
                 v-model.number="multiobjectiveHCRestartSizeNeighbors"
                 type="number"
@@ -288,7 +288,7 @@ const handleSave = async () => {
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Distancia HC Multiobjetivo con Reinicio</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.multiobjHCDistanceNeighbors') }}</label>
               <input
                 v-model.number="multiobjectiveHCDistanceSizeNeighbors"
                 type="number"
@@ -299,7 +299,7 @@ const handleSave = async () => {
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-sm font-medium text-gray-700">Tamaño Tabú Multiobjetivo</label>
+              <label class="text-sm font-medium text-gray-700">{{ t('features.experiments.multiobjTabuSize') }}</label>
               <input
                 v-model.number="multiobjectiveTabuSolutionsMaxelements"
                 type="number"
@@ -320,7 +320,7 @@ const handleSave = async () => {
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
           <RefreshCw class="w-4 h-4" />
-          Restablecer
+          {{ t('common.reset') }}
         </button>
         <button
           @click="handleSave"

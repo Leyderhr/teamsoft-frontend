@@ -112,15 +112,15 @@ const belbinRoles = ref({
 })
 
 const belbinRoleLabels = {
-  'Implementador': 'implementador',
-  'Coordinador': 'coordinador',
-  'Cerebro': 'cerebro',
-  'Investigador': 'investigador',
-  'Monitor': 'monitor',
-  'Cohesionador': 'cohesionador',
-  'Impulsor': 'impulsor',
-  'Finalizador': 'finalizador',
-  'Especialista': 'especialista',
+  implementador: 'features.persons.belbinRoles.implementer',
+  coordinador: 'features.persons.belbinRoles.coordinator',
+  cerebro: 'features.persons.belbinRoles.plant',
+  investigador: 'features.persons.belbinRoles.resourceInvestigator',
+  monitor: 'features.persons.belbinRoles.monitor',
+  cohesionador: 'features.persons.belbinRoles.teamworker',
+  impulsor: 'features.persons.belbinRoles.shaper',
+  finalizador: 'features.persons.belbinRoles.finisher',
+  especialista: 'features.persons.belbinRoles.specialist',
 }
 
 // Conflicts
@@ -794,9 +794,9 @@ async function handleSave() {
           <div>
             <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ t('features.persons.test.belbinSection') }}</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <div v-for="(key, label) in belbinRoleLabels" :key="key" class="space-y-1">
-                <label class="block text-sm font-medium text-gray-700">{{ label }}</label>
-                <AppSelect v-model="belbinRoles[key]" :options="belbinOptions" />
+              <div v-for="(labelKey, roleKey) in belbinRoleLabels" :key="roleKey" class="space-y-1">
+                <label class="block text-sm font-medium text-gray-700">{{ t(labelKey) }}</label>
+                <AppSelect v-model="belbinRoles[roleKey]" :options="belbinOptions" />
               </div>
             </div>
           </div>

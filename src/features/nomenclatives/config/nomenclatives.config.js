@@ -186,11 +186,11 @@ export const nomenclativeConfigs = {
         columns: [
             { field: 'id', header: 'common.columns.id', width: '80px', sortable: true },
             { field: 'name', header: 'common.columns.name', width: '250px', sortable: true, filterable: true },
-            { field: 'father.name', header: 'features.nomenclatives.personGroup.columns.parentGroup', width: '200px', sortable: true, filterable: true }
+            { field: 'father', header: 'features.nomenclatives.personGroup.columns.parentGroup', width: '200px', sortable: true, filterable: true }
         ],
         fields: [
             { name: 'name', label: 'features.nomenclatives.personGroup.fields.name', type: 'text', required: true },
-            { name: 'parentGroupId', label: 'features.nomenclatives.personGroup.fields.parentGroup', type: 'select', required: false, optionsService: personGroupService, optionLabel: 'name', optionValue: 'id', editKey: 'father.id' }
+            { name: 'parentGroupId', label: 'features.nomenclatives.personGroup.fields.parentGroup', type: 'select', required: false, optionsService: personGroupService, optionLabel: 'name', optionValue: 'id', editKey: 'father.id', clearable: true }
         ],
         breadcrumb: [{ name: 'features.nomenclatives.personGroup.title', disable: true }],
         showImportButton: false

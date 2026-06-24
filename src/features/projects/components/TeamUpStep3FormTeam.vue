@@ -69,24 +69,47 @@ const factors = computed(() => [
     balanceKey: 'balanceMultiroleTeamMembers',   balanceWeightKey: 'balanceMultiroleTeamMembersWeight' },
   { id: 'sex',          label: t('features.teamUp.step3.factors.sex'),                 icon: Equal,       hasBalance: true,
     enabledKey: 'maxSex',              secondaryEnabledKey: 'minSex',
-    weightKey: 'maxSexWeight',
-    balanceKey: 'balanceMaximizeSexFactor', balanceWeightKey: 'balanceMaximizeSexFactorWeight' },
+    weightKey: 'maxSexWeight',         secondaryWeightKey: 'minSexWeight',
+    balanceKey: 'balanceMaximizeSexFactor', balanceWeightKey: 'balanceMaximizeSexFactorWeight',
+    secondaryBalanceKey: 'balanceMinimizeSexFactor', secondaryBalanceWeightKey: 'balanceMinimizeSexFactorWeight' },
   { id: 'nationality',  label: t('features.teamUp.step3.factors.nationality'),         icon: Globe,       hasBalance: true,
     enabledKey: 'heterogeneousTeams',  secondaryEnabledKey: 'homogeneousTeams',
-    weightKey: 'heterogeneousTeamsWeight',
-    balanceKey: 'balanceHeterogeneousTeams', balanceWeightKey: 'balanceHeterogeneousTeamsNacionalityFactorWeight' },
+    weightKey: 'heterogeneousTeamsWeight', secondaryWeightKey: 'homogeneousTeamsWeight',
+    balanceKey: 'balanceHeterogeneousTeams', balanceWeightKey: 'balanceHeterogeneousTeamsNacionalityFactorWeight',
+    secondaryBalanceKey: 'balanceHomogeneousTeams', secondaryBalanceWeightKey: 'balanceHomogeneousTeamsNacionalityFactorWeight' },
   { id: 'religion',     label: t('features.teamUp.step3.factors.religion'),             icon: BookOpen,    hasBalance: true,
     enabledKey: 'maxReligion',         secondaryEnabledKey: 'minReligion',
-    weightKey: 'maxReligionWeight',
-    balanceKey: 'balanceMaximizeReligion', balanceWeightKey: 'balanceMaximizeReligionWeight' },
+    weightKey: 'maxReligionWeight',    secondaryWeightKey: 'minReligionWeight',
+    balanceKey: 'balanceMaximizeReligion', balanceWeightKey: 'balanceMaximizeReligionWeight',
+    secondaryBalanceKey: 'balanceMinimizeReligion', secondaryBalanceWeightKey: 'balanceMinimizeReligionWeight' },
   { id: 'age',          label: t('features.teamUp.step3.factors.ageRange'),      icon: Calendar,    hasBalance: true,
     enabledKey: 'maxAgeHeterogeneity', secondaryEnabledKey: 'minAgeHomogeneity',
-    weightKey: 'maxAgeHeterogeneityWeight',
-    balanceKey: 'balanceMaximizeAgeHeterogeneity', balanceWeightKey: 'balanceMaximizeAgeHeterogeneityWeight' },
+    weightKey: 'maxAgeHeterogeneityWeight', secondaryWeightKey: 'minAgeHomogeneityWeight',
+    balanceKey: 'balanceMaximizeAgeHeterogeneity', balanceWeightKey: 'balanceMaximizeAgeHeterogeneityWeight',
+    secondaryBalanceKey: 'balanceMinimizeAgeHomogeneity', secondaryBalanceWeightKey: 'balanceMinimizeAgeHomogeneityWeight' },
 ])
 
 function isFactorEnabled(f) {
   return store.step3Factors[f.enabledKey] || !!(f.secondaryEnabledKey && store.step3Factors[f.secondaryEnabledKey])
+}
+
+// Peso a mostrar en el card: el del lado activo (Heterogéneo primario u Homogéneo
+// secundario). Devuelve null si el factor está apagado.
+function factorWeightDisplay(f) {
+  const sf = store.step3Factors
+  if (sf[f.enabledKey]) return sf[f.weightKey]
+  if (f.secondaryEnabledKey && sf[f.secondaryEnabledKey]) return sf[f.secondaryWeightKey]
+  return null
+}
+
+// Peso del balance a mostrar: solo si el lado activo tiene su balance marcado.
+function factorBalanceDisplay(f) {
+  const sf = store.step3Factors
+  if (sf[f.enabledKey]) return sf[f.balanceKey] ? sf[f.balanceWeightKey] : null
+  if (f.secondaryEnabledKey && sf[f.secondaryEnabledKey]) {
+    return sf[f.secondaryBalanceKey] ? sf[f.secondaryBalanceWeightKey] : null
+  }
+  return null
 }
 
 const selectedFactor = ref(null)
@@ -361,15 +384,15 @@ watch(roleLoadOptions, (opts) => {
               <div class="flex items-center gap-0.5">
                 <span class="text-[10px] text-gray-400">{{ t('features.teamUp.step3.weight') }}</span>
                 <span class="text-[10px] font-semibold tabular-nums"
-                  :class="store.step3Factors[f.enabledKey] && store.step3Factors[f.weightKey] != null ? 'text-brand-600' : 'text-gray-300'">
-                  {{ store.step3Factors[f.enabledKey] && store.step3Factors[f.weightKey] != null ? store.step3Factors[f.weightKey] : '—' }}
+                  :class="factorWeightDisplay(f) != null ? 'text-brand-600' : 'text-gray-300'">
+                  {{ factorWeightDisplay(f) != null ? factorWeightDisplay(f) : '—' }}
                 </span>
               </div>
               <div v-if="f.hasBalance" class="flex items-center gap-0.5">
                 <span class="text-[10px] text-gray-400">{{ t('features.teamUp.step3.balance') }}</span>
                 <span class="text-[10px] font-semibold tabular-nums"
-                  :class="store.step3Factors[f.enabledKey] && store.step3Factors[f.balanceKey] && store.step3Factors[f.balanceWeightKey] != null ? 'text-brand-400' : 'text-gray-300'">
-                  {{ store.step3Factors[f.enabledKey] && store.step3Factors[f.balanceKey] && store.step3Factors[f.balanceWeightKey] != null ? store.step3Factors[f.balanceWeightKey] : '—' }}
+                  :class="factorBalanceDisplay(f) != null ? 'text-brand-400' : 'text-gray-300'">
+                  {{ factorBalanceDisplay(f) != null ? factorBalanceDisplay(f) : '—' }}
                 </span>
               </div>
             </div>

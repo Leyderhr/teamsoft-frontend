@@ -76,13 +76,7 @@ const menuItems = computed(() => {
         { label: t('menu.competences'), command: () => router.push('/manage-competences/competence') },
         { label: t('menu.roles'), command: () => router.push('/manage-roles/role') },
         { label: t('menu.persons'), command: () => router.push('/person') },
-        {
-          label: t('menu.importPersons'),
-          items: [
-            { label: t('menu.import'), command: () => router.push('/import') },
-            { label: t('menu.configure'), command: () => router.push('/import/config') }
-          ]
-        }
+        { label: t('menu.importPersons'), command: () => router.push('/import') }
       ]
     })
   }

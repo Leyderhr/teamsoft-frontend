@@ -27,6 +27,7 @@
   "noRecords": "Sin registros",
   "noResults": "Sin resultados",
   "noOptions": "Sin opciones",
+  "createOption": "Crear \"{0}\"",
   "actions": "Acciones",
   "yes": "Sí",
   "no": "No",
