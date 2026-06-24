@@ -1,8 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDown, Check, Search, Plus } from 'lucide-vue-next'
-import { ChevronDown, Check, Search, X } from 'lucide-vue-next'
+import { ChevronDown, Check, Search, Plus, X } from 'lucide-vue-next'
 
 
 const { t } = useI18n()
