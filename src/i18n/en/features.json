@@ -463,7 +463,7 @@
     },
     "formTitle": "Project",
     "createTitle": "Create Projects",
-    "editTitle": "Edit Project",
+    "editTitle": "Edit Teams",
     "nameLabel": "Project Name",
     "startDateLabel": "Start Date",
     "clientLabel": "Client",
@@ -482,7 +482,7 @@
     "updated": "Project updated successfully",
     "created": "Projects created successfully",
     "title": "Projects",
-    "listTitle": "Projects List",
+    "listTitle": "Team List",
     "entity": { "singular": "project", "plural": "projects" },
     "columns": { "initialDate": "Initial Date" },
     "state": { "created": "Created", "formed": "Formed", "finalized": "Finalized", "closed": "Closed" },
@@ -734,7 +734,7 @@
     "noProjects": "No projects registered",
     "personGroups": "Person Groups ({0})",
     "stats": {
-      "total": "Total Projects",
+      "total": "Total Teams",
       "active": "Active",
       "finalized": "Finalized",
       "closed": "Closed"
